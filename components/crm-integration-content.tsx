@@ -109,6 +109,7 @@ export function CRMIntegrationContent() {
                     });
                     localStorage.removeItem("platformSlug");
                     localStorage.removeItem("redirectUri");
+                    setIsIntegrating(false);
                     window.history.replaceState({}, document.title, window.location.pathname);
                     await fetchPlatforms();
                 } else {
