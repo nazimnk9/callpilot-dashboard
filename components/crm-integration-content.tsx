@@ -115,7 +115,7 @@ export function CRMIntegrationContent() {
                     setErrorDialog({
                         show: true,
                         title: "Integration Error",
-                        message: data.platform_slug || "Failed to complete integration",
+                        message: data.detail || data.platform_slug || "Failed to complete integration",
                     });
                 }
             }
