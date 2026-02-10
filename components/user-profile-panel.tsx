@@ -2,6 +2,8 @@
 
 import { LogOut, Sun, Moon, Monitor } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { cookieUtils } from '@/services/auth-service';
 
 interface UserProfilePanelProps {
   onClose: () => void;
@@ -9,6 +11,14 @@ interface UserProfilePanelProps {
 
 export function UserProfilePanel({ onClose }: UserProfilePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    cookieUtils.set('access', '', -1);
+    cookieUtils.set('refresh', '', -1);
+    onClose();
+    router.push('/login');
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -39,13 +49,13 @@ export function UserProfilePanel({ onClose }: UserProfilePanelProps) {
         {/* Theme Toggles */}
         <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl w-fit">
           <button className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition text-gray-400 hover:text-gray-900">
-            <Sun size={18} />
+            < Sun size={18} />
           </button>
           <button className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition text-gray-400 hover:text-gray-900">
-            <Moon size={18} />
+            < Moon size={18} />
           </button>
           <button className="p-2 bg-white shadow-sm rounded-lg transition text-gray-900 border border-gray-100">
-            <Monitor size={18} />
+            < Monitor size={18} />
           </button>
         </div>
       </div>
@@ -72,8 +82,12 @@ export function UserProfilePanel({ onClose }: UserProfilePanelProps) {
         >
           Help
         </a>
-        <button className="w-full text-left text-[14px] font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-xl transition">
-          Log out
+        <button
+          onClick={handleLogout}
+          className="w-full text-left text-[14px] font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-xl transition flex items-center gap-2"
+        >
+          <LogOut size={16} />
+          <span>Log out</span>
         </button>
       </nav>
     </div>

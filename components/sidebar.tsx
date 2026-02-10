@@ -29,6 +29,7 @@ import {
   Phone,
   Shuffle,
 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { UserProfilePanel } from './user-profile-panel';
 
 interface SidebarProps {
@@ -38,11 +39,12 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [showUserPanel, setShowUserPanel] = useState(false);
+  const pathname = usePathname();
 
   const menuItems = [
-    { icon: LayoutGrid, label: 'Dashboard', href: '#', isBold: true },
+    { icon: LayoutGrid, label: 'Dashboard', href: '/dashboard', isBold: true },
     { label: 'Integrations', isHeader: true },
-    { icon: Globe, label: 'Connect CRMs', href: '#', isBold: true },
+    { icon: Globe, label: 'Connect CRMs', href: '/dashboard/connect-crms', isBold: true },
     { icon: Phone, label: 'Phone numbers', href: '#', isBold: true },
     { label: 'AI Flows', isHeader: true },
     { icon: Shuffle, label: 'Phone call Flows', href: '#', isBold: true },
@@ -85,9 +87,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Tabs */}
         <div className="px-4 py-2 md:hidden">
           <div className="flex bg-gray-100/80 p-1 rounded-lg">
-            <button className="flex-1 py-1.5 text-xs font-semibold bg-white rounded-md shadow-sm text-gray-900">
+            {/* <button className="flex-1 py-1.5 text-xs font-semibold bg-white rounded-md shadow-sm text-gray-900">
               Dashboard
-            </button>
+            </button> */}
             {/* <button className="flex-1 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700">
               Docs
             </button>
@@ -108,14 +110,26 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   </div>
                 );
               }
+              const isActive = pathname === item.href;
               return (
                 <a
                   key={index}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-1.5 text-[15px] rounded-lg transition text-gray-900 group`}
+                  className={`flex items-center gap-3 px-3 py-2 text-[15px] rounded-lg transition-colors group ${isActive
+                    ? 'bg-gray-200 text-gray-900'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
                 >
-                  {item.icon && <item.icon size={18} strokeWidth={3} className="text-gray-800 group-hover:text-gray-900" />}
-                  <span className={item.isBold ? 'font-medium' : 'font-medium'}>{item.label}</span>
+                  {item.icon && (
+                    <item.icon
+                      size={18}
+                      strokeWidth={isActive ? 3 : 2.5}
+                      className={`${isActive ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}
+                    />
+                  )}
+                  <span className={isActive || item.isBold ? 'font-semibold' : 'font-medium'}>
+                    {item.label}
+                  </span>
                 </a>
               );
             })}
