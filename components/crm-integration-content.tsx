@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Zap, Check, Phone, Plus } from "lucide-react";
@@ -33,10 +33,14 @@ export function CRMIntegrationContent() {
         message: "",
     });
     const router = useRouter();
+    const hasProcessedRef = useRef(false);
 
     useEffect(() => {
         fetchPlatforms();
-        checkOAuthCallback();
+        if (!hasProcessedRef.current) {
+            checkOAuthCallback();
+            hasProcessedRef.current = true;
+        }
     }, []);
 
     const fetchPlatforms = async () => {
@@ -109,7 +113,6 @@ export function CRMIntegrationContent() {
                     });
                     localStorage.removeItem("platformSlug");
                     localStorage.removeItem("redirectUri");
-                    setIsIntegrating(false);
                     window.history.replaceState({}, document.title, window.location.pathname);
                     await fetchPlatforms();
                 } else {
