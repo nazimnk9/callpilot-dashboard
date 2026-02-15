@@ -66,6 +66,7 @@ export function PhoneNumbersContent() {
                         <Button
                             variant="default"
                             className="bg-[#8e97a9] hover:bg-[#7e8799] text-gray-900 font-semibold px-6 py-2 rounded-xl flex items-center gap-2 border-none"
+                            onClick={() => router.push("/dashboard/number-list")}
                         >
                             <Phone size={18} />
                             My Numbers

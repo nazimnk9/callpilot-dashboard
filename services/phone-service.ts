@@ -56,5 +56,9 @@ export const phoneService = {
 
     async buyNumber(data: any) {
         return api.post("/phone_number/buy", data);
+    },
+
+    async getPurchasedNumbers() {
+        return api.get("/phone_number/");
     }
 };
