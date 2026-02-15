@@ -28,6 +28,8 @@ import {
   Globe,
   Phone,
   Shuffle,
+  User,
+  CreditCard,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { UserProfilePanel } from './user-profile-panel';
@@ -39,6 +41,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [showUserPanel, setShowUserPanel] = useState(false);
+  const [isSettingsView, setIsSettingsView] = useState(false);
   const pathname = usePathname();
 
   const menuItems = [
@@ -51,6 +54,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { label: 'Report', isHeader: true },
     { icon: FileText, label: 'Call logs', href: '#', isBold: true },
   ];
+
+  const settingsMenuItems = [
+    { label: 'Settings', isHeader: true },
+    { icon: User, label: 'Your Profile', href: '#', isBold: true },
+    { label: 'Organization', isHeader: true },
+    { icon: FileText, label: 'General', href: '#', isBold: true },
+    { icon: CreditCard, label: 'Billing', href: '#', isBold: true },
+  ];
+
+  const currentMenuItems = isSettingsView ? settingsMenuItems : menuItems;
 
   return (
     <>
@@ -102,7 +115,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Navigation content */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
           <nav className="space-y-8">
-            {menuItems.map((item, index) => {
+            {currentMenuItems.map((item, index) => {
               if (item.isHeader) {
                 return (
                   <div key={index} className="text-[13px] font-medium text-gray-400 mt-6 mb-2 px-3">
@@ -149,11 +162,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <span>Forum</span>
               </button> */}
               <button
-                onClick={() => setShowUserPanel(!showUserPanel)}
+                onClick={() => setIsSettingsView(!isSettingsView)}
                 className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900"
               >
-                <Settings size={16} strokeWidth={2.5} className="text-gray-500" />
-                <span>Settings</span>
+                {isSettingsView ? (
+                  <>
+                    <LayoutGrid size={16} strokeWidth={2.5} className="text-gray-500" />
+                    <span>Dashboard</span>
+                  </>
+                ) : (
+                  <>
+                    <Settings size={16} strokeWidth={2.5} className="text-gray-500" />
+                    <span>Settings</span>
+                  </>
+                )}
               </button>
             </div>
 

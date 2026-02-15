@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -25,6 +26,7 @@ export default function SignInPage() {
     });
     const [otp, setOtp] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showErrorDialog, setShowErrorDialog] = useState(false);
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -78,7 +80,10 @@ export default function SignInPage() {
         setError(null);
 
         try {
-            const response = await authService.login(formData);
+            const response = await authService.login({
+                ...formData,
+                remember_me: rememberMe
+            });
             const data = await response.json();
 
             if (response.ok) {
@@ -238,6 +243,21 @@ export default function SignInPage() {
                                                     autoComplete="current-password"
                                                     disabled={isLoading}
                                                 />
+                                            </div>
+
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="remember_me"
+                                                    checked={rememberMe}
+                                                    onCheckedChange={(checked) => setRememberMe(!!checked)}
+                                                    disabled={isLoading}
+                                                />
+                                                <Label
+                                                    htmlFor="remember_me"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                    Remember me for a month
+                                                </Label>
                                             </div>
 
                                             <Button
