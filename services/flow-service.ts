@@ -29,5 +29,37 @@ export const flowService = {
 
     async getPricingPlans(featureUid: string) {
         return api.get(`/subscription/plan/${featureUid}/`);
+    },
+
+    async getInterviewStatus() {
+        return api.get("/interview/status/");
+    },
+
+    async getMyPlatforms() {
+        return api.get("/organizations/platform/my_platforms");
+    },
+
+    async getPhoneNumbers() {
+        return api.get("/phone_number/");
+    },
+
+    async getPrimaryQuestions() {
+        return api.get("/interview/call/config/primary_questions");
+    },
+
+    async savePrimaryQuestion(question: string) {
+        return api.post("/interview/call/config/primary_questions", { question });
+    },
+
+    async getCallConfig() {
+        return api.get("/interview/call/config/details");
+    },
+
+    async createCallConfig(payload: any) {
+        return api.post("/interview/call/config/", payload);
+    },
+
+    async updateCallConfig(payload: any) {
+        return api.patch("/interview/call/config/details", payload);
     }
 };

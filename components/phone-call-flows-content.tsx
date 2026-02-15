@@ -60,6 +60,10 @@ export function PhoneCallFlowsContent() {
         router.push(`/dashboard/pricing-plan/${flow.uid}`)
     }
 
+    const handleConfigureClick = (flow: Flow) => {
+        router.push(`/dashboard/configure/${flow.uid}`)
+    }
+
     const yourFlows = flows.filter(f => f.is_purchased)
     const availableFlows = flows.filter(f => !f.is_purchased)
 
@@ -99,7 +103,10 @@ export function PhoneCallFlowsContent() {
                         </>
                     ) : (
                         <>
-                            <Button className="bg-[#e2e8f0] hover:bg-[#cbd5e1] text-[#64748b] font-bold h-11 px-8 rounded-lg text-sm transition-all border-none">
+                            <Button
+                                className="bg-[#e2e8f0] hover:bg-[#cbd5e1] text-[#64748b] font-bold h-11 px-8 rounded-lg text-sm transition-all border-none"
+                                onClick={() => handleConfigureClick(flow)}
+                            >
                                 Configure
                             </Button>
                         </>
