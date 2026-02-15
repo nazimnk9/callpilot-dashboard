@@ -48,7 +48,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: LayoutGrid, label: 'Dashboard', href: '/dashboard', isBold: true },
     { label: 'Integrations', isHeader: true },
     { icon: Globe, label: 'Connect CRMs', href: '/dashboard/connect-crms', isBold: true },
-    { icon: Phone, label: 'Phone numbers', href: '#', isBold: true },
+    { icon: Phone, label: 'Phone numbers', href: '/dashboard/phone-numbers', isBold: true },
     { label: 'AI Flows', isHeader: true },
     { icon: Shuffle, label: 'Phone call Flows', href: '#', isBold: true },
     { label: 'Report', isHeader: true },
