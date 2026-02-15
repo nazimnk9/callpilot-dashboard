@@ -50,7 +50,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: Globe, label: 'Connect CRMs', href: '/dashboard/connect-crms', isBold: true },
     { icon: Phone, label: 'Phone numbers', href: '/dashboard/phone-numbers', isBold: true },
     { label: 'AI Flows', isHeader: true },
-    { icon: Shuffle, label: 'Phone call Flows', href: '#', isBold: true },
+    { icon: Shuffle, label: 'Phone call Flows', href: '/dashboard/phone-call-flows', isBold: true },
     { label: 'Report', isHeader: true },
     { icon: FileText, label: 'Call logs', href: '#', isBold: true },
   ];
