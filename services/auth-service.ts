@@ -36,6 +36,33 @@ export const authService = {
         });
         return response;
     },
+
+    async forgotPassword(email: string) {
+        const response = await fetch(`${API_BASE_URL}/auth/organizations/forget_password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+        });
+        return response;
+    },
+
+    async resetPassword(formData: any) {
+        const response = await fetch(`${API_BASE_URL}/auth/organizations/reset_password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+        });
+        return response;
+    },
+
+    async verifyOrganization(uid: string, data: { password: "" }) {
+        const response = await fetch(`${API_BASE_URL}/auth/organizations/verify/${uid}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+        return response;
+    },
 };
 
 // Cookie Helpers
