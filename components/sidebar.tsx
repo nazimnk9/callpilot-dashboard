@@ -52,7 +52,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { label: 'AI Flows', isHeader: true },
     { icon: Shuffle, label: 'Phone call Flows', href: '/dashboard/phone-call-flows', isBold: true },
     { label: 'Report', isHeader: true },
-    { icon: FileText, label: 'Call logs', href: '#', isBold: true },
+    { icon: FileText, label: 'Call logs', href: '/dashboard/call-logs', isBold: true },
   ];
 
   const settingsMenuItems = [
