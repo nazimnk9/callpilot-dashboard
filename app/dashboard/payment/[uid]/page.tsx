@@ -53,8 +53,8 @@ export default function PaymentDashboardPage() {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <div className="flex items-center justify-center h-screen bg-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
             </div>
         )
     }

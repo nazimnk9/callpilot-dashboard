@@ -26,6 +26,7 @@ export default function SignInPage() {
     });
     const [otp, setOtp] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isCheckingSession, setIsCheckingSession] = useState(true);
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -34,11 +35,15 @@ export default function SignInPage() {
 
     // Check for existing session on mount
     useEffect(() => {
-        const accessToken = cookieUtils.get("access");
-        const refreshTokenStr = cookieUtils.get("refresh");
-        if (accessToken && refreshTokenStr) {
-            verifyAndRedirect(accessToken, refreshTokenStr);
-        }
+        const checkSession = async () => {
+            const accessToken = cookieUtils.get("access");
+            const refreshTokenStr = cookieUtils.get("refresh");
+            if (accessToken && refreshTokenStr) {
+                await verifyAndRedirect(accessToken, refreshTokenStr);
+            }
+            setIsCheckingSession(false);
+        };
+        checkSession();
     }, []);
 
     const handleInputChange = (field: "email" | "password", value: string) => {
@@ -136,6 +141,14 @@ export default function SignInPage() {
             setIsLoading(false);
         }
     };
+
+    if (isCheckingSession) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background">

@@ -4,10 +4,10 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { Topbar } from "@/components/topbar"
-import { CallLogsContent } from "@/components/call-logs-content"
+import { OrganizationContent } from "@/components/organization-content"
 import { authService, cookieUtils } from "@/services/auth-service"
 
-export default function CallLogsPage() {
+export default function OrganizationPage() {
     const router = useRouter()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isTabletOrLarger, setIsTabletOrLarger] = useState(false)
@@ -69,7 +69,7 @@ export default function CallLogsPage() {
                     isSidebarOpen={isSidebarOpen}
                 />
 
-                <CallLogsContent />
+                <OrganizationContent />
             </div>
         </div>
     )

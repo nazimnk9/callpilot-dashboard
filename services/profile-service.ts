@@ -28,5 +28,13 @@ export const profileService = {
     async updatePassword(data: any) {
         // Based on user request, password is patched to /me/ as well
         return api.patch("/me/", data);
+    },
+
+    async getOrganization() {
+        return api.get("/organizations/me");
+    },
+
+    async updateOrganization(data: any) {
+        return api.patch("/organizations/me", data);
     }
 };

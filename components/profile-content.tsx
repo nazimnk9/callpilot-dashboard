@@ -233,12 +233,14 @@ export function ProfileContent() {
                         <AlertDialogTitle className={alertConfig.variant === "destructive" ? "text-destructive" : ""}>
                             {alertConfig.title}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="space-y-2">
-                            {alertConfig.description.map((error, index) => (
-                                <p key={index} className="text-sm font-medium text-gray-900">
-                                    {error}
-                                </p>
-                            ))}
+                        <AlertDialogDescription className="space-y-2" asChild>
+                            <div className="space-y-2">
+                                {alertConfig.description.map((error, index) => (
+                                    <div key={index} className="text-sm font-medium text-gray-900">
+                                        {error}
+                                    </div>
+                                ))}
+                            </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
