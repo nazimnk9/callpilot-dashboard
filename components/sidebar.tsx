@@ -87,30 +87,29 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-full md:w-52 bg-white bg-gray-100 border-r border-gray-200 flex flex-col transition-transform duration-300 z-50 md:relative md:translate-x-0 md:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed left-0 top-0 h-screen w-full md:w-52 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-transform duration-300 z-50 md:relative md:translate-x-0 md:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
       >
         {/* Header - Logo area */}
-        <div className="h-16 flex items-center justify-center px-4 border-b border-gray-200 relative">
+        <div className="h-16 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-800 relative">
           <div className="flex items-center justify-center">
             <img
               src="/callpilot_logo.png"
               alt="CallPilot Logo"
-              className="h-12 w-auto object-contain"
+              className="h-12 w-auto object-contain brightness-100"
             />
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 text-gray-900 hover:bg-gray-100 transition shadow-sm border border-gray-100 md:hidden absolute right-4"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition shadow-sm border border-gray-100 dark:border-gray-700 md:hidden absolute right-4"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - Hidden as per design */}
         <div className="px-4 py-2 md:hidden">
-          <div className="flex bg-gray-100/80 p-1 rounded-lg">
-            {/* Tab content removed as per design request */}
+          <div className="flex bg-gray-100/80 dark:bg-gray-800/80 p-1 rounded-lg">
           </div>
         </div>
 
@@ -120,7 +119,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {currentMenuItems.map((item, index) => {
               if (item.isHeader) {
                 return (
-                  <div key={index} className="text-[13px] font-medium text-gray-400 mt-6 mb-2 px-3">
+                  <div key={index} className="text-[13px] font-medium text-gray-400 dark:text-gray-500 mt-6 mb-2 px-3">
                     {item.label}
                   </div>
                 );
@@ -131,15 +130,15 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   key={index}
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2 text-[15px] rounded-lg transition-colors group ${isActive
-                    ? 'bg-gray-200 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                 >
                   {item.icon && (
                     <item.icon
                       size={18}
                       strokeWidth={isActive ? 3 : 2.5}
-                      className={`${isActive ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900'}`}
+                      className={`${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}
                     />
                   )}
                   <span className={isActive || item.isBold ? 'font-semibold' : 'font-medium'}>
@@ -152,21 +151,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Bottom section */}
-        <div className="border-t border-gray-100 px-7 py-6 bg-white relative">
+        <div className="border-t border-gray-100 dark:border-gray-800 px-7 py-6 bg-white dark:bg-gray-950 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSettingsView(!isSettingsView)}
-                className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
               >
                 {isSettingsView ? (
                   <>
-                    <LayoutGrid size={16} strokeWidth={2.5} className="text-gray-500" />
+                    <LayoutGrid size={16} strokeWidth={2.5} className="text-gray-500 dark:text-gray-500" />
                     <span>Dashboard</span>
                   </>
                 ) : (
                   <>
-                    <Settings size={16} strokeWidth={2.5} className="text-gray-500" />
+                    <Settings size={16} strokeWidth={2.5} className="text-gray-500 dark:text-gray-500" />
                     <span>Settings</span>
                   </>
                 )}
@@ -175,7 +174,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <button
               onClick={() => setShowUserPanel(!showUserPanel)}
-              className="relative md:hidden w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 transition"
+              className="relative md:hidden w-8 h-8 rounded-full border border-gray-100 dark:border-gray-800 flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
               aria-label="User menu"
             >
               <User size={18} />

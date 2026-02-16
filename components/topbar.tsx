@@ -14,12 +14,12 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
+      <header className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
         {/* Left section - Logo and project selector */}
         <div className="flex items-center gap-2 md:gap-6">
           {/* Project selector */}
-          <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors">
-            <span className="text-gray-900 font-medium">Personal</span>
+          <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-2 py-1 rounded-lg transition-colors">
+            <span className="text-gray-900 dark:text-gray-100 font-medium">Personal</span>
             <div className="flex flex-col -space-y-1">
               <ChevronUp size={10} className="text-gray-400" />
               <ChevronDown size={10} className="text-gray-400" />
@@ -33,7 +33,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
           <div className="relative hidden md:block">
             <button
               onClick={() => setShowUserPanel(!showUserPanel)}
-              className="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 transition flex-shrink-0"
+              className="w-8 h-8 rounded-full border border-gray-100 dark:border-gray-800 flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0"
               aria-label="User menu"
             >
               <User size={18} />
@@ -48,7 +48,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
           </div>
           <button
             onClick={onMenuClick}
-            className="md:hidden text-gray-700 hover:text-gray-900 flex-shrink-0"
+            className="md:hidden text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 flex-shrink-0"
             aria-label="Toggle menu"
           >
             <Menu size={24} />

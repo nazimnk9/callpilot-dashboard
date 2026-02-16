@@ -65,14 +65,14 @@ export default function DashboardPage() {
 
     if (isAuthenticated === null) {
         return (
-            <div className="flex items-center justify-center h-screen bg-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+            <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100" />
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-white overflow-hidden">
+        <div className="flex h-screen bg-white dark:bg-gray-950 overflow-hidden">
             {/* Sidebar - always visible on tablet+, toggleable on mobile */}
             <Sidebar
                 isOpen={isTabletOrLarger || isSidebarOpen}

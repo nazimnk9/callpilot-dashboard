@@ -1,3 +1,5 @@
+'use client';
+
 import { Phone, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -44,21 +46,21 @@ export function PhoneNumbersContent() {
     };
 
     return (
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
             <LoaderOverlay isLoading={isLoading} />
             <div className="max-w-7xl mx-auto space-y-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Phone Numbers</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Phone Numbers</h1>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-8">
                     <div className="flex items-start gap-4 mb-8">
-                        <div className="p-3 bg-gray-100 rounded-xl">
-                            <Phone size={24} className="text-gray-900" />
+                        <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                            <Phone size={24} className="text-gray-900 dark:text-gray-100" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900">Manage Phone Numbers</h2>
-                            <p className="text-gray-500 mt-1">Manage the phone numbers used by your automations.</p>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Manage Phone Numbers</h2>
+                            <p className="text-gray-500 dark:text-gray-400 mt-1">Manage the phone numbers used by your automations.</p>
                         </div>
                     </div>
 
@@ -85,15 +87,15 @@ export function PhoneNumbersContent() {
             </div>
 
             <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-                <AlertDialogContent>
+                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-destructive">Error</AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogTitle className="text-destructive dark:text-red-400">Error</AlertDialogTitle>
+                        <AlertDialogDescription className="dark:text-gray-400">
                             {error}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogAction onClick={() => setShowErrorDialog(false)}>
+                        <AlertDialogAction onClick={() => setShowErrorDialog(false)} className="dark:bg-gray-100 dark:text-gray-900">
                             OK
                         </AlertDialogAction>
                     </AlertDialogFooter>

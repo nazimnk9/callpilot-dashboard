@@ -224,19 +224,19 @@ export function ProfileContent() {
     }
 
     return (
-        <main className="flex-1 overflow-y-auto bg-white p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-950 p-4 md:p-8">
             <LoaderOverlay isLoading={isLoading || isSaving} />
 
             <AlertDialog open={alertConfig.open} onOpenChange={(open) => setAlertConfig(prev => ({ ...prev, open }))}>
-                <AlertDialogContent>
+                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className={alertConfig.variant === "destructive" ? "text-destructive" : ""}>
+                        <AlertDialogTitle className={alertConfig.variant === "destructive" ? "text-destructive dark:text-red-400" : "dark:text-gray-100"}>
                             {alertConfig.title}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="space-y-2" asChild>
+                        <AlertDialogDescription className="space-y-2 dark:text-gray-400" asChild>
                             <div className="space-y-2">
                                 {alertConfig.description.map((error, index) => (
-                                    <div key={index} className="text-sm font-medium text-gray-900">
+                                    <div key={index} className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                         {error}
                                     </div>
                                 ))}
@@ -244,7 +244,7 @@ export function ProfileContent() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogAction onClick={() => setAlertConfig(prev => ({ ...prev, open: false }))}>
+                        <AlertDialogAction onClick={() => setAlertConfig(prev => ({ ...prev, open: false }))} className="dark:bg-gray-100 dark:text-gray-900">
                             OK
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -254,29 +254,29 @@ export function ProfileContent() {
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Page Title */}
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">Profile</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Profile</h1>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-6 border-b border-gray-100">
+                <div className="flex items-center gap-6 border-b border-gray-100 dark:border-gray-800">
                     <button
                         onClick={() => setActiveTab("User")}
-                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === "User" ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
+                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === "User" ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                             }`}
                     >
                         User
                         {activeTab === "User" && (
-                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900" />
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900 dark:bg-gray-100" />
                         )}
                     </button>
                     <button
                         onClick={() => setActiveTab("Security")}
-                        className={`pb-3 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${activeTab === "Security" ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
+                        className={`pb-3 text-sm font-medium transition-colors relative flex items-center gap-1.5 ${activeTab === "Security" ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                             }`}
                     >
                         Security
                         {activeTab === "Security" && (
-                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900" />
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900 dark:bg-gray-100" />
                         )}
                     </button>
                 </div>
@@ -287,60 +287,60 @@ export function ProfileContent() {
                         <>
                             {/* First Name Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="first_name" className="text-[15px] font-bold text-gray-900">
+                                <Label htmlFor="first_name" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                     First Name
                                 </Label>
-                                <p className="text-sm text-gray-500">Your first name</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Your first name</p>
                                 <Input
                                     id="first_name"
                                     value={profile.first_name}
                                     onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
                                     placeholder="Enter your first name"
                                 />
                             </div>
 
                             {/* Last Name Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="last_name" className="text-[15px] font-bold text-gray-900">
+                                <Label htmlFor="last_name" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                     Last Name
                                 </Label>
-                                <p className="text-sm text-gray-500">Your last name</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Your last name</p>
                                 <Input
                                     id="last_name"
                                     value={profile.last_name}
                                     onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
                                     placeholder="Enter your last name"
                                 />
                             </div>
 
                             {/* Email Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-[15px] font-bold text-gray-900">
+                                <Label htmlFor="email" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                     Email address
                                 </Label>
-                                <p className="text-sm text-gray-500">The email address associated with this account</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">The email address associated with this account</p>
                                 <Input
                                     id="email"
                                     type="email"
                                     value={profile.email}
                                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
                                 />
                             </div>
 
                             {/* Phone Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-[15px] font-bold text-gray-900">
+                                <Label htmlFor="phone" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                     Phone number
                                 </Label>
-                                <p className="text-sm text-gray-500">The phone number associated with this account</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">The phone number associated with this account</p>
                                 <Input
                                     id="phone"
                                     value={profile.phone}
                                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
                                     placeholder="+8801815553036"
                                 />
                             </div>
@@ -349,23 +349,23 @@ export function ProfileContent() {
                         <>
                             {/* New Password Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="newPassword" className="text-[15px] font-bold text-gray-900">
+                                <Label htmlFor="newPassword" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                     New Password
                                 </Label>
-                                <p className="text-sm text-gray-500">Enter your new password</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Enter your new password</p>
                                 <div className="relative">
                                     <Input
                                         id="newPassword"
                                         type={showNewPassword ? "text" : "password"}
                                         value={passwords.newPassword}
                                         onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                                        className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent pr-10"
+                                        className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
                                         placeholder="••••••••"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowNewPassword(!showNewPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
                                     >
                                         {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
@@ -374,23 +374,23 @@ export function ProfileContent() {
 
                             {/* Confirm Password Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="confirmPassword" className="text-[15px] font-bold text-gray-900">
+                                <Label htmlFor="confirmPassword" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                     Confirm Password
                                 </Label>
-                                <p className="text-sm text-gray-500">Confirm your new password</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Confirm your new password</p>
                                 <div className="relative">
                                     <Input
                                         id="confirmPassword"
                                         type={showConfirmPassword ? "text" : "password"}
                                         value={passwords.confirmPassword}
                                         onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                                        className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent pr-10"
+                                        className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
                                         placeholder="••••••••"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
                                     >
                                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
@@ -404,7 +404,7 @@ export function ProfileContent() {
                         <Button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-[#1a1c1e] hover:bg-[#2a2c2e] text-white font-semibold px-8 py-2.5 rounded-lg transition-all duration-200"
+                            className="bg-[#1a1c1e] dark:bg-gray-100 hover:bg-[#2a2c2e] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold px-8 py-2.5 rounded-lg transition-all duration-200"
                         >
                             Save
                         </Button>

@@ -68,26 +68,26 @@ export function PhoneCallFlowsContent() {
     const availableFlows = flows.filter(f => !f.is_purchased)
 
     const FlowCard = ({ flow, type }: { flow: Flow, type: 'your' | 'available' }) => (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow duration-200">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow duration-200">
             {/* Logo Section */}
-            <div className="p-4 flex gap-2 border-b border-gray-100">
-                <div className="w-14 h-14 border border-gray-200 rounded-md p-2 flex items-center justify-center bg-white">
-                    <img src="/images/JobAdder.jpg" alt="JobAdder" className="max-w-full h-auto" />
+            <div className="p-4 flex gap-2 border-b border-gray-100 dark:border-gray-700">
+                <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
+                    <img src="/images/JobAdder.jpg" alt="JobAdder" className="max-w-full h-auto brightness-100" />
                 </div>
-                <div className="w-14 h-14 border border-gray-200 rounded-md p-2 flex items-center justify-center bg-white">
-                    <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="max-w-full h-auto" />
+                <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
+                    <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="max-w-full h-auto brightness-100" />
                 </div>
             </div>
 
             {/* Content Section */}
             <div className="p-6 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 leading-tight">{flow.name}</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">{flow.name}</h3>
+                    <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                         <span className="text-sm font-medium underline">More</span>
                     </button>
                 </div>
-                <p className="text-gray-500 text-[15px] leading-relaxed mb-6 line-clamp-2">
+                <p className="text-gray-500 dark:text-gray-400 text-[15px] leading-relaxed mb-6 line-clamp-2">
                     {flow.description}
                 </p>
 
@@ -95,7 +95,7 @@ export function PhoneCallFlowsContent() {
                     {type === 'available' ? (
                         <>
                             <Button
-                                className="bg-[#0f172a] hover:bg-[#1e293b] text-white font-bold h-11 px-8 rounded-lg text-sm transition-all shadow-sm"
+                                className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold h-11 px-8 rounded-lg text-sm transition-all shadow-sm"
                                 onClick={() => handleSelectClick(flow)}
                             >
                                 Select
@@ -104,7 +104,7 @@ export function PhoneCallFlowsContent() {
                     ) : (
                         <>
                             <Button
-                                className="bg-[#e2e8f0] hover:bg-[#cbd5e1] text-[#64748b] font-bold h-11 px-8 rounded-lg text-sm transition-all border-none"
+                                className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-bold h-11 px-8 rounded-lg text-sm transition-all border-none"
                                 onClick={() => handleConfigureClick(flow)}
                             >
                                 Configure
@@ -117,7 +117,7 @@ export function PhoneCallFlowsContent() {
     )
 
     return (
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
             {/* <LoaderOverlay isLoading={isLoading} /> */}
             {toast && (
                 <ToastNotification
@@ -130,22 +130,22 @@ export function PhoneCallFlowsContent() {
 
             <div className="max-w-7xl mx-auto space-y-12">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Phone call Flows</h1>
-                    <p className="text-gray-500">Enable and manage your AI-powered recruitment call flows.</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Phone call Flows</h1>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered recruitment call flows.</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Your Flows (Left) */}
-                    <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 shadow-sm">
                         <div className="space-y-6">
                             <div className="flex items-baseline gap-3">
-                                <h2 className="text-2xl font-bold text-gray-900">Your Flows</h2>
-                                <span className="text-sm font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{yourFlows.length}</span>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Your Flows</h2>
+                                <span className="text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{yourFlows.length}</span>
                             </div>
                             {yourFlows.length === 0 && !isLoading ? (
-                                <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
-                                    <p className="text-gray-500 font-medium">You haven't selected any flows yet.</p>
-                                    <p className="text-sm text-gray-400 mt-1">Choose from available flows on the right.</p>
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400 font-medium">You haven't selected any flows yet.</p>
+                                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Choose from available flows on the right.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-6">
@@ -158,15 +158,15 @@ export function PhoneCallFlowsContent() {
                     </div>
 
                     {/* Available Flows (Right) */}
-                    <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 shadow-sm">
                         <div className="space-y-6">
                             <div className="flex items-baseline gap-3">
-                                <h2 className="text-2xl font-bold text-gray-900">Available Flows</h2>
-                                <span className="text-sm font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{availableFlows.length}</span>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Available Flows</h2>
+                                <span className="text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{availableFlows.length}</span>
                             </div>
                             {availableFlows.length === 0 && !isLoading ? (
-                                <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
-                                    <p className="text-gray-500 font-medium">No more available flows.</p>
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400 font-medium">No more available flows.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-6">
@@ -181,17 +181,17 @@ export function PhoneCallFlowsContent() {
             </div>
 
             <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
-                <AlertDialogContent>
+                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className={resultTitle === "Error" ? "text-destructive" : "text-primary"}>
+                        <AlertDialogTitle className={resultTitle === "Error" ? "text-destructive dark:text-red-400" : "text-primary dark:text-green-400"}>
                             {resultTitle}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-base">
+                        <AlertDialogDescription className="text-base dark:text-gray-400 font-medium">
                             {resultMessage}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogAction onClick={() => setShowResultDialog(false)}>
+                        <AlertDialogAction onClick={() => setShowResultDialog(false)} className="dark:bg-gray-100 dark:text-gray-900">
                             OK
                         </AlertDialogAction>
                     </AlertDialogFooter>
