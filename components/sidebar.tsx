@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MessageCircle,
   Zap,
@@ -40,9 +40,19 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const [showUserPanel, setShowUserPanel] = useState(false);
-  const [isSettingsView, setIsSettingsView] = useState(false);
   const pathname = usePathname();
+  // Check if current route is a settings page to initialize the view
+  const isSettingsPage = pathname === '/dashboard/profile' || pathname === '/dashboard/organization';
+
+  const [showUserPanel, setShowUserPanel] = useState(false);
+  const [isSettingsView, setIsSettingsView] = useState(isSettingsPage);
+
+  // Sync state if navigating to a settings page specifically
+  useEffect(() => {
+    if (isSettingsPage) {
+      setIsSettingsView(true);
+    }
+  }, [isSettingsPage]);
 
   const menuItems = [
     { icon: LayoutGrid, label: 'Dashboard', href: '/dashboard', isBold: true },
