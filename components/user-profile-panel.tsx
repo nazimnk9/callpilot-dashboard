@@ -1,17 +1,42 @@
 'use client';
 
 import { LogOut, Sun, Moon, Monitor } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cookieUtils } from '@/services/auth-service';
+import { profileService } from '@/services/profile-service';
 
 interface UserProfilePanelProps {
   onClose: () => void;
 }
 
+interface UserData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+}
+
 export function UserProfilePanel({ onClose }: UserProfilePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await profileService.getProfile();
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleLogout = () => {
     cookieUtils.set('access', '', -1);
@@ -34,6 +59,9 @@ export function UserProfilePanel({ onClose }: UserProfilePanelProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
+  const fullName = userData ? `${userData.first_name} ${userData.last_name}` : "Loading...";
+  const email = userData ? userData.email : "Loading...";
+
   return (
     <div
       ref={panelRef}
@@ -42,8 +70,12 @@ export function UserProfilePanel({ onClose }: UserProfilePanelProps) {
       {/* User Info */}
       <div className="mb-4">
         <div className="flex flex-col mb-4">
-          <p className="text-[15px] font-bold text-gray-900">Md. Nazim Ahmed</p>
-          <p className="text-[13px] text-gray-500 truncate">nazimahmedprovat@gmail.c...</p>
+          <p className="text-[15px] font-bold text-gray-900">
+            {isLoading ? "Loading..." : fullName}
+          </p>
+          <p className="text-[13px] text-gray-500 truncate">
+            {isLoading ? "Loading..." : email}
+          </p>
         </div>
 
         {/* Theme Toggles */}
@@ -65,7 +97,7 @@ export function UserProfilePanel({ onClose }: UserProfilePanelProps) {
       {/* Menu Items */}
       <nav className="space-y-1">
         <a
-          href="#"
+          href="/dashboard/profile"
           className="block text-[14px] font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-xl transition"
         >
           Your profile
