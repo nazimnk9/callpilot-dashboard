@@ -156,7 +156,7 @@ export function ProfileContent() {
                             }`}
                     >
                         Security
-                        {activeTab !== "Security" && <ExternalLink size={14} className="text-gray-400" />}
+                        {/* {activeTab === "Security" && <ExternalLink size={14} className="text-gray-400" />} */}
                         {activeTab === "Security" && (
                             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900" />
                         )}
