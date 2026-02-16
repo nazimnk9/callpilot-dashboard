@@ -4,16 +4,31 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { ExternalLink } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { profileService } from "@/services/profile-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
-import { ToastNotification } from "@/components/auth/toast-notification"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export function ProfileContent() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
+    const [initialProfile, setInitialProfile] = useState({
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone: ""
+    })
     const [profile, setProfile] = useState({
-        name: "",
+        first_name: "",
+        last_name: "",
         email: "",
         phone: ""
     })
@@ -21,12 +36,21 @@ export function ProfileContent() {
         newPassword: "",
         confirmPassword: ""
     })
+    const [showNewPassword, setShowNewPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [activeTab, setActiveTab] = useState("User")
-    const [toast, setToast] = useState<{
+
+    const [alertConfig, setAlertConfig] = useState<{
+        open: boolean
         title: string
-        description: string
+        description: string[]
         variant: "default" | "destructive"
-    } | null>(null)
+    }>({
+        open: false,
+        title: "",
+        description: [],
+        variant: "default"
+    })
 
     useEffect(() => {
         fetchProfile()
@@ -37,17 +61,21 @@ export function ProfileContent() {
             setIsLoading(true)
             const response = await profileService.getProfile()
             const data = response.data
-            setProfile({
-                name: data.name || "",
+            const profileData = {
+                first_name: data.first_name || "",
+                last_name: data.last_name || "",
                 email: data.email || "",
-                phone: data.phone || data.mobile_number || "" // Adjust based on actual API field
-            })
+                phone: data.phone || data.mobile_number || ""
+            }
+            setInitialProfile(profileData)
+            setProfile(profileData)
         } catch (err: any) {
             console.error("Error fetching profile:", err)
-            setToast({
+            setAlertConfig({
+                open: true,
                 title: "Error",
-                description: "Failed to load profile data",
-                variant: "destructive",
+                description: ["Failed to load profile data. Please try again later."],
+                variant: "destructive"
             })
         } finally {
             setIsLoading(false)
@@ -56,63 +84,139 @@ export function ProfileContent() {
 
     const handleSave = async () => {
         if (activeTab === "User") {
-            try {
-                setIsSaving(true)
-                await profileService.updateProfile({
-                    name: profile.name,
-                })
-                setToast({
-                    title: "Success",
-                    description: "Profile updated successfully",
-                    variant: "default",
-                })
-            } catch (err: any) {
-                console.error("Error updating profile:", err)
-                setToast({
-                    title: "Error",
-                    description: "Failed to update profile",
-                    variant: "destructive",
-                })
-            } finally {
-                setIsSaving(false)
-            }
-        } else {
-            // Security Tab - Password Change
-            if (!passwords.newPassword || !passwords.confirmPassword) {
-                setToast({
-                    title: "Error",
-                    description: "Please fill in all password fields",
-                    variant: "destructive",
-                })
-                return
-            }
-            if (passwords.newPassword !== passwords.confirmPassword) {
-                setToast({
-                    title: "Error",
-                    description: "Passwords do not match",
-                    variant: "destructive",
+            // Partial Patch Logic
+            const payload: any = {}
+            if (profile.first_name !== initialProfile.first_name) payload.first_name = profile.first_name
+            if (profile.last_name !== initialProfile.last_name) payload.last_name = profile.last_name
+            if (profile.email !== initialProfile.email) payload.email = profile.email
+            if (profile.phone !== initialProfile.phone) payload.phone = profile.phone
+
+            if (Object.keys(payload).length === 0) {
+                setAlertConfig({
+                    open: true,
+                    title: "No Changes",
+                    description: ["No modifications detected to save."],
+                    variant: "default"
                 })
                 return
             }
 
             try {
                 setIsSaving(true)
-                await profileService.updatePassword({
+                const response = await profileService.updateProfile(payload)
+                const updatedData = {
+                    first_name: response.data.first_name || profile.first_name,
+                    last_name: response.data.last_name || profile.last_name,
+                    email: response.data.email || profile.email,
+                    phone: response.data.phone || response.data.mobile_number || profile.phone
+                }
+                setProfile(updatedData)
+                setInitialProfile(updatedData)
+                setAlertConfig({
+                    open: true,
+                    title: "Success",
+                    description: ["Profile updated successfully."],
+                    variant: "default"
+                })
+            } catch (err: any) {
+                console.error("Error updating profile:", err)
+                if (err.response?.data) {
+                    const errors = err.response.data
+                    const errorMessages: string[] = []
+                    Object.keys(errors).forEach((key) => {
+                        if (Array.isArray(errors[key])) {
+                            errorMessages.push(`${key}: ${errors[key][0]}`)
+                        } else if (typeof errors[key] === 'string') {
+                            errorMessages.push(`${key}: ${errors[key]}`)
+                        }
+                    })
+                    setAlertConfig({
+                        open: true,
+                        title: "Update Failed",
+                        description: errorMessages.length > 0 ? errorMessages : ["An unexpected error occurred."],
+                        variant: "destructive"
+                    })
+                } else {
+                    setAlertConfig({
+                        open: true,
+                        title: "Error",
+                        description: ["Failed to update profile. Please try again."],
+                        variant: "destructive"
+                    })
+                }
+            } finally {
+                setIsSaving(false)
+            }
+        } else {
+            // Security Tab - Password Change
+            if (!passwords.newPassword || !passwords.confirmPassword) {
+                setAlertConfig({
+                    open: true,
+                    title: "Validation Error",
+                    description: ["Please fill in all password fields."],
+                    variant: "destructive"
+                })
+                return
+            }
+            if (passwords.newPassword !== passwords.confirmPassword) {
+                setAlertConfig({
+                    open: true,
+                    title: "Validation Error",
+                    description: ["Passwords do not match."],
+                    variant: "destructive"
+                })
+                return
+            }
+
+            try {
+                setIsSaving(true)
+                const response = await profileService.updatePassword({
                     password: passwords.newPassword,
                 })
-                setToast({
+
+                // Update profile data with any changes returned from the API
+                const updatedData = {
+                    first_name: response.data.first_name || profile.first_name,
+                    last_name: response.data.last_name || profile.last_name,
+                    email: response.data.email || profile.email,
+                    phone: response.data.phone || response.data.mobile_number || profile.phone
+                }
+                setProfile(updatedData)
+                setInitialProfile(updatedData)
+
+                setAlertConfig({
+                    open: true,
                     title: "Success",
-                    description: "Password updated successfully",
-                    variant: "default",
+                    description: ["Password updated successfully."],
+                    variant: "default"
                 })
                 setPasswords({ newPassword: "", confirmPassword: "" })
             } catch (err: any) {
                 console.error("Error updating password:", err)
-                setToast({
-                    title: "Error",
-                    description: "Failed to update password",
-                    variant: "destructive",
-                })
+                if (err.response?.data) {
+                    const errors = err.response.data
+                    const errorMessages: string[] = []
+                    Object.keys(errors).forEach((key) => {
+                        if (Array.isArray(errors[key])) {
+                            errorMessages.push(`${key}: ${errors[key][0]}`)
+                        } else if (typeof errors[key] === 'string') {
+                            errorMessages.push(`${key}: ${errors[key]}`)
+                        }
+                    })
+                    setAlertConfig({
+                        open: true,
+                        title: "Update Failed",
+                        description: errorMessages.length > 0 ? errorMessages : ["An unexpected error occurred during password update."],
+                        variant: "destructive"
+                    })
+                } else {
+                    setAlertConfig({
+                        open: true,
+                        title: "Error",
+                        description: ["Failed to update password. Please try again."],
+                        variant: "destructive"
+                    })
+                }
             } finally {
                 setIsSaving(false)
             }
@@ -123,14 +227,27 @@ export function ProfileContent() {
         <main className="flex-1 overflow-y-auto bg-white p-4 md:p-8">
             <LoaderOverlay isLoading={isLoading || isSaving} />
 
-            {toast && (
-                <ToastNotification
-                    title={toast.title}
-                    description={toast.description}
-                    variant={toast.variant}
-                    onClose={() => setToast(null)}
-                />
-            )}
+            <AlertDialog open={alertConfig.open} onOpenChange={(open) => setAlertConfig(prev => ({ ...prev, open }))}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className={alertConfig.variant === "destructive" ? "text-destructive" : ""}>
+                            {alertConfig.title}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-2">
+                            {alertConfig.description.map((error, index) => (
+                                <p key={index} className="text-sm font-medium text-gray-900">
+                                    {error}
+                                </p>
+                            ))}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction onClick={() => setAlertConfig(prev => ({ ...prev, open: false }))}>
+                            OK
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Page Title */}
@@ -156,7 +273,6 @@ export function ProfileContent() {
                             }`}
                     >
                         Security
-                        {/* {activeTab === "Security" && <ExternalLink size={14} className="text-gray-400" />} */}
                         {activeTab === "Security" && (
                             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900" />
                         )}
@@ -167,18 +283,33 @@ export function ProfileContent() {
                 <div className="max-w-md space-y-8 pt-4">
                     {activeTab === "User" ? (
                         <>
-                            {/* Name Field */}
+                            {/* First Name Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="name" className="text-[15px] font-bold text-gray-900">
-                                    Name
+                                <Label htmlFor="first_name" className="text-[15px] font-bold text-gray-900">
+                                    First Name
                                 </Label>
-                                <p className="text-sm text-gray-500">The name associated with this account</p>
+                                <p className="text-sm text-gray-500">Your first name</p>
                                 <Input
-                                    id="name"
-                                    value={profile.name}
-                                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                                    id="first_name"
+                                    value={profile.first_name}
+                                    onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
                                     className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
-                                    placeholder="Enter your name"
+                                    placeholder="Enter your first name"
+                                />
+                            </div>
+
+                            {/* Last Name Field */}
+                            <div className="space-y-2">
+                                <Label htmlFor="last_name" className="text-[15px] font-bold text-gray-900">
+                                    Last Name
+                                </Label>
+                                <p className="text-sm text-gray-500">Your last name</p>
+                                <Input
+                                    id="last_name"
+                                    value={profile.last_name}
+                                    onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
+                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
+                                    placeholder="Enter your last name"
                                 />
                             </div>
 
@@ -192,8 +323,8 @@ export function ProfileContent() {
                                     id="email"
                                     type="email"
                                     value={profile.email}
-                                    readOnly
-                                    className="h-11 rounded-xl border-gray-200 bg-white text-gray-400 cursor-not-allowed"
+                                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
                                 />
                             </div>
 
@@ -206,9 +337,9 @@ export function ProfileContent() {
                                 <Input
                                     id="phone"
                                     value={profile.phone}
-                                    readOnly
-                                    className="h-11 rounded-xl border-gray-200 bg-white text-gray-400 cursor-not-allowed"
-                                    placeholder="+000000000000"
+                                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
+                                    placeholder="+8801815553036"
                                 />
                             </div>
                         </>
@@ -220,14 +351,23 @@ export function ProfileContent() {
                                     New Password
                                 </Label>
                                 <p className="text-sm text-gray-500">Enter your new password</p>
-                                <Input
-                                    id="newPassword"
-                                    type="password"
-                                    value={passwords.newPassword}
-                                    onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
-                                    placeholder="••••••••"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="newPassword"
+                                        type={showNewPassword ? "text" : "password"}
+                                        value={passwords.newPassword}
+                                        onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                                        className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent pr-10"
+                                        placeholder="••••••••"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Confirm Password Field */}
@@ -236,14 +376,23 @@ export function ProfileContent() {
                                     Confirm Password
                                 </Label>
                                 <p className="text-sm text-gray-500">Confirm your new password</p>
-                                <Input
-                                    id="confirmPassword"
-                                    type="password"
-                                    value={passwords.confirmPassword}
-                                    onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent"
-                                    placeholder="••••••••"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        value={passwords.confirmPassword}
+                                        onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                                        className="h-11 rounded-xl border-gray-200 focus:ring-1 focus:ring-gray-300 focus:border-transparent pr-10"
+                                        placeholder="••••••••"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
                         </>
                     )}

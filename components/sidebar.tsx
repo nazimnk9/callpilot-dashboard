@@ -100,15 +100,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Tabs */}
         <div className="px-4 py-2 md:hidden">
           <div className="flex bg-gray-100/80 p-1 rounded-lg">
-            {/* <button className="flex-1 py-1.5 text-xs font-semibold bg-white rounded-md shadow-sm text-gray-900">
-              Dashboard
-            </button> */}
-            {/* <button className="flex-1 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700">
-              Docs
-            </button>
-            <button className="flex-1 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700">
-              API
-            </button> */}
+            {/* Tab content removed as per design request */}
           </div>
         </div>
 
@@ -153,14 +145,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="border-t border-gray-100 px-7 py-6 bg-white relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* <button className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900">
-                <Code size={16} className="text-gray-500" />
-                <span>Cookbook</span>
-              </button>
-              <button className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900">
-                <Users size={16} className="text-gray-500" />
-                <span>Forum</span>
-              </button> */}
               <button
                 onClick={() => setIsSettingsView(!isSettingsView)}
                 className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900"
@@ -181,16 +165,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <button
               onClick={() => setShowUserPanel(!showUserPanel)}
-              className="relative md:hidden"
+              className="relative md:hidden w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center bg-gray-50 text-gray-600 hover:bg-gray-100 transition"
+              aria-label="User menu"
             >
-              <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-N6qL6R8Z6X9Y2P4M7G5S1F3H0B2J4K.png"
-                alt="User Profile"
-                className="w-8 h-8 rounded-full border border-gray-100"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Md";
-                }}
-              />
+              <User size={18} />
             </button>
           </div>
 

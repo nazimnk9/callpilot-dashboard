@@ -18,14 +18,15 @@ api.interceptors.request.use((config) => {
 
 export const profileService = {
     async getProfile() {
-        return api.get("/organizations/me");
+        return api.get("/me/");
     },
 
     async updateProfile(data: any) {
-        return api.patch("/organizations/me", data);
+        return api.patch("/me/", data);
     },
 
     async updatePassword(data: any) {
-        return api.post("/token/reset-password", data); // Adjusting based on common patterns, will check if user provided specific one
+        // Based on user request, password is patched to /me/ as well
+        return api.patch("/me/", data);
     }
 };
