@@ -61,7 +61,7 @@ export function NumberListPage() {
     }
 
     return (
-        <div className="flex-1 overflow-y-auto bg-background">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950">
             <LoaderOverlay isLoading={isLoading} />
 
             {toast && (
@@ -99,7 +99,7 @@ export function NumberListPage() {
 
                 {/* Phone Numbers List */}
                 {phoneNumbers.length === 0 && !isLoading ? (
-                    <Card className="border-2 border-border shadow-sm">
+                    <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
                         <CardContent className="pt-12 pb-12 text-center">
                             <Phone className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                             <p className="text-muted-foreground font-medium">No phone numbers found</p>
@@ -111,9 +111,9 @@ export function NumberListPage() {
                         {phoneNumbers.map((number) => (
                             <Card
                                 key={number.id}
-                                className="border-2 border-border hover:shadow-lg hover:border-primary/50 transition-all duration-300 shadow-sm"
+                                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-primary/50 transition-all duration-300 shadow-sm"
                             >
-                                <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border p-6">
+                                <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-start gap-3 flex-1">
                                             <div className="p-2.5 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg">

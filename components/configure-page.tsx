@@ -313,7 +313,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     }
 
     return (
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-900/50 p-4 md:p-8">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
             <LoaderOverlay
                 isLoading={isLoading || isSaving}
             />

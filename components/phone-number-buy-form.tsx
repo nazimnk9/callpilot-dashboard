@@ -246,7 +246,7 @@ export function PhoneNumberBuyForm() {
                 onSuccess={handleFinalSubmitSuccess}
             />
 
-            <div className="p-4 md:p-8 space-y-8">
+            <div className="p-4 md:p-8 space-y-8 bg-white dark:bg-gray-950">
                 {/* Header */}
                 <div className="space-y-4">
                     <div>
@@ -255,8 +255,8 @@ export function PhoneNumberBuyForm() {
                     </div>
                 </div>
 
-                <Card className="border-2 border-border shadow-lg">
-                    <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border p-6">
+                <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
+                    <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
                         <CardTitle className="text-2xl">Phone Number Purchase</CardTitle>
                         <CardDescription>Select your preferred country, phone number, and bundle</CardDescription>
                     </CardHeader>

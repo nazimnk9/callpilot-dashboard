@@ -92,7 +92,7 @@ export function CallLogsContent() {
     }
 
     return (
-        <div className="flex-1 overflow-y-auto bg-background">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950">
             <LoaderOverlay isLoading={isLoading} />
 
             {toast && (
@@ -114,8 +114,8 @@ export function CallLogsContent() {
                 </div>
 
                 {/* Table Section */}
-                <Card className="border shadow-sm">
-                    <CardHeader className="bg-muted/50 border-b">
+                <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                         <CardTitle className="text-lg flex items-center gap-2">
                             <FileText className="w-5 h-5" />
                             Interview Records
