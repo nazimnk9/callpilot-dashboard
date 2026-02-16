@@ -10,7 +10,7 @@ const _geistMono = Geist_Mono({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Chat Prompts - Dashboard',
   description: 'Create and manage chat prompts with AI assistance',
-  generator: 'v0.app',
+  icons: [],
 }
 
 export default function RootLayout({
@@ -19,7 +19,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body className="font-sans antialiased">{children}</body>
     </html>
   )
