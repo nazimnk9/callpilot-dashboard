@@ -31,7 +31,7 @@ import {
   User,
   CreditCard,
 } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { UserProfilePanel } from './user-profile-panel';
 
 interface SidebarProps {
@@ -41,6 +41,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   // Check if current route is a settings page to initialize the view
   const isSettingsPage = pathname === '/dashboard/profile' || pathname === '/dashboard/organization';
 
@@ -51,8 +52,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   useEffect(() => {
     if (isSettingsPage) {
       setIsSettingsView(true);
+    } else if (pathname === '/dashboard') {
+      setIsSettingsView(false);
     }
-  }, [isSettingsPage]);
+  }, [pathname, isSettingsPage]);
 
   const menuItems = [
     { icon: LayoutGrid, label: 'Dashboard', href: '/dashboard', isBold: true },
@@ -74,6 +77,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   ];
 
   const currentMenuItems = isSettingsView ? settingsMenuItems : menuItems;
+
+  const handleViewToggle = () => {
+    if (isSettingsView) {
+      // Switching from Settings back to Dashboard
+      setIsSettingsView(false);
+      router.push('/dashboard');
+    } else {
+      // Switching from Dashboard to Settings
+      setIsSettingsView(true);
+      router.push('/dashboard/profile');
+    }
+  };
 
   return (
     <>
@@ -155,7 +170,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setIsSettingsView(!isSettingsView)}
+                onClick={handleViewToggle}
                 className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-lg"
               >
                 {isSettingsView ? (
