@@ -129,7 +129,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <a
                   key={index}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 text-[15px] rounded-lg transition-colors group ${isActive
+                  className={`text-lg flex items-center gap-3 px-3 py-2 text-[15px] rounded-lg transition-colors group ${isActive
                     ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
@@ -156,16 +156,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSettingsView(!isSettingsView)}
-                className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-lg"
               >
                 {isSettingsView ? (
                   <>
-                    <LayoutGrid size={16} strokeWidth={2.5} className="text-gray-500 dark:text-gray-500" />
+                    <LayoutGrid size={16} strokeWidth={2.5} className="text-gray-500 dark:text-gray-500 h-[18px] w-[18px]" />
                     <span>Dashboard</span>
                   </>
                 ) : (
                   <>
-                    <Settings size={16} strokeWidth={2.5} className="text-gray-500 dark:text-gray-500" />
+                    <Settings size={16} strokeWidth={2.5} className="text-gray-500 dark:text-gray-500 h-[18px] w-[18px]" />
                     <span>Settings</span>
                   </>
                 )}
