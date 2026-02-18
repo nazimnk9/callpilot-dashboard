@@ -23,5 +23,13 @@ export const interviewService = {
 
     async getInterviewById(id: number | string) {
         return api.get(`/interview/${id}/`);
+    },
+
+    async retryInterviews(limit: number) {
+        return api.post(`/interview/retry/`, { limit });
+    },
+
+    async retrySingleInterview(uid: string) {
+        return api.post(`/interview/retry/${uid}`);
     }
 };

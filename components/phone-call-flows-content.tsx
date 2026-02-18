@@ -16,6 +16,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import Link from "next/link"
 
 interface Flow {
     id: number
@@ -104,11 +105,18 @@ export function PhoneCallFlowsContent() {
                     ) : (
                         <>
                             <Button
-                                className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-bold h-11 px-8 rounded-lg text-sm transition-all border-none"
+                                className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold h-11 px-8 rounded-lg text-sm transition-all shadow-sm"
                                 onClick={() => handleConfigureClick(flow)}
                             >
                                 Configure
                             </Button>
+                            <Link href={`/dashboard/report/${flow.uid}`}>
+                                <Button
+                                    className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-bold h-11 px-8 rounded-lg text-sm transition-all border-none"
+                                >
+                                    Interviews
+                                </Button>
+                            </Link>
                         </>
                     )}
                 </div>
@@ -129,35 +137,45 @@ export function PhoneCallFlowsContent() {
             )}
 
             <div className="max-w-7xl mx-auto space-y-12">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Phone call Flows</h1>
-                    <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered recruitment call flows.</p>
+                <div className="flex flex-row justify-between">
+                    <div className="flex flex-col gap-1">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Phone call Flows</h1>
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered recruitment call flows.</p>
+                    </div>
+                    <div>
+                        <Button
+                            variant="default"
+                            className="bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold transition-all duration-200 gap-2"
+                        >
+                            Browse Ready-made Flows
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    {/* Your Flows (Left) */}
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 shadow-sm">
-                        <div className="space-y-6">
-                            <div className="flex items-baseline gap-3">
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Your Flows</h2>
-                                <span className="text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{yourFlows.length}</span>
-                            </div>
-                            {yourFlows.length === 0 && !isLoading ? (
-                                <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-12 text-center">
-                                    <p className="text-gray-500 dark:text-gray-400 font-medium">You haven't selected any flows yet.</p>
-                                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Choose from available flows on the right.</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 gap-6">
-                                    {yourFlows.map(flow => (
-                                        <FlowCard key={flow.id} flow={flow} type="your" />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                {/* <div className="grid grid-cols-1 lg:grid-cols-1 gap-12"> */}
+                {/* Your Flows (Left) */}
+                {/* <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 shadow-sm"> */}
+                <div className="space-y-6">
+                    <div className="flex items-baseline gap-3">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Your Flows</h2>
+                        <span className="text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{yourFlows.length}</span>
                     </div>
+                    {yourFlows.length === 0 && !isLoading ? (
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-12 text-center">
+                            <p className="text-gray-500 dark:text-gray-400 font-medium">You haven't selected any flows yet.</p>
+                            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Choose from available flows on the right.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {yourFlows.map(flow => (
+                                <FlowCard key={flow.id} flow={flow} type="your" />
+                            ))}
+                        </div>
+                    )}
+                </div>
+                {/* </div> */}
 
-                    {/* Available Flows (Right) */}
+                {/* Available Flows (Right)
                     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 shadow-sm">
                         <div className="space-y-6">
                             <div className="flex items-baseline gap-3">
@@ -176,8 +194,8 @@ export function PhoneCallFlowsContent() {
                                 </div>
                             )}
                         </div>
-                    </div>
-                </div>
+                    </div> */}
+                {/* </div> */}
             </div>
 
             <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
