@@ -12,6 +12,15 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { interviewService } from "@/services/interview-service"
 import { flowService } from "@/services/flow-service"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 // Interfaces based on user provided JSON structure
 interface ChatMessage {
@@ -52,6 +61,11 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
     const [isRecallModalOpen, setIsRecallModalOpen] = useState(false)
     const [recallLimit, setRecallLimit] = useState("5")
     const [isRecalling, setIsRecalling] = useState(false)
+
+    // Result Dialog State
+    const [showResultDialog, setShowResultDialog] = useState(false)
+    const [resultMessage, setResultMessage] = useState("")
+    const [resultTitle, setResultTitle] = useState("")
 
     // Main Reports State
     const [reports, setReports] = useState<DisplayReportItem[]>([])
@@ -121,18 +135,17 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
         try {
             setIsRecalling(true)
             await interviewService.retryInterviews(Number(recallLimit))
-            toast({
-                title: "Success",
-                description: "Retry call process started successfully."
-            })
+            setResultTitle("Success")
+            setResultMessage("Retry call process started successfully.")
+            setShowResultDialog(true)
             setIsRecallModalOpen(false)
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error retrying calls:", error)
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to initiate retry calls."
-            })
+            setResultTitle("Error")
+            const errorMessage = error.response?.data?.error || "Failed to initiate retry calls."
+            const aiDecision = error.response?.data?.ai_decision
+            setResultMessage(aiDecision ? `${errorMessage} (AI Decision: ${aiDecision})` : errorMessage)
+            setShowResultDialog(true)
         } finally {
             setIsRecalling(false)
         }
@@ -143,17 +156,16 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
         try {
             setIsRecalling(true)
             await interviewService.retrySingleInterview(uid)
-            toast({
-                title: "Success",
-                description: "Recall initiated successfully."
-            })
-        } catch (error) {
+            setResultTitle("Success")
+            setResultMessage("Recall initiated successfully.")
+            setShowResultDialog(true)
+        } catch (error: any) {
             console.error("Error recalling interview:", error)
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to initiate recall."
-            })
+            setResultTitle("Error")
+            const errorMessage = error.response?.data?.error || "Failed to initiate recall."
+            const aiDecision = error.response?.data?.ai_decision
+            setResultMessage(aiDecision ? `${errorMessage} (AI Decision: ${aiDecision})` : errorMessage)
+            setShowResultDialog(true)
         } finally {
             setIsRecalling(false)
         }
@@ -329,6 +341,24 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
+                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className={resultTitle === "Error" ? "text-destructive dark:text-red-400" : "text-primary dark:text-green-400"}>
+                            {resultTitle}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-base dark:text-gray-400 font-medium">
+                            {resultMessage}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction onClick={() => setShowResultDialog(false)} className="dark:bg-gray-100 dark:text-gray-900">
+                            OK
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
