@@ -32,6 +32,10 @@ export function CRMIntegrationContent() {
         title: "",
         message: "",
     });
+    const [disconnectDialog, setDisconnectDialog] = useState<{ show: boolean; platform: Platform | null }>({
+        show: false,
+        platform: null,
+    });
     const router = useRouter();
     const hasProcessedRef = useRef(false);
 
@@ -151,6 +155,43 @@ export function CRMIntegrationContent() {
         }
     };
 
+    const handleDisconnect = async () => {
+        if (!disconnectDialog.platform || !disconnectDialog.platform.my_platform) return;
+
+        try {
+            setIsIntegrating(true);
+            const authToken = cookieUtils.get("access");
+            if (!authToken) throw new Error("No auth token");
+
+            const response = await crmService.disconnectPlatform(authToken, disconnectDialog.platform.my_platform.uid);
+
+            if (response.ok) {
+                setSuccessDialog({
+                    show: true,
+                    title: "Success",
+                    message: `Successfully disconnected ${disconnectDialog.platform.name}!`,
+                });
+                setDisconnectDialog({ show: false, platform: null });
+                await fetchPlatforms();
+            } else {
+                const data = await response.json();
+                setErrorDialog({
+                    show: true,
+                    title: "Disconnection Error",
+                    message: data.detail || "Failed to disconnect platform",
+                });
+            }
+        } catch (err) {
+            setErrorDialog({
+                show: true,
+                title: "Error",
+                message: "An error occurred while disconnecting the platform",
+            });
+        } finally {
+            setIsIntegrating(false);
+        }
+    };
+
     return (
         <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
             {/* Success Dialog */}
@@ -161,7 +202,7 @@ export function CRMIntegrationContent() {
                         <AlertDialogDescription className="dark:text-gray-400">{successDialog.message}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogAction onClick={() => setSuccessDialog({ ...successDialog, show: false })} className="dark:bg-gray-100 dark:text-gray-900">
+                        <AlertDialogAction onClick={() => setSuccessDialog({ ...successDialog, show: false })} className="dark:bg-100 dark:text-900">
                             OK
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -178,6 +219,33 @@ export function CRMIntegrationContent() {
                     <AlertDialogFooter>
                         <AlertDialogAction onClick={() => setErrorDialog({ ...errorDialog, show: false })} className="dark:bg-gray-100 dark:text-gray-900">
                             Try Again
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Disconnect Confirmation Dialog */}
+            <AlertDialog open={disconnectDialog.show} onOpenChange={(val) => setDisconnectDialog({ ...disconnectDialog, show: val })}>
+                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="dark:text-gray-100">Are you sure to disconnect Your {disconnectDialog.platform?.name} Account from Callpilot?</AlertDialogTitle>
+                        <AlertDialogDescription className="dark:text-gray-400">
+                            This action will remove the integration and disable automation features for this platform.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDisconnectDialog({ show: false, platform: null })}
+                            className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                        >
+                            Cancel
+                        </Button>
+                        <AlertDialogAction
+                            onClick={handleDisconnect}
+                            className="bg-red-600 hover:bg-red-700 text-white border-none"
+                        >
+                            Disconnect
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -234,7 +302,7 @@ export function CRMIntegrationContent() {
                                                     <CardDescription className="mt-2 text-gray-500 dark:text-gray-400">
                                                         {platform.description || `Connect your ${platform.name} account to enable automation features.`}
                                                     </CardDescription>
-                                                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                                                    {/* <div className="mt-3 flex items-center gap-2 flex-wrap">
                                                         <span className="inline-block px-2.5 py-1 bg-green-500/10 dark:bg-green-500/20 rounded-full text-xs font-medium text-green-700 dark:text-green-400">
                                                             Status: {platform.status}
                                                         </span>
@@ -244,12 +312,12 @@ export function CRMIntegrationContent() {
                                                                 Connected
                                                             </span>
                                                         )}
-                                                    </div>
+                                                    </div> */}
                                                 </div>
                                             </div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="flex items-center gap-4">
                                         <Button
                                             onClick={() => handleIntegrate(platform)}
                                             disabled={isIntegrating || platform.is_connected}
@@ -261,6 +329,16 @@ export function CRMIntegrationContent() {
                                             <Zap className="w-4 h-4" />
                                             {platform.is_connected ? "Already Integrated" : `Integrate ${platform.name} Account`}
                                         </Button>
+
+                                        {platform.is_connected && (
+                                            <Button
+                                                onClick={() => setDisconnectDialog({ show: true, platform })}
+                                                disabled={isIntegrating}
+                                                className="bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200"
+                                            >
+                                                Disconnect
+                                            </Button>
+                                        )}
                                     </CardContent>
                                 </Card>
                             ))

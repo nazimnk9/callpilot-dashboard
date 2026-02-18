@@ -1,7 +1,27 @@
 import { BASE_URL } from "@/lib/baseUrl";
 
+export interface MyPlatform {
+    id: number;
+    uid: string;
+    created_at: string;
+    updated_at: string;
+    access_token: string;
+    refresh_token: string;
+    token_type: string;
+    base_url: string;
+    expires_at: string;
+    is_connected: boolean;
+    connected_at: string;
+    last_synced_at: string | null;
+    config: any;
+    status: string;
+    organization: number;
+    platform: number;
+}
+
 export interface Platform {
     id: number;
+    uid: string;
     name: string;
     slug: string;
     description: string;
@@ -15,6 +35,7 @@ export interface Platform {
     response_type: string;
     state: string;
     is_connected: boolean;
+    my_platform: MyPlatform | null;
 }
 
 export interface PlatformResponse {
@@ -44,6 +65,17 @@ export const crmService = {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(data),
+        });
+        return response;
+    },
+
+    async disconnectPlatform(token: string, uid: string) {
+        const response = await fetch(`${BASE_URL}/organizations/platform/my_platforms/${uid}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
         });
         return response;
     },
