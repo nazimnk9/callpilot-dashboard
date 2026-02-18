@@ -17,6 +17,31 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+// Custom Toggle Component matching provided image
+const CustomToggle = ({ checked, onChange, label, description }: { checked: boolean, onChange: (val: boolean) => void, label: string, description: string }) => {
+    return (
+        <div className="space-y-2">
+            <Label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                {label}
+            </Label>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
+            <button
+                onClick={() => onChange(!checked)}
+                className={`relative w-[70px] h-[28px] rounded-full transition-colors duration-200 flex items-center px-1.5 ${checked ? 'bg-[#56CCF2]' : 'bg-gray-300 dark:bg-gray-700'
+                    }`}
+            >
+                <span className={`text-[11px] font-bold text-white uppercase transition-opacity duration-200 ${checked ? 'opacity-100 ml-0.5' : 'opacity-0'}`}>
+                    ON
+                </span>
+                <div
+                    className={`absolute w-[22px] h-[22px] bg-white rounded-full shadow-sm transform transition-transform duration-200 ${checked ? 'right-1' : 'left-1'
+                        }`}
+                />
+            </button>
+        </div>
+    );
+};
+
 export function ProfileContent() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
@@ -24,13 +49,13 @@ export function ProfileContent() {
         first_name: "",
         last_name: "",
         email: "",
-        phone: ""
+        is_otp_required: true
     })
     const [profile, setProfile] = useState({
         first_name: "",
         last_name: "",
         email: "",
-        phone: ""
+        is_otp_required: true
     })
     const [passwords, setPasswords] = useState({
         newPassword: "",
@@ -65,7 +90,7 @@ export function ProfileContent() {
                 first_name: data.first_name || "",
                 last_name: data.last_name || "",
                 email: data.email || "",
-                phone: data.phone || data.mobile_number || ""
+                is_otp_required: data.is_otp_required !== undefined ? data.is_otp_required : true
             }
             setInitialProfile(profileData)
             setProfile(profileData)
@@ -88,8 +113,7 @@ export function ProfileContent() {
             const payload: any = {}
             if (profile.first_name !== initialProfile.first_name) payload.first_name = profile.first_name
             if (profile.last_name !== initialProfile.last_name) payload.last_name = profile.last_name
-            if (profile.email !== initialProfile.email) payload.email = profile.email
-            if (profile.phone !== initialProfile.phone) payload.phone = profile.phone
+            if (profile.is_otp_required !== initialProfile.is_otp_required) payload.is_otp_required = profile.is_otp_required
 
             if (Object.keys(payload).length === 0) {
                 setAlertConfig({
@@ -108,7 +132,7 @@ export function ProfileContent() {
                     first_name: response.data.first_name || profile.first_name,
                     last_name: response.data.last_name || profile.last_name,
                     email: response.data.email || profile.email,
-                    phone: response.data.phone || response.data.mobile_number || profile.phone
+                    is_otp_required: response.data.is_otp_required !== undefined ? response.data.is_otp_required : profile.is_otp_required
                 }
                 setProfile(updatedData)
                 setInitialProfile(updatedData)
@@ -179,7 +203,7 @@ export function ProfileContent() {
                     first_name: response.data.first_name || profile.first_name,
                     last_name: response.data.last_name || profile.last_name,
                     email: response.data.email || profile.email,
-                    phone: response.data.phone || response.data.mobile_number || profile.phone
+                    is_otp_required: response.data.is_otp_required !== undefined ? response.data.is_otp_required : profile.is_otp_required
                 }
                 setProfile(updatedData)
                 setInitialProfile(updatedData)
@@ -325,25 +349,18 @@ export function ProfileContent() {
                                     id="email"
                                     type="email"
                                     value={profile.email}
-                                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
+                                    disabled
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent opacity-70"
                                 />
                             </div>
 
-                            {/* Phone Field */}
-                            <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                    Phone number
-                                </Label>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">The phone number associated with this account</p>
-                                <Input
-                                    id="phone"
-                                    value={profile.phone}
-                                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
-                                    placeholder="+8801815553036"
-                                />
-                            </div>
+                            {/* OTP Toggle Field */}
+                            <CustomToggle
+                                label="OTP required while Login"
+                                description="Enable/Disable OTP requirement during login process"
+                                checked={profile.is_otp_required}
+                                onChange={(val) => setProfile({ ...profile, is_otp_required: val })}
+                            />
                         </>
                     ) : (
                         <>
