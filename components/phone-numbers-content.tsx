@@ -53,13 +53,13 @@ export function PhoneNumbersContent() {
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Phone Numbers</h1>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-8">
+                <div className="border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 group p-8 rounded-xl">
                     <div className="flex items-start gap-4 mb-8">
-                        <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-xl">
-                            <Phone size={24} className="text-gray-900 dark:text-gray-100" />
+                        <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+                            <Phone size={24} className="text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Manage Phone Numbers</h2>
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Manage Phone Numbers</h2>
                             <p className="text-gray-500 dark:text-gray-400 mt-1">Manage the phone numbers used by your automations.</p>
                         </div>
                     </div>
@@ -67,7 +67,7 @@ export function PhoneNumbersContent() {
                     <div className="flex flex-wrap gap-4">
                         <Button
                             variant="default"
-                            className="bg-[#8e97a9] hover:bg-[#7e8799] text-gray-900 font-semibold px-6 py-2 rounded-xl flex items-center gap-2 border-none"
+                            className="bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold transition-all duration-200 gap-2"
                             onClick={() => router.push("/dashboard/number-list")}
                         >
                             <Phone size={18} />
@@ -75,7 +75,7 @@ export function PhoneNumbersContent() {
                         </Button>
                         <Button
                             variant="default"
-                            className="bg-[#8e97a9] hover:bg-[#7e8799] text-gray-900 font-semibold px-6 py-2 rounded-xl flex items-center gap-2 border-none"
+                            className="bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold transition-all duration-200 gap-2"
                             onClick={handleBuyNumber}
                             disabled={isLoading}
                         >

@@ -36,7 +36,9 @@ interface Interview {
     candidate_name: string | null
     candidate_email: string | null
     candidate_phone: string | null
+    from_number: string | null
     job_title: string | null
+    call_duration: string | null
     status: string
     created_at: string
     interview_data: {
@@ -50,6 +52,7 @@ interface Interview {
 export function CallLogsContent() {
     const [interviews, setInterviews] = useState<Interview[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [activeTab, setActiveTab] = useState<"All" | "Incoming" | "Outgoing">("All")
     const [error, setError] = useState("")
     const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -91,6 +94,8 @@ export function CallLogsContent() {
         return new Date(timestamp).toLocaleString()
     }
 
+    const filteredInterviews = activeTab === "Incoming" ? [] : interviews
+
     return (
         <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950">
             <LoaderOverlay isLoading={isLoading} />
@@ -113,6 +118,22 @@ export function CallLogsContent() {
                     </div>
                 </div>
 
+                {/* Tabs */}
+                <div className="flex space-x-1 bg-white dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700 w-fit">
+                    {(["All", "Incoming", "Outgoing"] as const).map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === tab
+                                ? "bg-black dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm"
+                                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Table Section */}
                 <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
                     <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -125,36 +146,38 @@ export function CallLogsContent() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Candidate Name</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Phone</TableHead>
-                                    <TableHead>Job Title</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
+                                    <TableHead></TableHead>
+                                    <TableHead>From</TableHead>
+                                    <TableHead>To</TableHead>
+                                    <TableHead>Duration</TableHead>
+                                    <TableHead>Call Status</TableHead>
+                                    <TableHead>Created at</TableHead>
+                                    <TableHead className="">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {interviews.length === 0 && !isLoading ? (
+                                {filteredInterviews.length === 0 && !isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                                             No call logs found.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    interviews.map((interview) => (
+                                    filteredInterviews.map((interview) => (
                                         <TableRow key={interview.id}>
                                             <TableCell className="font-medium">
-                                                {interview.candidate_name || "N/A"}
+                                                Outgoing
                                             </TableCell>
-                                            <TableCell>{interview.candidate_email || "N/A"}</TableCell>
+                                            <TableCell>{interview.from_number || "N/A"}</TableCell>
                                             <TableCell>{interview.candidate_phone || "N/A"}</TableCell>
-                                            <TableCell>{interview.job_title || "N/A"}</TableCell>
+                                            <TableCell>{interview.call_duration || "N/A"}</TableCell>
                                             <TableCell>
                                                 <Badge variant={interview.status === 'COMPLETED' ? 'default' : 'secondary'}>
                                                     {interview.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell>{formatTimestamp(interview.created_at) || "N/A"}</TableCell>
+                                            <TableCell className="">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
