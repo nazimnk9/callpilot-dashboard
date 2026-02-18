@@ -129,19 +129,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <a
                   key={index}
                   href={item.href}
-                  className={`text-lg flex items-center gap-3 px-3 py-2 text-[15px] rounded-lg transition-colors group ${isActive
+                  className={`flex items-center gap-3 px-3 py-2 text-[15px] rounded-lg transition-colors group ${isActive
                     ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                 >
                   {item.icon && (
                     <item.icon
-                      size={18}
+                      size={20}
                       strokeWidth={isActive ? 3 : 2.5}
                       className={`${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}
                     />
                   )}
-                  <span className={isActive || item.isBold ? 'font-semibold' : 'font-medium'}>
+                  <span className={isActive || item.isBold ? 'text-lg font-semibold' : 'text-lg font-medium'}>
                     {item.label}
                   </span>
                 </a>
