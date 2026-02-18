@@ -16,6 +16,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog"
 
 // Custom Toggle Component matching provided image
 const CustomToggle = ({ checked, onChange, label, description }: { checked: boolean, onChange: (val: boolean) => void, label: string, description: string }) => {
@@ -58,12 +65,15 @@ export function ProfileContent() {
         is_otp_required: true
     })
     const [passwords, setPasswords] = useState({
+        currentPassword: "",
         newPassword: "",
         confirmPassword: ""
     })
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false)
     const [showNewPassword, setShowNewPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [activeTab, setActiveTab] = useState("User")
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
 
     const [alertConfig, setAlertConfig] = useState<{
         open: boolean
@@ -108,142 +118,134 @@ export function ProfileContent() {
     }
 
     const handleSave = async () => {
-        if (activeTab === "User") {
-            // Partial Patch Logic
-            const payload: any = {}
-            if (profile.first_name !== initialProfile.first_name) payload.first_name = profile.first_name
-            if (profile.last_name !== initialProfile.last_name) payload.last_name = profile.last_name
-            if (profile.is_otp_required !== initialProfile.is_otp_required) payload.is_otp_required = profile.is_otp_required
+        // Partial Patch Logic
+        const payload: any = {}
+        if (profile.first_name !== initialProfile.first_name) payload.first_name = profile.first_name
+        if (profile.last_name !== initialProfile.last_name) payload.last_name = profile.last_name
+        if (profile.is_otp_required !== initialProfile.is_otp_required) payload.is_otp_required = profile.is_otp_required
 
-            if (Object.keys(payload).length === 0) {
-                setAlertConfig({
-                    open: true,
-                    title: "No Changes",
-                    description: ["No modifications detected to save."],
-                    variant: "default"
-                })
-                return
-            }
+        if (Object.keys(payload).length === 0) {
+            setAlertConfig({
+                open: true,
+                title: "No Changes",
+                description: ["No modifications detected to save."],
+                variant: "default"
+            })
+            return
+        }
 
-            try {
-                setIsSaving(true)
-                const response = await profileService.updateProfile(payload)
-                const updatedData = {
-                    first_name: response.data.first_name || profile.first_name,
-                    last_name: response.data.last_name || profile.last_name,
-                    email: response.data.email || profile.email,
-                    is_otp_required: response.data.is_otp_required !== undefined ? response.data.is_otp_required : profile.is_otp_required
-                }
-                setProfile(updatedData)
-                setInitialProfile(updatedData)
-                setAlertConfig({
-                    open: true,
-                    title: "Success",
-                    description: ["Profile updated successfully."],
-                    variant: "default"
-                })
-            } catch (err: any) {
-                console.error("Error updating profile:", err)
-                if (err.response?.data) {
-                    const errors = err.response.data
-                    const errorMessages: string[] = []
-                    Object.keys(errors).forEach((key) => {
-                        if (Array.isArray(errors[key])) {
-                            errorMessages.push(`${key}: ${errors[key][0]}`)
-                        } else if (typeof errors[key] === 'string') {
-                            errorMessages.push(`${key}: ${errors[key]}`)
-                        }
-                    })
-                    setAlertConfig({
-                        open: true,
-                        title: "Update Failed",
-                        description: errorMessages.length > 0 ? errorMessages : ["An unexpected error occurred."],
-                        variant: "destructive"
-                    })
-                } else {
-                    setAlertConfig({
-                        open: true,
-                        title: "Error",
-                        description: ["Failed to update profile. Please try again."],
-                        variant: "destructive"
-                    })
-                }
-            } finally {
-                setIsSaving(false)
+        try {
+            setIsSaving(true)
+            const response = await profileService.updateProfile(payload)
+            const updatedData = {
+                first_name: response.data.first_name || profile.first_name,
+                last_name: response.data.last_name || profile.last_name,
+                email: profile.email,
+                is_otp_required: response.data.is_otp_required !== undefined ? response.data.is_otp_required : profile.is_otp_required
             }
-        } else {
-            // Security Tab - Password Change
-            if (!passwords.newPassword || !passwords.confirmPassword) {
+            setProfile(updatedData)
+            setInitialProfile(updatedData)
+            setAlertConfig({
+                open: true,
+                title: "Success",
+                description: ["Profile updated successfully."],
+                variant: "default"
+            })
+        } catch (err: any) {
+            console.error("Error updating profile:", err)
+            if (err.response?.data) {
+                const errors = err.response.data
+                const errorMessages: string[] = []
+                Object.keys(errors).forEach((key) => {
+                    if (Array.isArray(errors[key])) {
+                        errorMessages.push(`${key}: ${errors[key][0]}`)
+                    } else if (typeof errors[key] === 'string') {
+                        errorMessages.push(`${key}: ${errors[key]}`)
+                    }
+                })
                 setAlertConfig({
                     open: true,
-                    title: "Validation Error",
-                    description: ["Please fill in all password fields."],
+                    title: "Update Failed",
+                    description: errorMessages.length > 0 ? errorMessages : ["An unexpected error occurred."],
                     variant: "destructive"
                 })
-                return
-            }
-            if (passwords.newPassword !== passwords.confirmPassword) {
+            } else {
                 setAlertConfig({
                     open: true,
-                    title: "Validation Error",
-                    description: ["Passwords do not match."],
+                    title: "Error",
+                    description: ["Failed to update profile. Please try again."],
                     variant: "destructive"
                 })
-                return
             }
+        } finally {
+            setIsSaving(false)
+        }
+    }
 
-            try {
-                setIsSaving(true)
-                const response = await profileService.updatePassword({
-                    password: passwords.newPassword,
+    const handlePasswordUpdate = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!passwords.currentPassword || !passwords.newPassword || !passwords.confirmPassword) {
+            setAlertConfig({
+                open: true,
+                title: "Validation Error",
+                description: ["Please fill in all password fields."],
+                variant: "destructive"
+            })
+            return
+        }
+        if (passwords.newPassword !== passwords.confirmPassword) {
+            setAlertConfig({
+                open: true,
+                title: "Validation Error",
+                description: ["New passwords do not match."],
+                variant: "destructive"
+            })
+            return
+        }
+
+        try {
+            setIsSaving(true)
+            const response = await profileService.updatePassword({
+                password: passwords.newPassword,
+                old_password: passwords.currentPassword
+            })
+
+            setAlertConfig({
+                open: true,
+                title: "Success",
+                description: ["Password updated successfully."],
+                variant: "default"
+            })
+            setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" })
+            setIsPasswordModalOpen(false)
+        } catch (err: any) {
+            console.error("Error updating password:", err)
+            if (err.response?.data) {
+                const errors = err.response.data
+                const errorMessages: string[] = []
+                Object.keys(errors).forEach((key) => {
+                    if (Array.isArray(errors[key])) {
+                        errorMessages.push(`${key === 'old_password' ? 'Current Password' : key}: ${errors[key][0]}`)
+                    } else if (typeof errors[key] === 'string') {
+                        errorMessages.push(`${key === 'old_password' ? 'Current Password' : key}: ${errors[key]}`)
+                    }
                 })
-
-                // Update profile data with any changes returned from the API
-                const updatedData = {
-                    first_name: response.data.first_name || profile.first_name,
-                    last_name: response.data.last_name || profile.last_name,
-                    email: response.data.email || profile.email,
-                    is_otp_required: response.data.is_otp_required !== undefined ? response.data.is_otp_required : profile.is_otp_required
-                }
-                setProfile(updatedData)
-                setInitialProfile(updatedData)
-
                 setAlertConfig({
                     open: true,
-                    title: "Success",
-                    description: ["Password updated successfully."],
-                    variant: "default"
+                    title: "Update Failed",
+                    description: errorMessages.length > 0 ? errorMessages : ["An unexpected error occurred during password update."],
+                    variant: "destructive"
                 })
-                setPasswords({ newPassword: "", confirmPassword: "" })
-            } catch (err: any) {
-                console.error("Error updating password:", err)
-                if (err.response?.data) {
-                    const errors = err.response.data
-                    const errorMessages: string[] = []
-                    Object.keys(errors).forEach((key) => {
-                        if (Array.isArray(errors[key])) {
-                            errorMessages.push(`${key}: ${errors[key][0]}`)
-                        } else if (typeof errors[key] === 'string') {
-                            errorMessages.push(`${key}: ${errors[key]}`)
-                        }
-                    })
-                    setAlertConfig({
-                        open: true,
-                        title: "Update Failed",
-                        description: errorMessages.length > 0 ? errorMessages : ["An unexpected error occurred during password update."],
-                        variant: "destructive"
-                    })
-                } else {
-                    setAlertConfig({
-                        open: true,
-                        title: "Error",
-                        description: ["Failed to update password. Please try again."],
-                        variant: "destructive"
-                    })
-                }
-            } finally {
-                setIsSaving(false)
+            } else {
+                setAlertConfig({
+                    open: true,
+                    title: "Error",
+                    description: ["Failed to update password. Please try again."],
+                    variant: "destructive"
+                })
             }
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -251,6 +253,7 @@ export function ProfileContent() {
         <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-950 p-4 md:p-8">
             <LoaderOverlay isLoading={isLoading || isSaving} />
 
+            {/* Alert Dialog */}
             <AlertDialog open={alertConfig.open} onOpenChange={(open) => setAlertConfig(prev => ({ ...prev, open }))}>
                 <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
                     <AlertDialogHeader>
@@ -274,6 +277,108 @@ export function ProfileContent() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Password Change Modal */}
+            <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+                <DialogContent className="sm:max-w-[425px] dark:bg-gray-900 dark:border-gray-800">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold dark:text-gray-100">Change Password</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handlePasswordUpdate} className="space-y-6 pt-4">
+                        {/* Current Password Field */}
+                        <div className="space-y-2">
+                            <Label htmlFor="currentPassword" className="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+                                Current Password
+                            </Label>
+                            <div className="relative">
+                                <Input
+                                    id="currentPassword"
+                                    type={showCurrentPassword ? "text" : "password"}
+                                    value={passwords.currentPassword}
+                                    onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                                >
+                                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* New Password Field */}
+                        <div className="space-y-2">
+                            <Label htmlFor="newPassword" className="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+                                New Password
+                            </Label>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Enter your new password</p>
+                            <div className="relative">
+                                <Input
+                                    id="newPassword"
+                                    type={showNewPassword ? "text" : "password"}
+                                    value={passwords.newPassword}
+                                    onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                                >
+                                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Confirm Password Field */}
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword" className="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+                                Confirm Password
+                            </Label>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Confirm your new password</p>
+                            <div className="relative">
+                                <Input
+                                    id="confirmPassword"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={passwords.confirmPassword}
+                                    onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <DialogFooter className="pt-2 gap-2 sm:gap-0">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsPasswordModalOpen(false)}
+                                className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={isSaving}
+                                className="bg-[#1a1c1e] dark:bg-gray-100 hover:bg-[#2a2c2e] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold px-8 rounded-lg transition-all duration-200"
+                            >
+                                Change Password
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Page Title */}
@@ -361,71 +466,28 @@ export function ProfileContent() {
                                 checked={profile.is_otp_required}
                                 onChange={(val) => setProfile({ ...profile, is_otp_required: val })}
                             />
+
+                            {/* Save Button */}
+                            <div className="pt-2">
+                                <Button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className="bg-[#1a1c1e] dark:bg-gray-100 hover:bg-[#2a2c2e] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold px-8 py-2.5 rounded-lg transition-all duration-200"
+                                >
+                                    Save
+                                </Button>
+                            </div>
                         </>
                     ) : (
-                        <>
-                            {/* New Password Field */}
-                            <div className="space-y-2">
-                                <Label htmlFor="newPassword" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                    New Password
-                                </Label>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Enter your new password</p>
-                                <div className="relative">
-                                    <Input
-                                        id="newPassword"
-                                        type={showNewPassword ? "text" : "password"}
-                                        value={passwords.newPassword}
-                                        onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                                        className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
-                                        placeholder="••••••••"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowNewPassword(!showNewPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-                                    >
-                                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Confirm Password Field */}
-                            <div className="space-y-2">
-                                <Label htmlFor="confirmPassword" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                    Confirm Password
-                                </Label>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Confirm your new password</p>
-                                <div className="relative">
-                                    <Input
-                                        id="confirmPassword"
-                                        type={showConfirmPassword ? "text" : "password"}
-                                        value={passwords.confirmPassword}
-                                        onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                                        className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
-                                        placeholder="••••••••"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-                                    >
-                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                </div>
-                            </div>
-                        </>
+                        <div className="pt-2">
+                            <Button
+                                onClick={() => setIsPasswordModalOpen(true)}
+                                className="bg-[#1a1c1e] dark:bg-gray-100 hover:bg-[#2a2c2e] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold px-8 py-2.5 rounded-lg transition-all duration-200"
+                            >
+                                Change Password
+                            </Button>
+                        </div>
                     )}
-
-                    {/* Save Button */}
-                    <div className="pt-2">
-                        <Button
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            className="bg-[#1a1c1e] dark:bg-gray-100 hover:bg-[#2a2c2e] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold px-8 py-2.5 rounded-lg transition-all duration-200"
-                        >
-                            Save
-                        </Button>
-                    </div>
                 </div>
             </div>
         </main>
