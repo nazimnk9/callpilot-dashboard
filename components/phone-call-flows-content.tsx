@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal,Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { flowService } from "@/services/flow-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
@@ -139,16 +139,17 @@ export function PhoneCallFlowsContent() {
             <div className="max-w-7xl mx-auto space-y-12">
                 <div className="flex flex-row justify-between">
                     <div className="flex flex-col gap-1">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Phone call Flows</h1>
+                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Phone call Flows</h1>
                         <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered recruitment call flows.</p>
                     </div>
                     <div>
-                        <Button
-                            variant="default"
-                            className="bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold transition-all duration-200 gap-2"
+                        <button
+                            //variant="default"
+                            className="bg-white border border-black dark:bg-gray-100 text-black dark:text-gray-900 transition-all duration-200 gap-2 flex justify-center items-center rounded-md px-4 py-1"
                         >
-                            Browse Ready-made Flows
-                        </Button>
+                            <Globe className="w-4 h-4 text-green-600" />
+                            CallPilot Flow store
+                        </button>
                     </div>
                 </div>
 
@@ -157,7 +158,7 @@ export function PhoneCallFlowsContent() {
                 {/* <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 shadow-sm"> */}
                 <div className="space-y-6">
                     <div className="flex items-baseline gap-3">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Your Flows</h2>
+                        <h2 className="text-md font-semibold text-gray-900 dark:text-gray-100">Your Flows</h2>
                         <span className="text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{yourFlows.length}</span>
                     </div>
                     {yourFlows.length === 0 && !isLoading ? (

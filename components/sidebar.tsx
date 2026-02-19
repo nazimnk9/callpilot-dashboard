@@ -156,7 +156,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                       className={`${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}
                     />
                   )}
-                  <span className={isActive || item.isBold ? 'text-lg font-semibold' : 'text-lg font-medium'}>
+                  <span className={isActive || item.isBold ? 'text-md font-semibold' : 'text-md font-medium'}>
                     {item.label}
                   </span>
                 </a>
@@ -171,7 +171,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="flex items-center gap-4">
               <button
                 onClick={handleViewToggle}
-                className="flex items-center gap-1.5 text-[13px] font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-lg"
+                className="flex items-center gap-1.5 font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-md"
               >
                 {isSettingsView ? (
                   <>

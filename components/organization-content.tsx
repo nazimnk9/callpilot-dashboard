@@ -159,20 +159,20 @@ export function OrganizationContent() {
             <div className="max-w-4xl mx-auto space-y-12">
                 {/* Page Title */}
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Organization settings</h1>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Organization settings</h1>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-x-12 gap-y-8">
                     {/* Left Column - Section Header */}
                     <div>
-                        <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Details</h2>
+                        <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Details</h2>
                     </div>
 
                     {/* Right Column - Inputs */}
                     <div className="max-w-md space-y-8">
                         {/* Organization Name Field */}
                         <div className="space-y-3">
-                            <Label htmlFor="org_name" className="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+                            <Label htmlFor="org_name" className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
                                 Organization name
                             </Label>
                             <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-tight">
@@ -199,7 +199,7 @@ export function OrganizationContent() {
 
                         {/* Organization ID Field */}
                         <div className="space-y-3 pt-4">
-                            <Label htmlFor="org_id" className="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+                            <Label htmlFor="org_id" className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
                                 Organization ID
                             </Label>
                             <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-tight">

@@ -250,14 +250,14 @@ export function PhoneNumberBuyForm() {
                 {/* Header */}
                 <div className="space-y-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Buy Phone Number</h1>
+                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Buy Phone Number</h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-2">Select country, phone number, and bundle to purchase</p>
                     </div>
                 </div>
 
                 <Card className="border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 group">
                     <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-6 rounded-t-xl group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/10 transition-colors">
-                        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Phone Number Purchase</CardTitle>
+                        <CardTitle className="text-md font-semibold text-gray-900 dark:text-gray-100">Phone Number Purchase</CardTitle>
                         <CardDescription className="text-gray-500 dark:text-gray-400">Select your preferred country, phone number, and bundle</CardDescription>
                     </CardHeader>
 

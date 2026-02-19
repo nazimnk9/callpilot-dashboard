@@ -34,7 +34,7 @@ export function DashboardContent() {
         <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto space-y-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard Overview</h1>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Dashboard Overview</h1>
                     <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p>
                 </div>
 
@@ -56,7 +56,7 @@ export function DashboardContent() {
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.title}</p>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{card.value}</h3>
+                                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{card.value}</h3>
                             </div>
                         </div>
                     ))}

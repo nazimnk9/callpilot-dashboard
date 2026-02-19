@@ -113,7 +113,7 @@ export function CallLogsContent() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground tracking-tight">Call Logs</h1>
+                        <h1 className="text-lg font-semibold text-foreground tracking-tight">Call Logs</h1>
                         <p className="text-muted-foreground mt-2">View and manage candidate interview conversations</p>
                     </div>
                 </div>
@@ -137,7 +137,7 @@ export function CallLogsContent() {
                 {/* Table Section */}
                 <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
                     <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                        <CardTitle className="text-lg flex items-center gap-2">
+                        <CardTitle className="text-md flex items-center gap-2">
                             <FileText className="w-5 h-5" />
                             Interview Records
                         </CardTitle>

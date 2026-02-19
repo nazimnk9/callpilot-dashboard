@@ -253,7 +253,7 @@ export function CRMIntegrationContent() {
 
             <div className="max-w-7xl mx-auto space-y-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Available CRMS to Connect</h1>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Available CRMS to Connect</h1>
                     <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your business integrations and settings</p>
                 </div>
 
@@ -295,10 +295,10 @@ export function CRMIntegrationContent() {
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-start gap-3 flex-1">
                                                 <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
-                                                    <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                                                    <img src="/jobadder.jpeg" className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <CardTitle className="text-lg dark:text-gray-100">{platform.name} Integration</CardTitle>
+                                                    <CardTitle className="text-md dark:text-gray-100">{platform.name} Integration</CardTitle>
                                                     <CardDescription className="mt-2 text-gray-500 dark:text-gray-400">
                                                         {platform.description || `Connect your ${platform.name} account to enable automation features.`}
                                                     </CardDescription>
