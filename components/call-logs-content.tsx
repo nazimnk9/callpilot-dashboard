@@ -136,12 +136,7 @@ export function CallLogsContent() {
 
                 {/* Table Section */}
                 <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                        <CardTitle className="text-md flex items-center gap-2">
-                            <FileText className="w-5 h-5" />
-                            Interview Records
-                        </CardTitle>
-                    </CardHeader>
+                    
                     <CardContent className="p-0">
                         <Table>
                             <TableHeader>
