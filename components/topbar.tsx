@@ -13,7 +13,7 @@ interface TopbarProps {
 export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
-  const [selectedOrg, setSelectedOrg] = useState('Personal Account');
+  const [selectedOrg, setSelectedOrg] = useState('Your Business');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,13 +53,13 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
 
                 <div
                   onClick={() => {
-                    setSelectedOrg('Personal Account');
+                    setSelectedOrg('Your Business');
                     setIsOrgDropdownOpen(false);
                   }}
                   className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="w-4 flex justify-center">
-                    {selectedOrg === 'Personal Account' || selectedOrg === 'Personal Account' ? (
+                    {selectedOrg === 'Your Business' || selectedOrg === 'Your Business' ? (
                       <Check size={14} className="text-gray-600 dark:text-gray-400" />
                     ) : null}
                   </div>
@@ -67,7 +67,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
                     <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
                       P
                     </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Personal Account</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Your Business</span>
                   </div>
                 </div>
               </div>
