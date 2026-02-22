@@ -43,7 +43,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   // Check if current route is a settings page to initialize the view
-  const isSettingsPage = pathname === '/dashboard/profile' || pathname === '/dashboard/organization';
+  const isSettingsPage = pathname === '/dashboard/profile' || pathname === '/dashboard/organization' || pathname === '/dashboard/billing';
 
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [isSettingsView, setIsSettingsView] = useState(isSettingsPage);
@@ -73,7 +73,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: User, label: 'Your Profile', href: '/dashboard/profile', isBold: true },
     { label: 'Organization', isHeader: true },
     { icon: FileText, label: 'General', href: '/dashboard/organization', isBold: true },
-    { icon: CreditCard, label: 'Billing', href: '#', isBold: true },
+    { icon: CreditCard, label: 'Billing', href: '/dashboard/billing', isBold: true },
   ];
 
   const currentMenuItems = isSettingsView ? settingsMenuItems : menuItems;
