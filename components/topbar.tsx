@@ -56,7 +56,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
                     setSelectedOrg('Your Business');
                     setIsOrgDropdownOpen(false);
                   }}
-                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xs"
                 >
                   <div className="w-4 flex justify-center">
                     {selectedOrg === 'Your Business' || selectedOrg === 'Your Business' ? (
