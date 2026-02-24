@@ -63,6 +63,12 @@ export function BillingContent() {
     const [isTopUpSubmitting, setIsTopUpSubmitting] = useState(false);
     const [isPmSelectorOpen, setIsPmSelectorOpen] = useState(false);
     const [errorDetail, setErrorDetail] = useState<string | null>(null);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [pmToDelete, setPmToDelete] = useState<any>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isSetDefaultOpen, setIsSetDefaultOpen] = useState(false);
+    const [pmToSetDefault, setPmToSetDefault] = useState<any>(null);
+    const [isSettingDefault, setIsSettingDefault] = useState(false);
 
     const tabs = ["Overview", "Payment methods", "Billing history"]
 
@@ -192,6 +198,90 @@ export function BillingContent() {
             if (defaultCard) setSelectedPmForTopUp(defaultCard);
         }
     }, [paymentMethods, selectedPmForTopUp]);
+
+    const handleDeletePaymentMethod = async () => {
+        if (!pmToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/payment-methods/${pmToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                toast.success("Payment method deleted successfully");
+                setIsDeleteOpen(false);
+                setPmToDelete(null);
+
+                // Refresh payment methods list
+                const fetchPaymentMethods = async () => {
+                    const token = cookieUtils.get("access");
+                    const res = await fetch(`${BASE_URL}/payment/payment-methods`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setPaymentMethods(data);
+                    }
+                };
+                fetchPaymentMethods();
+            } else {
+                const errData = await response.json();
+                setErrorDetail(errData.detail || "Failed to delete payment method");
+            }
+        } catch (err) {
+            console.error("Delete error:", err);
+            setErrorDetail("An error occurred during deletion");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleSetDefaultPaymentMethod = async () => {
+        if (!pmToSetDefault) return;
+
+        setIsSettingDefault(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/payment-methods/${pmToSetDefault.id}/default`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                toast.success("Default payment method updated successfully");
+                setIsSetDefaultOpen(false);
+                setPmToSetDefault(null);
+
+                // Refresh payment methods list
+                const fetchPaymentMethods = async () => {
+                    const token = cookieUtils.get("access");
+                    const res = await fetch(`${BASE_URL}/payment/payment-methods`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setPaymentMethods(data);
+                    }
+                };
+                fetchPaymentMethods();
+            } else {
+                const errData = await response.json();
+                setErrorDetail(errData.detail || "Failed to set as default");
+            }
+        } catch (err) {
+            console.error("Set default error:", err);
+            setErrorDetail("An error occurred while updating default status");
+        } finally {
+            setIsSettingDefault(false);
+        }
+    };
 
     const handleTopUp = async () => {
         if (!selectedPmForTopUp || !topUpAmount) {
@@ -492,9 +582,11 @@ export function BillingContent() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
-                            <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
-                                Cancel plan
-                            </Button>
+                            {orgData?.current_plan && (
+                                <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+                                    Cancel plan
+                                </Button>
+                            )}
                         </div>
 
                         {/* Auto-recharge Banner */}
@@ -585,8 +677,8 @@ export function BillingContent() {
                                                 </td>
                                                 <td className="py-5 px-4 border-b border-gray-100 dark:border-gray-800">
                                                     <span className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${tx.status === 'paid'
-                                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                                                            : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                                        : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                                                         }`}>
                                                         {tx.status_display}
                                                     </span>
@@ -666,11 +758,23 @@ export function BillingContent() {
                                         </div>
                                         <div className="pt-2 flex items-center gap-6">
                                             {!pm.is_default && (
-                                                <button className="text-gray-900 dark:text-gray-100 hover:text-black text-[14px] font-bold transition-colors">
+                                                <button
+                                                    onClick={() => {
+                                                        setPmToSetDefault(pm);
+                                                        setIsSetDefaultOpen(true);
+                                                    }}
+                                                    className="text-gray-900 dark:text-gray-100 hover:text-black text-[14px] font-bold transition-colors"
+                                                >
                                                     Set as default
                                                 </button>
                                             )}
-                                            <button className="text-red-500 hover:text-red-600 text-[14px] font-bold transition-colors">
+                                            <button
+                                                onClick={() => {
+                                                    setPmToDelete(pm);
+                                                    setIsDeleteOpen(true);
+                                                }}
+                                                className="text-red-500 hover:text-red-600 text-[14px] font-bold transition-colors"
+                                            >
                                                 Delete
                                             </button>
                                         </div>
@@ -923,6 +1027,70 @@ export function BillingContent() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                {/* Delete Confirmation Modal */}
+                <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                    <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
+                        <DialogHeader className="p-0 space-y-2 text-left">
+                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                                Delete payment method?
+                            </DialogTitle>
+                            <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                                Are you sure you want to delete this payment method? This action cannot be undone.
+                            </p>
+                        </DialogHeader>
+
+                        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                            <Button
+                                onClick={() => setIsDeleteOpen(false)}
+                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
+                                disabled={isDeleting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleDeletePaymentMethod}
+                                disabled={isDeleting}
+                                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                            >
+                                {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Delete
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Set as Default Confirmation Modal */}
+                <Dialog open={isSetDefaultOpen} onOpenChange={setIsSetDefaultOpen}>
+                    <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
+                        <DialogHeader className="p-0 space-y-2 text-left">
+                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                                Set as default?
+                            </DialogTitle>
+                            <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                                Are you sure you want to set this payment method as your default for future payments?
+                            </p>
+                        </DialogHeader>
+
+                        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                            <Button
+                                onClick={() => setIsSetDefaultOpen(false)}
+                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
+                                disabled={isSettingDefault}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSetDefaultPaymentMethod}
+                                disabled={isSettingDefault}
+                                className="w-full sm:w-auto bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                            >
+                                {isSettingDefault && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Set as default
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
         </main>
     )
