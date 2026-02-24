@@ -67,7 +67,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
                     <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
                       P
                     </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Your Business</span>
+                    <span className="text-xs font-normal text-gray-900 dark:text-gray-100">Your Business</span>
                   </div>
                 </div>
               </div>
