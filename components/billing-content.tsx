@@ -16,6 +16,15 @@ import { cookieUtils } from "@/services/auth-service";
 import { phoneService } from "@/services/phone-service";
 import countriesData from "@/lib/countries.json";
 import { toast } from "sonner";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export function BillingContent() {
     const [activeTab, setActiveTab] = useState("Overview")
@@ -48,10 +57,12 @@ export function BillingContent() {
 
     const [orgData, setOrgData] = useState<any>(null);
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+    const [transactions, setTransactions] = useState<any[]>([]);
     const [topUpAmount, setTopUpAmount] = useState("");
     const [selectedPmForTopUp, setSelectedPmForTopUp] = useState<any>(null);
     const [isTopUpSubmitting, setIsTopUpSubmitting] = useState(false);
     const [isPmSelectorOpen, setIsPmSelectorOpen] = useState(false);
+    const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
     const tabs = ["Overview", "Payment methods", "Billing history"]
 
@@ -99,8 +110,26 @@ export function BillingContent() {
             }
         };
 
+        const fetchTransactions = async () => {
+            try {
+                const token = cookieUtils.get("access");
+                const response = await fetch(`${BASE_URL}/payment/transactions`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setTransactions(data.results || []);
+                }
+            } catch (err) {
+                console.error("Error fetching transactions:", err);
+            }
+        };
+
         fetchOrgData();
         fetchPaymentMethods();
+        fetchTransactions();
     }, []);
 
     useEffect(() => {
@@ -203,11 +232,11 @@ export function BillingContent() {
                 fetchOrgData();
             } else {
                 const errData = await response.json();
-                toast.error(errData.detail || "Failed to top up wallet");
+                setErrorDetail(errData.detail || "Failed to top up wallet");
             }
         } catch (err) {
             console.error("Top-up error:", err);
-            toast.error("An error occurred during top-up");
+            setErrorDetail("An error occurred during top-up");
         } finally {
             setIsTopUpSubmitting(false);
         }
@@ -271,11 +300,11 @@ export function BillingContent() {
                 fetchPaymentMethods();
             } else {
                 const errData = await response.json();
-                toast.error(errData.detail || "Failed to add payment method");
+                setErrorDetail(errData.detail || "Failed to add payment method");
             }
         } catch (err) {
             console.error(err);
-            toast.error("An unexpected error occurred");
+            setErrorDetail("An unexpected error occurred");
         } finally {
             setIsSubmitting(false);
         }
@@ -548,31 +577,56 @@ export function BillingContent() {
                                     </tr>
                                 </thead>
                                 <tbody className="text-[15px]">
-                                    {[
-                                        { id: "B38FE232-0007", amount: "$6.14", date: "Jan 1, 2026, 1:54 AM" },
-                                        { id: "B38FE232-0006", amount: "$6.01", date: "Dec 13, 2025, 11:43 PM" },
-                                        { id: "B38FE232-0005", amount: "$6.11", date: "Nov 11, 2025, 6:53 AM" },
-                                        { id: "B38FE232-0004", amount: "$6.01", date: "Oct 22, 2025, 2:13 AM" },
-                                        { id: "B38FE232-0003", amount: "$18.00", date: "Oct 2, 2025, 12:15 PM" },
-                                        { id: "B38FE232-0002", amount: "$6.00", date: "Sep 5, 2024, 12:56 PM" },
-                                        { id: "B38FE232-0001", amount: "$12.00", date: "Sep 5, 2024, 12:55 PM" },
-                                    ].map((invoice, index) => (
-                                        <tr key={index} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
-                                            <td className="py-5 pr-4 font-medium text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-800">{invoice.id}</td>
-                                            <td className="py-5 px-4 border-b border-gray-100 dark:border-gray-800">
-                                                <span className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[12px] font-bold px-2 py-0.5 rounded-md">
-                                                    Paid
-                                                </span>
-                                            </td>
-                                            <td className="py-5 px-4 text-right font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">{invoice.amount}</td>
-                                            <td className="py-5 pl-4 text-gray-900 dark:text-gray-100 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">{invoice.date}</td>
-                                            <td className="py-5 text-right whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
-                                                <button className="text-gray-900 dark:text-gray-100 hover:text-black font-bold text-[14px] transition-colors pr-2">
-                                                    View
-                                                </button>
+                                    {transactions.length > 0 ? (
+                                        transactions.map((tx, index) => (
+                                            <tr key={index} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
+                                                <td className="py-5 pr-4 font-medium text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-800">
+                                                    {tx.type_display}
+                                                </td>
+                                                <td className="py-5 px-4 border-b border-gray-100 dark:border-gray-800">
+                                                    <span className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${tx.status === 'paid'
+                                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                                            : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                                        }`}>
+                                                        {tx.status_display}
+                                                    </span>
+                                                </td>
+                                                <td className="py-5 px-4 text-right font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+                                                    ${tx.amount}
+                                                </td>
+                                                <td className="py-5 pl-4 text-gray-900 dark:text-gray-100 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+                                                    {new Date(tx.created_at).toLocaleString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric',
+                                                        hour: 'numeric',
+                                                        minute: '2-digit',
+                                                        hour12: true
+                                                    })}
+                                                </td>
+                                                <td className="py-5 text-right whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+                                                    {tx.stripe_invoice_url ? (
+                                                        <button
+                                                            onClick={() => window.open(tx.stripe_invoice_url, '_blank')}
+                                                            className="text-gray-900 dark:text-gray-100 hover:text-black font-bold text-[14px] transition-colors pr-2"
+                                                        >
+                                                            View
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-300 dark:text-gray-700 text-[14px] font-medium pr-2 cursor-not-allowed">
+                                                            N/A
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={5} className="py-12 text-center text-gray-500 dark:text-gray-400 text-sm italic">
+                                                No billing history found.
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -847,6 +901,28 @@ export function BillingContent() {
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                {/* API Error Alert Dialog */}
+                <AlertDialog open={!!errorDetail} onOpenChange={() => setErrorDetail(null)}>
+                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                Notification
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2">
+                                {errorDetail}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="pt-4">
+                            <AlertDialogAction
+                                onClick={() => setErrorDetail(null)}
+                                className="w-full bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto"
+                            >
+                                Continue
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </main>
     )
