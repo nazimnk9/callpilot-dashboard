@@ -21,7 +21,6 @@ export function BillingContent() {
     const [activeTab, setActiveTab] = useState("Overview")
     const [isTopUpOpen, setIsTopUpOpen] = useState(false)
     const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
-    const [showInlineCard, setShowInlineCard] = useState(false)
     const [stripe, setStripe] = useState<Stripe | null>(null);
     const [elements, setElements] = useState<StripeElements | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,6 +46,13 @@ export function BillingContent() {
     const [stateRegion, setStateRegion] = useState("");
     const [isDefault, setIsDefault] = useState(true);
 
+    const [orgData, setOrgData] = useState<any>(null);
+    const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+    const [topUpAmount, setTopUpAmount] = useState("");
+    const [selectedPmForTopUp, setSelectedPmForTopUp] = useState<any>(null);
+    const [isTopUpSubmitting, setIsTopUpSubmitting] = useState(false);
+    const [isPmSelectorOpen, setIsPmSelectorOpen] = useState(false);
+
     const tabs = ["Overview", "Payment methods", "Billing history"]
 
     useEffect(() => {
@@ -55,6 +61,46 @@ export function BillingContent() {
             setStripe(stripeInstance);
         };
         initStripe();
+
+        const fetchOrgData = async () => {
+            try {
+                const token = cookieUtils.get("access");
+                const response = await fetch(`${BASE_URL}/organizations/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setOrgData(data);
+                }
+            } catch (err) {
+                console.error("Error fetching organization data:", err);
+            }
+        };
+
+        const fetchPaymentMethods = async () => {
+            try {
+                const token = cookieUtils.get("access");
+                const response = await fetch(`${BASE_URL}/payment/payment-methods`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setPaymentMethods(data);
+                    // Set default card for top-up
+                    const defaultCard = data.find((pm: any) => pm.is_default);
+                    if (defaultCard) setSelectedPmForTopUp(defaultCard);
+                }
+            } catch (err) {
+                console.error("Error fetching payment methods:", err);
+            }
+        };
+
+        fetchOrgData();
+        fetchPaymentMethods();
     }, []);
 
     useEffect(() => {
@@ -68,6 +114,39 @@ export function BillingContent() {
     }, []);
 
     useEffect(() => {
+        if (isAddPaymentOpen && stripe && !cardNumberRef.current) {
+            const timer = setTimeout(() => {
+                if (!cardNumberContainerRef.current) return;
+
+                const els = stripe.elements();
+                setElements(els);
+
+                const style = {
+                    base: {
+                        fontSize: '15px',
+                        color: '#111827',
+                        fontFamily: 'Inter, sans-serif',
+                        '::placeholder': {
+                            color: '#9ca3af',
+                        },
+                    },
+                };
+
+                const number = els.create('cardNumber', { style });
+                const expiry = els.create('cardExpiry', { style });
+                const cvc = els.create('cardCvc', { style });
+
+                if (cardNumberContainerRef.current) number.mount(cardNumberContainerRef.current);
+                if (cardExpiryContainerRef.current) expiry.mount(cardExpiryContainerRef.current);
+                if (cardCvcContainerRef.current) cvc.mount(cardCvcContainerRef.current);
+
+                cardNumberRef.current = number;
+                cardExpiryRef.current = expiry;
+                cardCvcRef.current = cvc;
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+
         return () => {
             if (cardNumberRef.current) cardNumberRef.current.unmount();
             if (cardExpiryRef.current) cardExpiryRef.current.unmount();
@@ -76,7 +155,63 @@ export function BillingContent() {
             cardExpiryRef.current = null;
             cardCvcRef.current = null;
         };
-    }, []);
+    }, [isAddPaymentOpen, stripe]);
+
+    useEffect(() => {
+        if (paymentMethods.length > 0 && !selectedPmForTopUp) {
+            const defaultCard = paymentMethods.find((pm: any) => pm.is_default);
+            if (defaultCard) setSelectedPmForTopUp(defaultCard);
+        }
+    }, [paymentMethods, selectedPmForTopUp]);
+
+    const handleTopUp = async () => {
+        if (!selectedPmForTopUp || !topUpAmount) {
+            toast.error("Please select a payment method and enter an amount");
+            return;
+        }
+
+        setIsTopUpSubmitting(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/wallet/topup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    amount: parseFloat(topUpAmount),
+                    payment_method_id: selectedPmForTopUp.id
+                })
+            });
+
+            if (response.ok) {
+                toast.success("Wallet topped up successfully");
+                setIsTopUpOpen(false);
+
+                // Refresh organization data (wallet minutes)
+                const fetchOrgData = async () => {
+                    const token = cookieUtils.get("access");
+                    const res = await fetch(`${BASE_URL}/organizations/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setOrgData(data);
+                    }
+                };
+                fetchOrgData();
+            } else {
+                const errData = await response.json();
+                toast.error(errData.detail || "Failed to top up wallet");
+            }
+        } catch (err) {
+            console.error("Top-up error:", err);
+            toast.error("An error occurred during top-up");
+        } finally {
+            setIsTopUpSubmitting(false);
+        }
+    };
 
     const handleAddPaymentMethod = async () => {
         if (!stripe || !elements || !cardNumberRef.current) return;
@@ -120,9 +255,20 @@ export function BillingContent() {
 
             if (response.ok) {
                 toast.success("Payment method added successfully");
-                setShowInlineCard(false);
                 setIsAddPaymentOpen(false)
-                // In a real app, you would refresh the list here
+
+                // Refresh the list after adding
+                const fetchPaymentMethods = async () => {
+                    const token = cookieUtils.get("access");
+                    const res = await fetch(`${BASE_URL}/payment/payment-methods`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setPaymentMethods(data);
+                    }
+                };
+                fetchPaymentMethods();
             } else {
                 const errData = await response.json();
                 toast.error(errData.detail || "Failed to add payment method");
@@ -169,13 +315,13 @@ export function BillingContent() {
                 {activeTab === "Overview" ? (
                     <div className="space-y-6 pt-4">
                         <div className="space-y-1">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Package Name</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{orgData?.current_plan || "No Active Plan"}</h2>
                             <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                 <span className="text-sm font-medium">Minute balance</span>
                                 <Info size={14} className="cursor-help" />
                             </div>
                             <div className="text-[40px] font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-                                40:20 Minutes
+                                {orgData?.wallet_minutes || "0.00"} Minutes
                             </div>
                         </div>
 
@@ -204,8 +350,9 @@ export function BillingContent() {
                                                     $
                                                 </span>
                                                 <input
-                                                    type="text"
-                                                    defaultValue="10"
+                                                    type="number"
+                                                    value={topUpAmount}
+                                                    onChange={(e) => setTopUpAmount(e.target.value)}
                                                     className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3.5 pl-8 pr-4 text-[16px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow"
                                                 />
                                             </div>
@@ -224,20 +371,65 @@ export function BillingContent() {
                                             <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                                 Payment method
                                             </label>
-                                            <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
-                                                        <div className="flex -space-x-1.5">
-                                                            <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                            <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                            <div className="relative">
+                                                <div
+                                                    onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
+                                                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                            {selectedPmForTopUp?.card.brand === 'visa' ? (
+                                                                <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                            ) : (
+                                                                <div className="flex -space-x-1.5">
+                                                                    <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                                    <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                            {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                                        <ChevronUp size={16} />
+                                                        <ChevronDown size={16} />
+                                                    </div>
+                                                </div>
+
+                                                {isPmSelectorOpen && (
+                                                    <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                        <div className="max-h-[200px] overflow-y-auto">
+                                                            {paymentMethods.map((pm) => (
+                                                                <div
+                                                                    key={pm.id}
+                                                                    onClick={() => {
+                                                                        setSelectedPmForTopUp(pm);
+                                                                        setIsPmSelectorOpen(false);
+                                                                    }}
+                                                                    className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                            {pm.card.brand === 'visa' ? (
+                                                                                <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                            ) : (
+                                                                                <div className="flex -space-x-1">
+                                                                                    <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                                    <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                                    </div>
+                                                                    {selectedPmForTopUp?.id === pm.id && (
+                                                                        <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                                    )}
+                                                                </div>
+                                                            ))}
                                                         </div>
                                                     </div>
-                                                    <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">•••• 7134</span>
-                                                </div>
-                                                <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
-                                                    <ChevronUp size={16} />
-                                                    <ChevronDown size={16} />
-                                                </div>
+                                                )}
                                             </div>
                                             <div className="flex justify-end pt-1">
                                                 <button
@@ -261,8 +453,11 @@ export function BillingContent() {
                                             Cancel
                                         </Button>
                                         <Button
-                                            className="bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto"
+                                            onClick={handleTopUp}
+                                            disabled={isTopUpSubmitting || !selectedPmForTopUp || !topUpAmount}
+                                            className="bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
                                         >
+                                            {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                             Continue
                                         </Button>
                                     </div>
@@ -385,89 +580,64 @@ export function BillingContent() {
                 ) : activeTab === "Payment methods" ? (
                     <div className="space-y-8 pt-10">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {/* Payment Card 1 (Default) */}
-                            <div className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 md:p-6 space-y-6 relative hover:shadow-sm transition-shadow">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-8 bg-black dark:bg-gray-800 rounded-md flex items-center justify-center relative overflow-hidden">
-                                            <div className="flex -space-x-2">
-                                                <div className="w-5 h-5 rounded-full bg-red-600 opacity-80" />
-                                                <div className="w-5 h-5 rounded-full bg-yellow-500 opacity-80" />
+                            {paymentMethods.length > 0 ? (
+                                paymentMethods.map((pm) => (
+                                    <div key={pm.id} className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 md:p-6 space-y-6 relative hover:shadow-sm transition-shadow">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-8 bg-black dark:bg-gray-800 rounded-md flex items-center justify-center relative overflow-hidden">
+                                                    {pm.card.brand === 'visa' ? (
+                                                        <span className="text-white font-bold italic text-xs">VISA</span>
+                                                    ) : (
+                                                        <div className="flex -space-x-2">
+                                                            <div className="w-5 h-5 rounded-full bg-red-600 opacity-80" />
+                                                            <div className="w-5 h-5 rounded-full bg-yellow-500 opacity-80" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">••••{pm.card.last4}</span>
+                                                    </div>
+                                                    <p className="text-[13px] text-gray-500 dark:text-gray-400">
+                                                        Expires {pm.card.exp_month.toString().padStart(2, '0')}/{pm.card.exp_year}
+                                                    </p>
+                                                </div>
                                             </div>
+                                            {pm.is_default && (
+                                                <span className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-[12px] font-bold px-3 py-1 rounded-lg">
+                                                    Default
+                                                </span>
+                                            )}
                                         </div>
-                                        <div className="space-y-0.5">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">••••7134</span>
-                                            </div>
-                                            <p className="text-[13px] text-gray-500 dark:text-gray-400">Expires 08/2030</p>
+                                        <div className="pt-2 flex items-center gap-6">
+                                            {!pm.is_default && (
+                                                <button className="text-gray-900 dark:text-gray-100 hover:text-black text-[14px] font-bold transition-colors">
+                                                    Set as default
+                                                </button>
+                                            )}
+                                            <button className="text-red-500 hover:text-red-600 text-[14px] font-bold transition-colors">
+                                                Delete
+                                            </button>
                                         </div>
                                     </div>
-                                    <span className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-[12px] font-bold px-3 py-1 rounded-lg">
-                                        Default
-                                    </span>
+                                ))
+                            ) : (
+                                <div className="col-span-full py-12 text-center text-gray-500 dark:text-gray-400 text-sm italic">
+                                    No payment methods found.
                                 </div>
-                                <div className="pt-2">
-                                    <button className="text-red-500 hover:text-red-600 text-[14px] font-bold transition-colors">
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
+                            )}
 
-                            {/* Payment Card 2 */}
-                            <div className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 md:p-6 space-y-6 hover:shadow-sm transition-shadow">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-8 bg-black dark:bg-gray-800 rounded-md flex items-center justify-center relative overflow-hidden">
-                                            <div className="flex -space-x-2">
-                                                <div className="w-5 h-5 rounded-full bg-red-600 opacity-80" />
-                                                <div className="w-5 h-5 rounded-full bg-yellow-500 opacity-80" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">••••7134</span>
-                                            </div>
-                                            <p className="text-[13px] text-gray-500 dark:text-gray-400">Expires 08/2030</p>
-                                        </div>
-                                    </div>
+                            {/* Add Payment Method Card */}
+                            {/* <div
+                                onClick={() => setIsAddPaymentOpen(true)}
+                                className="border border-dashed border-gray-200 dark:border-gray-800 rounded-2xl p-5 md:p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors group"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <CreditCard size={20} className="text-gray-400 dark:text-gray-500" />
                                 </div>
-                                <div className="pt-2 flex items-center gap-6">
-                                    <button className="text-gray-900 dark:text-gray-100 hover:text-black text-[14px] font-bold transition-colors">
-                                        Set as default
-                                    </button>
-                                    <button className="text-red-500 hover:text-red-600 text-[14px] font-bold transition-colors">
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Payment Card 3 */}
-                            <div className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 md:p-6 space-y-6 hover:shadow-sm transition-shadow">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-8 bg-black dark:bg-gray-800 rounded-md flex items-center justify-center relative overflow-hidden">
-                                            <div className="flex -space-x-2">
-                                                <div className="w-5 h-5 rounded-full bg-red-600 opacity-80" />
-                                                <div className="w-5 h-5 rounded-full bg-yellow-500 opacity-80" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-sm font-bold text-gray-900 dark:text-gray-100">••••7134</span>
-                                            </div>
-                                            <p className="text-[13px] text-gray-500 dark:text-gray-400">Expires 08/2030</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="pt-2 flex items-center gap-6">
-                                    <button className="text-gray-900 dark:text-gray-100 hover:text-black text-[14px] font-bold transition-colors">
-                                        Set as default
-                                    </button>
-                                    <button className="text-red-500 hover:text-red-600 text-[14px] font-bold transition-colors">
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
+                                <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">Add payment method</span>
+                            </div> */}
                         </div>
 
                         <div className="pt-4">
@@ -498,37 +668,6 @@ export function BillingContent() {
                     }
                 }}>
                     <DialogContent
-                        onOpenAutoFocus={(e) => {
-                            setTimeout(() => {
-                                if (stripe && !cardNumberRef.current) {
-                                    const els = stripe.elements();
-                                    setElements(els);
-
-                                    const style = {
-                                        base: {
-                                            fontSize: '15px',
-                                            color: '#111827',
-                                            fontFamily: 'Inter, sans-serif',
-                                            '::placeholder': {
-                                                color: '#9ca3af',
-                                            },
-                                        },
-                                    };
-
-                                    const number = els.create('cardNumber', { style });
-                                    const expiry = els.create('cardExpiry', { style });
-                                    const cvc = els.create('cardCvc', { style });
-
-                                    if (cardNumberContainerRef.current) number.mount(cardNumberContainerRef.current);
-                                    if (cardExpiryContainerRef.current) expiry.mount(cardExpiryContainerRef.current);
-                                    if (cardCvcContainerRef.current) cvc.mount(cardCvcContainerRef.current);
-
-                                    cardNumberRef.current = number;
-                                    cardExpiryRef.current = expiry;
-                                    cardCvcRef.current = cvc;
-                                }
-                            }, 100);
-                        }}
                         className="max-w-[calc(100vw-32px)] sm:max-w-[480px] p-5 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6 overflow-y-auto max-h-[90vh]"
                     >
                         <DialogHeader className="p-0 space-y-2 text-left">
