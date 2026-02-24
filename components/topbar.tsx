@@ -37,7 +37,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
               onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
               className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-2 py-1 rounded-lg transition-colors"
             >
-              <span className="text-gray-900 dark:text-gray-100 font-medium">{selectedOrg}</span>
+              <span className="text-gray-900 dark:text-gray-100 font-medium text-xs">{selectedOrg}</span>
               <div className="flex flex-col -space-y-1">
                 <ChevronUp size={10} className={cn("transition-colors", isOrgDropdownOpen ? "text-gray-900 dark:text-gray-100" : "text-gray-400")} />
                 <ChevronDown size={10} className={cn("transition-colors", !isOrgDropdownOpen ? "text-gray-900 dark:text-gray-100" : "text-gray-400")} />
@@ -56,7 +56,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
                     setSelectedOrg('Your Business');
                     setIsOrgDropdownOpen(false);
                   }}
-                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-xs"
+                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="w-4 flex justify-center">
                     {selectedOrg === 'Your Business' || selectedOrg === 'Your Business' ? (
@@ -67,7 +67,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
                     <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
                       P
                     </div>
-                    <span className="text-xs font-normal text-gray-900 dark:text-gray-100">Your Business</span>
+                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">Your Business</span>
                   </div>
                 </div>
               </div>
