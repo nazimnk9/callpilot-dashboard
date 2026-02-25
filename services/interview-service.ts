@@ -21,8 +21,16 @@ export const interviewService = {
         return api.get(`/interview/?page=${page}`);
     },
 
+    async getCallLogs(page: number = 1) {
+        return api.get(`/flows/call_logs/?page=${page}`);
+    },
+
     async getInterviewById(id: number | string) {
         return api.get(`/interview/${id}/`);
+    },
+
+    async deleteCallLog(uid: string) {
+        return api.delete(`/flows/call_logs/${uid}`);
     },
 
     async retryInterviews(limit: number) {

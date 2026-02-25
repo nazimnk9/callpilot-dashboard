@@ -16,9 +16,19 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
+    DialogFooter,
 } from "@/components/ui/dialog"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText, Eye, User, Calendar, Clock } from "lucide-react"
+import { FileText, Eye, User, Calendar, Clock, PhoneIncoming, PhoneOutgoing, Trash2, AlertCircle } from "lucide-react"
 import { interviewService } from "@/services/interview-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import { ToastNotification } from "@/components/auth/toast-notification"
@@ -31,31 +41,34 @@ interface ConversationMessage {
     timestamp: string
 }
 
-interface Interview {
+interface CallLog {
     id: number
-    candidate_name: string | null
-    candidate_email: string | null
-    candidate_phone: string | null
-    from_number: string | null
-    job_title: string | null
-    call_duration: string | null
-    status: string
+    uid: string
     created_at: string
-    interview_data: {
-        id: number
-        conversation_json: ConversationMessage[]
-        started_at: string
-        ended_at: string
-    } | null
+    updated_at: string
+    from_number: string | null
+    to_number: string | null
+    state: string // "INCOMING" | "OUTGOING"
+    duration: string | null
+    call_status: string
+    conversation_json: ConversationMessage[] | null
+    organization: number
 }
 
 export function CallLogsContent() {
-    const [interviews, setInterviews] = useState<Interview[]>([])
+    const [callLogs, setCallLogs] = useState<CallLog[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<"All" | "Incoming" | "Outgoing">("All")
     const [error, setError] = useState("")
-    const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null)
+    const [selectedCall, setSelectedCall] = useState<CallLog | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
+
+    // Delete states
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+    const [logToDelete, setLogToDelete] = useState<CallLog | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [deleteError, setDeleteError] = useState<string | null>(null)
+
     const [toast, setToast] = useState<{
         title: string
         description: string
@@ -63,16 +76,16 @@ export function CallLogsContent() {
     } | null>(null)
 
     useEffect(() => {
-        fetchInterviews()
+        fetchCallLogs()
     }, [])
 
-    const fetchInterviews = async () => {
+    const fetchCallLogs = async () => {
         try {
             setIsLoading(true)
-            const response = await interviewService.getInterviews()
-            setInterviews(response.data.results || [])
+            const response = await interviewService.getCallLogs()
+            setCallLogs(response.data.results || [])
         } catch (err: any) {
-            console.error("Error fetching interviews:", err)
+            console.error("Error fetching call logs:", err)
             const errorMessage = err.response?.data?.error || err.message || "Failed to fetch call logs"
             setError(errorMessage)
             setToast({
@@ -85,8 +98,34 @@ export function CallLogsContent() {
         }
     }
 
-    const handleViewConversation = (interview: Interview) => {
-        setSelectedInterview(interview)
+    const handleDeleteCallLog = async () => {
+        if (!logToDelete) return
+
+        try {
+            setIsDeleting(true)
+            setDeleteError(null)
+            await interviewService.deleteCallLog(logToDelete.uid)
+
+            setToast({
+                title: "Success",
+                description: "Call log deleted successfully",
+                variant: "default",
+            })
+
+            setIsDeleteConfirmOpen(false)
+            setLogToDelete(null)
+            fetchCallLogs()
+        } catch (err: any) {
+            console.error("Error deleting call log:", err)
+            const errorMessage = err.response?.data?.detail || err.response?.data?.error || err.message || "Failed to delete call log"
+            setDeleteError(errorMessage)
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
+    const handleViewConversation = (call: CallLog) => {
+        setSelectedCall(call)
         setIsModalOpen(true)
     }
 
@@ -94,11 +133,16 @@ export function CallLogsContent() {
         return new Date(timestamp).toLocaleString()
     }
 
-    const filteredInterviews = activeTab === "Incoming" ? [] : interviews
+    const filteredCallLogs = callLogs.filter(log => {
+        if (activeTab === "All") return true
+        if (activeTab === "Incoming") return log.state === "INCOMING"
+        if (activeTab === "Outgoing") return log.state === "OUTGOING"
+        return true
+    })
 
     return (
         <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950">
-            <LoaderOverlay isLoading={isLoading} />
+            <LoaderOverlay isLoading={isLoading || isDeleting} />
 
             {toast && (
                 <ToastNotification
@@ -135,111 +179,151 @@ export function CallLogsContent() {
                 </div>
 
                 {/* Table Section */}
-                <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-                    
+                <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                     <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead></TableHead>
-                                    <TableHead>From</TableHead>
-                                    <TableHead>To</TableHead>
-                                    <TableHead>Duration</TableHead>
-                                    <TableHead>Call Status</TableHead>
-                                    <TableHead>Created at</TableHead>
-                                    <TableHead className="">Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredInterviews.length === 0 && !isLoading ? (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                            No call logs found.
-                                        </TableCell>
+                                        <TableHead className="w-[100px]">Type</TableHead>
+                                        <TableHead>From</TableHead>
+                                        <TableHead>To</TableHead>
+                                        <TableHead>Duration</TableHead>
+                                        <TableHead>Call Status</TableHead>
+                                        <TableHead>Created at</TableHead>
+                                        <TableHead className="text-right">Action</TableHead>
                                     </TableRow>
-                                ) : (
-                                    filteredInterviews.map((interview) => (
-                                        <TableRow key={interview.id}>
-                                            <TableCell className="font-medium">
-                                                Outgoing
-                                            </TableCell>
-                                            <TableCell>{interview.from_number || "N/A"}</TableCell>
-                                            <TableCell>{interview.candidate_phone || "N/A"}</TableCell>
-                                            <TableCell>{interview.call_duration || "N/A"}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={interview.status === 'COMPLETED' ? 'default' : 'secondary'}>
-                                                    {interview.status}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>{formatTimestamp(interview.created_at) || "N/A"}</TableCell>
-                                            <TableCell className="">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="gap-2"
-                                                    onClick={() => handleViewConversation(interview)}
-                                                    disabled={!interview.interview_data}
-                                                >
-                                                    <Eye className="w-4 h-4" />
-                                                    View
-                                                </Button>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredCallLogs.length === 0 && !isLoading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                                No call logs found.
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                                    ) : (
+                                        filteredCallLogs.map((log) => (
+                                            <TableRow key={log.id}>
+                                                <TableCell className="font-medium">
+                                                    <div className="flex items-center gap-2">
+                                                        {log.state === "INCOMING" ? (
+                                                            <PhoneIncoming className="w-4 h-4 text-blue-500" />
+                                                        ) : (
+                                                            <PhoneOutgoing className="w-4 h-4 text-green-500" />
+                                                        )}
+                                                        <span className="text-xs">{log.state}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-sm">{log.from_number || "N/A"}</TableCell>
+                                                <TableCell className="text-sm">{log.to_number || "N/A"}</TableCell>
+                                                <TableCell className="text-sm">{log.duration || "N/A"}</TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        variant={log.call_status.toLowerCase() === 'completed' ? 'default' : 'secondary'}
+                                                        className="capitalize text-[10px]"
+                                                    >
+                                                        {log.call_status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-sm">{formatTimestamp(log.created_at)}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="gap-2 h-8"
+                                                            onClick={() => handleViewConversation(log)}
+                                                            disabled={!log.conversation_json || log.conversation_json.length === 0}
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                            View
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="gap-2 h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-100 dark:border-red-900/30"
+                                                            onClick={() => {
+                                                                setLogToDelete(log)
+                                                                setIsDeleteConfirmOpen(true)
+                                                            }}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Delete
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Conversation Modal */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <User className="w-5 h-5 text-primary" />
-                            Conversation for {selectedInterview?.candidate_name || "Candidate"}
-                        </DialogTitle>
-                        <DialogDescription>
-                            Review the AI-to-candidate interaction for {selectedInterview?.job_title}
-                        </DialogDescription>
+                <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+                    <DialogHeader className="p-6 pb-4 border-b">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                                <User className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-xl">
+                                    Call Conversation
+                                </DialogTitle>
+                                <DialogDescription className="mt-1">
+                                    Reviewing call between {selectedCall?.from_number} and {selectedCall?.to_number}
+                                </DialogDescription>
+                            </div>
+                        </div>
                     </DialogHeader>
 
-                    {selectedInterview?.interview_data ? (
-                        <div className="space-y-4 flex-1 overflow-hidden flex flex-col mt-4">
-                            <div className="grid grid-cols-2 gap-4 p-4 bg-muted/40 rounded-lg text-sm">
+                    {selectedCall?.conversation_json && selectedCall.conversation_json.length > 0 ? (
+                        <div className="flex-1 overflow-hidden flex flex-col">
+                            <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 border-b text-sm">
                                 <div className="flex items-center gap-2 text-muted-foreground font-medium">
                                     <Calendar className="w-4 h-4" />
-                                    Started: {formatTimestamp(selectedInterview.interview_data.started_at)}
+                                    Date: {formatTimestamp(selectedCall.created_at)}
                                 </div>
                                 <div className="flex items-center gap-2 text-muted-foreground font-medium">
                                     <Clock className="w-4 h-4" />
-                                    Ended: {formatTimestamp(selectedInterview.interview_data.ended_at)}
+                                    Duration: {selectedCall.duration || "N/A"}
                                 </div>
                             </div>
 
-                            <ScrollArea className="flex-1 pr-4">
-                                <div className="space-y-4">
-                                    {selectedInterview.interview_data.conversation_json?.map((msg, idx) => (
+                            <ScrollArea className="flex-1 p-6">
+                                <div className="space-y-6">
+                                    {selectedCall.conversation_json.map((msg, idx) => (
                                         <div
                                             key={idx}
                                             className={`flex flex-col ${msg.role === 'assistant' ? 'items-start' : 'items-end'
                                                 }`}
                                         >
                                             <div
-                                                className={`max-w-[85%] rounded-2xl p-4 ${msg.role === 'assistant'
+                                                className={`max-w-[90%] rounded-2xl p-4 flex flex-col ${msg.role === 'assistant'
                                                     ? 'bg-muted text-foreground rounded-tl-none'
                                                     : 'bg-primary text-primary-foreground rounded-tr-none shadow-md'
                                                     }`}
                                             >
-                                                <p className="text-sm font-semibold mb-1 opacity-70 uppercase tracking-tight">
-                                                    {msg.role}
-                                                </p>
-                                                <p className="text-[15px] leading-relaxed">{msg.content}</p>
-                                                <p className="text-[10px] opacity-50 mt-2 text-right">
-                                                    {formatTimestamp(msg.timestamp)}
-                                                </p>
+                                                <div className="flex items-center justify-between gap-4 mb-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+                                                        {msg.role}
+                                                    </span>
+                                                </div>
+                                                {/* Message Content with Scrollbar support */}
+                                                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    <p className="text-[14px] leading-relaxed whitespace-pre-wrap">
+                                                        {msg.content}
+                                                    </p>
+                                                </div>
+                                                {msg.timestamp && (
+                                                    <p className="text-[9px] opacity-50 mt-2 text-right">
+                                                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -247,18 +331,76 @@ export function CallLogsContent() {
                             </ScrollArea>
                         </div>
                     ) : (
-                        <div className="p-12 text-center text-muted-foreground">
-                            No conversation data available for this record.
+                        <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                            <div className="p-4 bg-muted rounded-full mb-4">
+                                <FileText className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                            <p className="text-muted-foreground font-medium">No conversation data available</p>
+                            <p className="text-sm text-muted-foreground/60 mt-1">This call might have been too short or experienced an error.</p>
                         </div>
                     )}
 
-                    <div className="flex justify-end pt-4 border-t">
-                        <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+                    <div className="p-4 border-t bg-gray-50/50 dark:bg-gray-900/50 flex justify-end">
+                        <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                             Close
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <AlertCircle className="w-5 h-5" />
+                            Confirm Deletion
+                        </DialogTitle>
+                        <DialogDescription className="py-2">
+                            Are you sure you want to delete the call log from <span className="font-semibold text-foreground">{logToDelete?.from_number}</span>? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setIsDeleteConfirmOpen(false)
+                                setLogToDelete(null)
+                            }}
+                            disabled={isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteCallLog}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? "Deleting..." : "Delete Call Log"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Error Alert */}
+            <AlertDialog open={!!deleteError} onOpenChange={() => setDeleteError(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                            <AlertCircle className="w-5 h-5 text-red-600" />
+                            Delete Failed
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {deleteError}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction onClick={() => setDeleteError(null)}>
+                            Ok
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

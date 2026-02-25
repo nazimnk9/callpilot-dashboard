@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MoreHorizontal,Globe } from "lucide-react"
+import { MoreHorizontal, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { flowService } from "@/services/flow-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
@@ -143,13 +143,14 @@ export function PhoneCallFlowsContent() {
                         <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered recruitment call flows.</p>
                     </div>
                     <div>
-                        <button
-                            //variant="default"
-                            className="bg-white border border-black dark:bg-gray-100 text-black dark:text-gray-900 text-xs transition-all duration-200 gap-2 flex justify-center items-center rounded-md px-2 py-1"
-                        >
-                            <Globe className="w-4 h-4 text-green-600" />
-                            AI Call Flow Options
-                        </button>
+                        <Link href="/dashboard/ai-call-flow-options">
+                            <button
+                                className="bg-white border border-black dark:bg-gray-100 text-black dark:text-gray-900 text-xs transition-all duration-200 gap-2 flex justify-center items-center rounded-md px-2 py-1"
+                            >
+                                <Globe className="w-4 h-4 text-green-600" />
+                                AI Call Flow Options
+                            </button>
+                        </Link>
                     </div>
                 </div>
 
