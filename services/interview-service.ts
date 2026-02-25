@@ -33,6 +33,14 @@ export const interviewService = {
         return api.delete(`/flows/call_logs/${uid}`);
     },
 
+    async getCallLogConfig() {
+        return api.get(`/flows/call_logs/config`);
+    },
+
+    async updateCallLogConfig(data: { action: string; delete_hours: number | null }) {
+        return api.patch(`/flows/call_logs/config`, data);
+    },
+
     async retryInterviews(limit: number) {
         return api.post(`/interview/retry/`, { limit });
     },

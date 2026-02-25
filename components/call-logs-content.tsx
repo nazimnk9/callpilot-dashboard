@@ -27,13 +27,21 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText, Eye, User, Calendar, Clock, PhoneIncoming, PhoneOutgoing, Trash2, AlertCircle } from "lucide-react"
+import { FileText, Eye, User, Calendar, Clock, PhoneIncoming, PhoneOutgoing, Trash2, AlertCircle, Settings2 } from "lucide-react"
 import { interviewService } from "@/services/interview-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import { ToastNotification } from "@/components/auth/toast-notification"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Label } from "@/components/ui/label"
 
 interface ConversationMessage {
     role: string
@@ -55,6 +63,11 @@ interface CallLog {
     organization: number
 }
 
+interface CallLogConfig {
+    action: string
+    delete_hours: number | string | null
+}
+
 export function CallLogsContent() {
     const [callLogs, setCallLogs] = useState<CallLog[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -68,6 +81,15 @@ export function CallLogsContent() {
     const [logToDelete, setLogToDelete] = useState<CallLog | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
     const [deleteError, setDeleteError] = useState<string | null>(null)
+
+    // Config states
+    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
+    const [config, setConfig] = useState<CallLogConfig>({
+        action: "NEVER_DELETE",
+        delete_hours: null
+    })
+    const [isConfigLoading, setIsConfigLoading] = useState(false)
+    const [configError, setConfigError] = useState<string | null>(null)
 
     const [toast, setToast] = useState<{
         title: string
@@ -95,6 +117,48 @@ export function CallLogsContent() {
             })
         } finally {
             setIsLoading(false)
+        }
+    }
+
+    const fetchConfig = async () => {
+        try {
+            setIsConfigLoading(true)
+            const response = await interviewService.getCallLogConfig()
+            if (response.data) {
+                setConfig({
+                    action: response.data.action || "NEVER_DELETE",
+                    delete_hours: response.data.delete_hours
+                })
+            }
+        } catch (err: any) {
+            console.error("Error fetching config:", err)
+        } finally {
+            setIsConfigLoading(false)
+        }
+    }
+
+    const handleUpdateConfig = async () => {
+        try {
+            setIsConfigLoading(true)
+            setConfigError(null)
+            const payload = {
+                action: config.action,
+                delete_hours: config.action === "CUSTOM_DELETE" ? (config.delete_hours !== null ? Number(config.delete_hours) : null) : null
+            }
+            await interviewService.updateCallLogConfig(payload)
+
+            setToast({
+                title: "Success",
+                description: "Configuration updated successfully",
+                variant: "default",
+            })
+            setIsConfigModalOpen(false)
+        } catch (err: any) {
+            console.error("Error updating config:", err)
+            const errorMessage = err.response?.data?.detail || err.response?.data?.error || err.message || "Failed to update configuration"
+            setConfigError(errorMessage)
+        } finally {
+            setIsConfigLoading(false)
         }
     }
 
@@ -140,9 +204,11 @@ export function CallLogsContent() {
         return true
     })
 
+    const hourOptions = Array.from({ length: 8 }, (_, i) => (i + 1) * 6)
+
     return (
         <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950">
-            <LoaderOverlay isLoading={isLoading || isDeleting} />
+            <LoaderOverlay isLoading={isLoading || isDeleting || (isConfigLoading && isConfigModalOpen)} />
 
             {toast && (
                 <ToastNotification
@@ -160,6 +226,16 @@ export function CallLogsContent() {
                         <h1 className="text-lg font-semibold text-foreground tracking-tight">Call Logs</h1>
                         <p className="text-muted-foreground mt-2">View and manage candidate interview conversations</p>
                     </div>
+                    <Button
+                        onClick={() => {
+                            fetchConfig()
+                            setIsConfigModalOpen(true)
+                        }}
+                        className="gap-2 bg-black dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900"
+                    >
+                        <Settings2 className="w-4 h-4" />
+                        Configure
+                    </Button>
                 </div>
 
                 {/* Tabs */}
@@ -348,6 +424,78 @@ export function CallLogsContent() {
                 </DialogContent>
             </Dialog>
 
+            {/* Configuration Modal */}
+            <Dialog open={isConfigModalOpen} onOpenChange={setIsConfigModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Settings2 className="w-5 h-5" />
+                            Auto-Delete Configuration
+                        </DialogTitle>
+                        <DialogDescription>
+                            Configure automated cleanup for your call logs.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-6 py-4">
+                        <div className="space-y-2">
+                            <Label>Delection Action</Label>
+                            <Select
+                                value={config.action}
+                                onValueChange={(value) => setConfig({ ...config, action: value })}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select an action" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="NEVER_DELETE">Never Auto delete</SelectItem>
+                                    <SelectItem value="ALWAYS_DELETE">Always auto delete instantly</SelectItem>
+                                    <SelectItem value="CUSTOM_DELETE">Auto Delete Within 'x' hours</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {config.action === "CUSTOM_DELETE" && (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <Label>Hour Select</Label>
+                                <Select
+                                    value={config.delete_hours !== null ? Number(config.delete_hours).toFixed(1) : undefined}
+                                    onValueChange={(value) => setConfig({ ...config, delete_hours: parseFloat(value) })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select hours" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {hourOptions.map(hour => (
+                                            <SelectItem key={hour} value={hour.toFixed(1)}>
+                                                {hour} hours
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsConfigModalOpen(false)}
+                            disabled={isConfigLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleUpdateConfig}
+                            disabled={isConfigLoading}
+                            className="bg-black dark:bg-gray-100 text-white dark:text-gray-900"
+                        >
+                            {isConfigLoading ? "Saving..." : "Configure"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Delete Confirmation Modal */}
             <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
                 <DialogContent className="max-w-md">
@@ -382,20 +530,29 @@ export function CallLogsContent() {
                 </DialogContent>
             </Dialog>
 
-            {/* Delete Error Alert */}
-            <AlertDialog open={!!deleteError} onOpenChange={() => setDeleteError(null)}>
+            {/* Error Alert Dialog */}
+            <AlertDialog
+                open={!!deleteError || !!configError}
+                onOpenChange={() => {
+                    setDeleteError(null)
+                    setConfigError(null)
+                }}
+            >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
                             <AlertCircle className="w-5 h-5 text-red-600" />
-                            Delete Failed
+                            Action Failed
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            {deleteError}
+                            {deleteError || configError}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogAction onClick={() => setDeleteError(null)}>
+                        <AlertDialogAction onClick={() => {
+                            setDeleteError(null)
+                            setConfigError(null)
+                        }}>
                             Ok
                         </AlertDialogAction>
                     </AlertDialogFooter>
