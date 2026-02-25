@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check } from "lucide-react"
+import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -69,8 +69,71 @@ export function BillingContent() {
     const [isSetDefaultOpen, setIsSetDefaultOpen] = useState(false);
     const [pmToSetDefault, setPmToSetDefault] = useState<any>(null);
     const [isSettingDefault, setIsSettingDefault] = useState(false);
+    const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [hoveredTier, setHoveredTier] = useState<string | null>(null);
+    const [isSubscriptionSubmitting, setIsSubscriptionSubmitting] = useState(false);
+    const [selectedPmForSubscription, setSelectedPmForSubscription] = useState<any>(null);
+    const [isPmSelectorForSubOpen, setIsPmSelectorForSubOpen] = useState(false);
 
     const tabs = ["Overview", "Payment methods", "Billing history"]
+
+    const fetchOrgData = async () => {
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/organizations/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setOrgData(data);
+            }
+        } catch (err) {
+            console.error("Error fetching organization data:", err);
+        }
+    };
+
+    const fetchPaymentMethods = async () => {
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/payment-methods`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data_res = await response.json();
+                setPaymentMethods(data_res);
+                // Set default card for top-up
+                const defaultCard = data_res.find((pm: any) => pm.is_default);
+                if (defaultCard) {
+                    setSelectedPmForTopUp(defaultCard);
+                    setSelectedPmForSubscription(defaultCard);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching payment methods:", err);
+        }
+    };
+
+    const fetchTransactions = async () => {
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/transactions`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setTransactions(data.results || []);
+            }
+        } catch (err) {
+            console.error("Error fetching transactions:", err);
+        }
+    };
 
     useEffect(() => {
         const initStripe = async () => {
@@ -78,61 +141,6 @@ export function BillingContent() {
             setStripe(stripeInstance);
         };
         initStripe();
-
-        const fetchOrgData = async () => {
-            try {
-                const token = cookieUtils.get("access");
-                const response = await fetch(`${BASE_URL}/organizations/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setOrgData(data);
-                }
-            } catch (err) {
-                console.error("Error fetching organization data:", err);
-            }
-        };
-
-        const fetchPaymentMethods = async () => {
-            try {
-                const token = cookieUtils.get("access");
-                const response = await fetch(`${BASE_URL}/payment/payment-methods`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setPaymentMethods(data);
-                    // Set default card for top-up
-                    const defaultCard = data.find((pm: any) => pm.is_default);
-                    if (defaultCard) setSelectedPmForTopUp(defaultCard);
-                }
-            } catch (err) {
-                console.error("Error fetching payment methods:", err);
-            }
-        };
-
-        const fetchTransactions = async () => {
-            try {
-                const token = cookieUtils.get("access");
-                const response = await fetch(`${BASE_URL}/payment/transactions`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setTransactions(data.results || []);
-                }
-            } catch (err) {
-                console.error("Error fetching transactions:", err);
-            }
-        };
-
         fetchOrgData();
         fetchPaymentMethods();
         fetchTransactions();
@@ -400,6 +408,80 @@ export function BillingContent() {
         }
     };
 
+    const handleCreateSubscription = async () => {
+        if (!selectedPlan || !selectedPmForSubscription) {
+            toast.error("Please select a plan and a payment method");
+            return;
+        }
+
+        setIsSubscriptionSubmitting(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    plan: selectedPlan === "Starter" ? "starter" : (selectedPlan === "Medium" ? "pro" : ""),
+                    payment_method_id: selectedPmForSubscription.id
+                })
+            });
+
+            if (response.ok) {
+                toast.success("Subscription plan created successfully");
+                setIsSubscriptionModalOpen(false);
+                fetchOrgData();
+            } else {
+                const errData = await response.json();
+                setErrorDetail(errData.detail || "Failed to create subscription plan");
+            }
+        } catch (err) {
+            console.error("Subscription error:", err);
+            setErrorDetail("An error occurred during subscription creation");
+        } finally {
+            setIsSubscriptionSubmitting(false);
+        }
+    };
+
+    const pricingTiers = [
+        {
+            name: "Starter",
+            price: "$15",
+            unit: "/mo",
+            icon: Rocket,
+            description: "Perfect for small businesses starting their AI journey.",
+            minimumMinutes: "Includes 100 minutes",
+            features: ["100 Minutes included", "Standard AI Voice", "Email Support"],
+            cta: "Select Starter",
+            popular: false,
+        },
+        {
+            name: "Medium",
+            price: "$49",
+            unit: "/mo",
+            icon: Zap,
+            description: "Ideal for growing teams with higher call volumes.",
+            minimumMinutes: "Includes 500 minutes",
+            features: ["500 Minutes included", "HD AI Voices", "Priority Support", "Advanced Analytics"],
+            cta: "Select Medium",
+            popular: true,
+        },
+        {
+            name: "Enterprise",
+            price: "Custom",
+            unit: "",
+            icon: Building2,
+            description: "Tailored solutions for large-scale operations.",
+            minimumMinutes: "Custom minutes available",
+            features: ["Unlimited Minutes", "Custom AI Models", "Dedicated Manager", "24/7 Phone Support"],
+            cta: "Contact Sales",
+            popular: false,
+            disabled: true,
+        }
+    ];
+
     const filteredCountries = countries.filter(c =>
         c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
         c.country_code.toLowerCase().includes(countrySearch.toLowerCase())
@@ -582,6 +664,28 @@ export function BillingContent() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
+                            {!orgData?.current_plan && (
+                                <Button
+                                    onClick={() => {
+                                        setSelectedPlan(null);
+                                        setIsSubscriptionModalOpen(true);
+                                    }}
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                >
+                                    Add Subscription Plan
+                                </Button>
+                            )}
+                            {orgData?.current_plan && (
+                                <Button
+                                    onClick={() => {
+                                        setSelectedPlan(null);
+                                        setIsSubscriptionModalOpen(true);
+                                    }}
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                >
+                                    Change Subscription Plan
+                                </Button>
+                            )}
                             {orgData?.current_plan && (
                                 <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
                                     Cancel plan
@@ -1006,13 +1110,17 @@ export function BillingContent() {
                     </DialogContent>
                 </Dialog>
 
-                {/* API Error Alert Dialog */}
                 <AlertDialog open={!!errorDetail} onOpenChange={() => setErrorDetail(null)}>
                     <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                Notification
-                            </AlertDialogTitle>
+                            <div className="flex justify-center items-center gap-3 mb-2">
+                                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+                                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                </div>
+                                <AlertDialogTitle className="text-lg font-bold text-red-600 dark:text-red-400">
+                                    Error
+                                </AlertDialogTitle>
+                            </div>
                             <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2">
                                 {errorDetail}
                             </AlertDialogDescription>
@@ -1020,7 +1128,7 @@ export function BillingContent() {
                         <AlertDialogFooter className="pt-4">
                             <AlertDialogAction
                                 onClick={() => setErrorDetail(null)}
-                                className="w-full bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto"
+                                className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
                             >
                                 Continue
                             </AlertDialogAction>
@@ -1054,8 +1162,168 @@ export function BillingContent() {
                                 className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
                             >
                                 {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                Delete
+                                Continue
                             </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={isSubscriptionModalOpen} onOpenChange={setIsSubscriptionModalOpen}>
+                    <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                Create Subscription Plan
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-10">
+                            {/* Pricing Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+                                {pricingTiers.map((tier) => {
+                                    const hidePopularHighlight = hoveredTier !== null && hoveredTier !== tier.name;
+                                    const isHighlighted = tier.popular ? !hidePopularHighlight : hoveredTier === tier.name;
+                                    const isSelected = selectedPlan === tier.name;
+
+                                    return (
+                                        <div
+                                            key={tier.name}
+                                            onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
+                                            onMouseLeave={() => setHoveredTier(null)}
+                                            onClick={() => !tier.disabled && setSelectedPlan(tier.name)}
+                                            className={[
+                                                "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
+                                                tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
+                                                isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
+                                                !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
+                                            ].join(" ")}
+                                        >
+                                            {tier.popular && !isSelected && (
+                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black text-white dark:bg-white dark:text-gray-900">
+                                                        Most Popular
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className={[
+                                                    "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                                                    isSelected ? "bg-black/10 dark:bg-white/10" : "bg-gray-100 dark:bg-gray-800",
+                                                ].join(" ")}>
+                                                    <tier.icon className={[
+                                                        "w-5 h-5 transition-colors",
+                                                        isSelected ? "text-black dark:text-white" : "text-gray-500",
+                                                    ].join(" ")} />
+                                                </div>
+                                                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tier.name}</h3>
+                                            </div>
+
+                                            <div className="mb-2">
+                                                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tier.price}</span>
+                                                <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
+                                            </div>
+
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{tier.minimumMinutes}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
+
+                                            <ul className="space-y-3 mb-8 flex-grow">
+                                                {tier.features.map((feature) => (
+                                                    <li key={feature} className="flex items-start gap-2">
+                                                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                                        <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Payment Method Selector (Styled like Top-up modal) */}
+                            <div className="max-w-md mx-auto w-full space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                        Payment method
+                                    </label>
+                                    <div className="relative">
+                                        <div
+                                            onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
+                                            className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                    {selectedPmForSubscription?.card.brand === 'visa' ? (
+                                                        <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                    ) : (
+                                                        <div className="flex -space-x-1.5">
+                                                            <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                            <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                    {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                                <ChevronUp size={16} />
+                                                <ChevronDown size={16} />
+                                            </div>
+                                        </div>
+
+                                        {isPmSelectorForSubOpen && (
+                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="max-h-[200px] overflow-y-auto">
+                                                    {paymentMethods.map((pm) => (
+                                                        <div
+                                                            key={pm.id}
+                                                            onClick={() => {
+                                                                setSelectedPmForSubscription(pm);
+                                                                setIsPmSelectorForSubOpen(false);
+                                                            }}
+                                                            className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                    {pm.card.brand === 'visa' ? (
+                                                                        <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                    ) : (
+                                                                        <div className="flex -space-x-1">
+                                                                            <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                            <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                            </div>
+                                                            {selectedPmForSubscription?.id === pm.id && (
+                                                                <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-6">
+                                    <Button
+                                        onClick={() => setIsSubscriptionModalOpen(false)}
+                                        className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleCreateSubscription}
+                                        disabled={isSubscriptionSubmitting || !selectedPlan || !selectedPmForSubscription}
+                                        className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                    >
+                                        {isSubscriptionSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                        Create Subscription Plan
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </DialogContent>
                 </Dialog>
