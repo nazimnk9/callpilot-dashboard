@@ -40,26 +40,50 @@ export function DashboardContent() {
 
                 {/* 3 cards in same row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {cards.map((card, index) => (
-                        <div
-                            key={index}
-                            className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className={`p-3 rounded-xl ${card.bgColor} ${card.iconColor}`}>
-                                    <card.icon size={24} />
-                                </div>
-                                <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-sm font-medium">
-                                    <span>{card.change}</span>
-                                    <ArrowUpRight size={16} />
-                                </div>
+                {cards.map((card, index) => (
+                    <div
+                    key={index}
+                    className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    >
+                    {/* soft gradient glow */}
+                    <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
+                        <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
+                    </div>
+
+                    {/* subtle dot pattern */}
+                    <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
+                        <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
+                    </div>
+
+                    <div className="relative p-6">
+                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            {/* icon container */}
+                            <div
+                            className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
+                            >
+                            <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
+                            <card.icon size={22} />
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.title}</p>
-                                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{card.value}</h3>
+
+                            <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                {card.title}
+                            </p>
+                            <p className="mt-1 text-xl font-medium tracking-tight text-gray-900 dark:text-white">
+                                {card.value}
+                            </p>
                             </div>
                         </div>
-                    ))}
+
+                        
+                        </div>
+
+                        {/* footer row */}
+                        
+                    </div>
+                    </div>
+                ))}
                 </div>
 
                 {/* Placeholder for more content to make it look full */}

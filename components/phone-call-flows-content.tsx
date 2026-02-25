@@ -139,16 +139,16 @@ export function PhoneCallFlowsContent() {
             <div className="max-w-7xl mx-auto space-y-12">
                 <div className="flex flex-row justify-between">
                     <div className="flex flex-col gap-1">
-                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Phone call Flows</h1>
+                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Phone Call Flows</h1>
                         <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered recruitment call flows.</p>
                     </div>
                     <div>
                         <button
                             //variant="default"
-                            className="bg-white border border-black dark:bg-gray-100 text-black dark:text-gray-900 transition-all duration-200 gap-2 flex justify-center items-center rounded-md px-4 py-1"
+                            className="bg-white border border-black dark:bg-gray-100 text-black dark:text-gray-900 text-xs transition-all duration-200 gap-2 flex justify-center items-center rounded-md px-2 py-1"
                         >
                             <Globe className="w-4 h-4 text-green-600" />
-                            CallPilot Flow store
+                            AI Call Flow Options
                         </button>
                     </div>
                 </div>

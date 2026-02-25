@@ -61,11 +61,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: LayoutGrid, label: 'Dashboard', href: '/dashboard', isBold: true },
     { label: 'Integrations', isHeader: true },
     { icon: Globe, label: 'Connect CRMs', href: '/dashboard/connect-crms', isBold: true },
-    { icon: Phone, label: 'Phone numbers', href: '/dashboard/phone-numbers', isBold: true },
+    { icon: Phone, label: 'Phone Numbers', href: '/dashboard/phone-numbers', isBold: true },
     { label: 'AI Flows', isHeader: true },
-    { icon: Shuffle, label: 'Phone call Flows', href: '/dashboard/phone-call-flows', isBold: true },
+    { icon: Shuffle, label: 'Phone Call Flows', href: '/dashboard/phone-call-flows', isBold: true },
     { label: 'Report', isHeader: true },
-    { icon: FileText, label: 'Call logs', href: '/dashboard/call-logs', isBold: true },
+    { icon: FileText, label: 'Call Logs', href: '/dashboard/call-logs', isBold: true },
   ];
 
   const settingsMenuItems = [
@@ -130,7 +130,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Navigation content */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-          <nav className="space-y-8">
+          <nav className="space-y-3">
             {currentMenuItems.map((item, index) => {
               if (item.isHeader) {
                 return (
@@ -156,7 +156,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                       className={`${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}
                     />
                   )}
-                  <span className={isActive || item.isBold ? 'text-md font-semibold' : 'text-md font-medium'}>
+                  <span className={isActive || item.isBold ? 'text-sm font-semibold' : 'text-sm font-medium'}>
                     {item.label}
                   </span>
                 </a>
