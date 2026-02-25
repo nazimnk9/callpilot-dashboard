@@ -75,6 +75,12 @@ export function BillingContent() {
     const [isSubscriptionSubmitting, setIsSubscriptionSubmitting] = useState(false);
     const [selectedPmForSubscription, setSelectedPmForSubscription] = useState<any>(null);
     const [isPmSelectorForSubOpen, setIsPmSelectorForSubOpen] = useState(false);
+    const [isCancelPlanModalOpen, setIsCancelPlanModalOpen] = useState(false);
+    const [isCancellingPlan, setIsCancellingPlan] = useState(false);
+    const [isUpdateSubscriptionModalOpen, setIsUpdateSubscriptionModalOpen] = useState(false);
+    const [currentSubscription, setCurrentSubscription] = useState<any>(null);
+    const [isFetchingSubscription, setIsFetchingSubscription] = useState(false);
+    const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
 
     const tabs = ["Overview", "Payment methods", "Billing history"]
 
@@ -132,6 +138,29 @@ export function BillingContent() {
             }
         } catch (err) {
             console.error("Error fetching transactions:", err);
+        }
+    };
+
+    const fetchCurrentSubscription = async () => {
+        setIsFetchingSubscription(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setCurrentSubscription(data);
+                // Pre-fill selected plan
+                if (data.plan === 'starter') setSelectedPlan("Starter");
+                else if (data.plan === 'pro') setSelectedPlan("Medium");
+            }
+        } catch (err) {
+            console.error("Error fetching current subscription:", err);
+        } finally {
+            setIsFetchingSubscription(false);
         }
     };
 
@@ -445,6 +474,76 @@ export function BillingContent() {
         }
     };
 
+    const handleCancelPlan = async () => {
+        setIsCancellingPlan(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/subscriptions/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                toast.success("Subscription plan cancelled successfully");
+                setIsCancelPlanModalOpen(false);
+                fetchOrgData();
+            } else {
+                const errData = await response.json();
+                setErrorDetail(errData.detail || "Failed to cancel subscription plan");
+            }
+        } catch (err) {
+            console.error("Cancellation error:", err);
+            setErrorDetail("An error occurred during subscription cancellation");
+        } finally {
+            setIsCancellingPlan(false);
+        }
+    };
+
+    const handleUpdateSubscription = async () => {
+        if (!selectedPlan || !selectedPmForSubscription) {
+            toast.error("Please select a plan and a payment method");
+            return;
+        }
+
+        const backendPlan = selectedPlan === "Starter" ? "starter" : (selectedPlan === "Medium" ? "pro" : "");
+        if (backendPlan === currentSubscription?.plan) {
+            setErrorDetail("You are already on this plan. Please select a different plan to update.");
+            return;
+        }
+
+        setIsUpdateSubmitting(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    plan: backendPlan,
+                    payment_method_id: selectedPmForSubscription.id
+                })
+            });
+
+            if (response.ok) {
+                toast.success("Subscription plan updated successfully");
+                setIsUpdateSubscriptionModalOpen(false);
+                fetchOrgData();
+            } else {
+                const errData = await response.json();
+                setErrorDetail(errData.detail || "Failed to update subscription plan");
+            }
+        } catch (err) {
+            console.error("Update error:", err);
+            setErrorDetail("An error occurred during subscription update");
+        } finally {
+            setIsUpdateSubmitting(false);
+        }
+    };
+
     const pricingTiers = [
         {
             name: "Starter",
@@ -664,6 +763,186 @@ export function BillingContent() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
+
+                            <Dialog open={isUpdateSubscriptionModalOpen} onOpenChange={setIsUpdateSubscriptionModalOpen}>
+                                <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                            Update Subscription Plan
+                                        </DialogTitle>
+                                    </DialogHeader>
+
+                                    <div className="space-y-10">
+                                        {isFetchingSubscription ? (
+                                            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                                <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
+                                                <p className="text-gray-500 font-medium">Fetching subscription details...</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {/* Pricing Grid */}
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+                                                    {pricingTiers.map((tier) => {
+                                                        const hidePopularHighlight = hoveredTier !== null && hoveredTier !== tier.name;
+                                                        const isHighlighted = tier.popular ? !hidePopularHighlight : hoveredTier === tier.name;
+                                                        const isSelected = selectedPlan === tier.name;
+
+                                                        return (
+                                                            <div
+                                                                key={tier.name}
+                                                                onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
+                                                                onMouseLeave={() => setHoveredTier(null)}
+                                                                onClick={() => !tier.disabled && setSelectedPlan(tier.name)}
+                                                                className={[
+                                                                    "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
+                                                                    tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
+                                                                    isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
+                                                                    !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
+                                                                ].join(" ")}
+                                                            >
+                                                                {tier.popular && !isSelected && (
+                                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black text-white dark:bg-white dark:text-gray-900">
+                                                                            Most Popular
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="flex items-center gap-3 mb-4">
+                                                                    <div className={[
+                                                                        "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                                                                        isSelected ? "bg-black/10 dark:bg-white/10" : "bg-gray-100 dark:bg-gray-800",
+                                                                    ].join(" ")}>
+                                                                        <tier.icon className={[
+                                                                            "w-5 h-5 transition-colors",
+                                                                            isSelected ? "text-black dark:text-white" : "text-gray-500",
+                                                                        ].join(" ")} />
+                                                                    </div>
+                                                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tier.name}</h3>
+                                                                </div>
+
+                                                                <div className="mb-2">
+                                                                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tier.price}</span>
+                                                                    <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
+                                                                </div>
+
+                                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{tier.minimumMinutes}</p>
+                                                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
+
+                                                                <ul className="space-y-3 mb-8 flex-grow">
+                                                                    {tier.features.map((feature) => (
+                                                                        <li key={feature} className="flex items-start gap-2">
+                                                                            <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                                                            <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Payment Method Selector (Styled like Top-up modal) */}
+                                                <div className="max-w-md mx-auto w-full space-y-4">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                            Payment method
+                                                        </label>
+                                                        <div className="relative">
+                                                            <div
+                                                                onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
+                                                                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                                        {selectedPmForSubscription?.card.brand === 'visa' ? (
+                                                                            <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                                        ) : (
+                                                                            <div className="flex -space-x-1.5">
+                                                                                <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                                                <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                                        {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                                                    <ChevronUp size={16} />
+                                                                    <ChevronDown size={16} />
+                                                                </div>
+                                                            </div>
+
+                                                            {isPmSelectorForSubOpen && (
+                                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                                    <div className="max-h-[200px] overflow-y-auto">
+                                                                        {paymentMethods.map((pm) => (
+                                                                            <div
+                                                                                key={pm.id}
+                                                                                onClick={() => {
+                                                                                    setSelectedPmForSubscription(pm);
+                                                                                    setIsPmSelectorForSubOpen(false);
+                                                                                }}
+                                                                                className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                                            >
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                                        {pm.card.brand === 'visa' ? (
+                                                                                            <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                                        ) : (
+                                                                                            <div className="flex -space-x-1">
+                                                                                                <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                                                <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                                                </div>
+                                                                                {selectedPmForSubscription?.id === pm.id && (
+                                                                                    <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                                                )}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-end pt-1">
+                                                        <button
+                                                            onClick={() => {
+                                                                setIsTopUpOpen(false)
+                                                                setIsAddPaymentOpen(true)
+                                                            }}
+                                                            className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                                        >
+                                                            + Add payment method
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex justify-end gap-3 pt-6">
+                                                    <Button
+                                                        onClick={() => setIsUpdateSubscriptionModalOpen(false)}
+                                                        className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        onClick={handleUpdateSubscription}
+                                                        disabled={isUpdateSubmitting || !selectedPlan || !selectedPmForSubscription}
+                                                        className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                                    >
+                                                        {isUpdateSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                        Update Subscription Plan
+                                                    </Button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
                             {!orgData?.current_plan && (
                                 <Button
                                     onClick={() => {
@@ -678,8 +957,8 @@ export function BillingContent() {
                             {orgData?.current_plan && (
                                 <Button
                                     onClick={() => {
-                                        setSelectedPlan(null);
-                                        setIsSubscriptionModalOpen(true);
+                                        fetchCurrentSubscription();
+                                        setIsUpdateSubscriptionModalOpen(true);
                                     }}
                                     className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
                                 >
@@ -687,7 +966,10 @@ export function BillingContent() {
                                 </Button>
                             )}
                             {orgData?.current_plan && (
-                                <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+                                <Button
+                                    onClick={() => setIsCancelPlanModalOpen(true)}
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                >
                                     Cancel plan
                                 </Button>
                             )}
@@ -1305,6 +1587,17 @@ export function BillingContent() {
                                             </div>
                                         )}
                                     </div>
+                                    <div className="flex justify-end pt-1">
+                                        <button
+                                            onClick={() => {
+                                                setIsTopUpOpen(false)
+                                                setIsAddPaymentOpen(true)
+                                            }}
+                                            className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                        >
+                                            + Add payment method
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="flex justify-end gap-3 pt-6">
@@ -1324,6 +1617,37 @@ export function BillingContent() {
                                     </Button>
                                 </div>
                             </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={isCancelPlanModalOpen} onOpenChange={setIsCancelPlanModalOpen}>
+                    <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
+                        <DialogHeader className="p-0 space-y-2 text-left">
+                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100 text-center">
+                                Cancel plan confirmation
+                            </DialogTitle>
+                            <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium text-center pt-2">
+                                Are you sure you want to cancel your current subscription plan?
+                            </p>
+                        </DialogHeader>
+
+                        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                            <Button
+                                onClick={() => setIsCancelPlanModalOpen(false)}
+                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
+                                disabled={isCancellingPlan}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleCancelPlan}
+                                disabled={isCancellingPlan}
+                                className="w-full sm:w-auto bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                            >
+                                {isCancellingPlan && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Continue
+                            </Button>
                         </div>
                     </DialogContent>
                 </Dialog>
