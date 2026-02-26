@@ -14,16 +14,27 @@ import {
     ArrowDownWideNarrow,
     ArrowUpWideNarrow,
     Plus,
-    Loader2
+    Loader2,
+    CheckCircle2,
+    Settings2,
+    BookMarked
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
 
 interface FilterTag {
     id: string
     label: string
+    type: "search" | "category"
+    value: string
 }
 
 interface FlowResult {
@@ -34,14 +45,29 @@ interface FlowResult {
     call_direction: string;
     flow_category: string;
     flow_summary: string;
+    how_works: string[];
+    applicable_crms: string[];
+    required_resources: string[];
     code: string;
     status: string;
     is_connected: boolean;
 }
 
+const CATEGORY_MAP: Record<string, string> = {
+    "Appointment & Booking Automation": "appointment_booking",
+    "Lead & Applicant Qualification": "lead_applicant",
+    "Compliance & Document Collection": "compliance_document",
+    "Contact Centre Automation": "contact_centre",
+    "Local Authority / Public Sector": "local_authority",
+    "Other": "other"
+};
+
 export function AICallFlowOptionsContent() {
     const [titleSearch, setTitleSearch] = useState("")
-    const [selectedTypes, setSelectedTypes] = useState<string[]>(["Movie", "TV Series", "Podcast Series"])
+    const [appliedSearch, setAppliedSearch] = useState("")
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+    const [selectedFlow, setSelectedFlow] = useState<FlowResult | null>(null)
 
     // Toggle states for sidebar filters
     const [isTitleNameExpanded, setIsTitleNameExpanded] = useState(true)
@@ -57,45 +83,84 @@ export function AICallFlowOptionsContent() {
     }
 
     const activeTags: FilterTag[] = [
-        // { id: "top100", label: "IMDb Top 100 Movies" },
-        { id: "title", label: `Title name: "live"` },
-        { id: "movie", label: "Movie" },
-        { id: "tv", label: "TV Series" },
-        { id: "podcast", label: "Podcast Series" },
+        ...(appliedSearch ? [{ id: "search", label: `Categories/Types name: "${appliedSearch}"`, type: "search", value: appliedSearch } as FilterTag] : []),
+        ...selectedCategories.map(cat => ({ id: `cat-${cat}`, label: cat, type: "category", value: cat } as FilterTag))
     ]
 
-    const titleTypes = [
-        "Movie", "TV Series", "Short", "TV Episode", "TV Mini Series", "TV Movie",
-        "TV Special", "TV Short", "Video Game", "Video", "Music Video",
-        "Podcast Series", "Podcast Episode"
-    ]
+    const titleTypes = Object.keys(CATEGORY_MAP);
 
     const [results, setResults] = useState<FlowResult[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
-    useEffect(() => {
-        const fetchAvailableFlows = async () => {
-            setIsLoading(true);
-            try {
-                const token = cookieUtils.get("access");
-                const response = await fetch(`${BASE_URL}/flows/available-flow/`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setResults(data.results || []);
-                }
-            } catch (error) {
-                console.error("Error fetching available flows:", error);
-            } finally {
-                setIsLoading(false);
+    const fetchAvailableFlows = async (searchQuery: string, categories: string[]) => {
+        setIsLoading(true);
+        try {
+            const token = cookieUtils.get("access");
+            const params = new URLSearchParams();
+            if (searchQuery) {
+                params.append("search", searchQuery);
             }
-        };
+            categories.forEach(cat => {
+                const slug = CATEGORY_MAP[cat];
+                if (slug) {
+                    params.append("flow_category", slug);
+                }
+            });
 
-        fetchAvailableFlows();
+            const url = `${BASE_URL}/flows/available-flow/${params.toString() ? `?${params.toString()}` : ""}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setResults(data.results || []);
+            }
+        } catch (error) {
+            console.error("Error fetching available flows:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAvailableFlows("", []);
     }, []);
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            setAppliedSearch(titleSearch);
+            fetchAvailableFlows(titleSearch, selectedCategories);
+        }
+    };
+
+    const toggleCategory = (category: string) => {
+        const newCategories = selectedCategories.includes(category)
+            ? selectedCategories.filter(c => c !== category)
+            : [...selectedCategories, category];
+
+        setSelectedCategories(newCategories);
+        fetchAvailableFlows(appliedSearch, newCategories);
+    };
+
+    const removeTag = (tag: FilterTag) => {
+        if (tag.type === "search") {
+            setTitleSearch("");
+            setAppliedSearch("");
+            fetchAvailableFlows("", selectedCategories);
+        } else if (tag.type === "category") {
+            const newCategories = selectedCategories.filter(c => c !== tag.value);
+            setSelectedCategories(newCategories);
+            fetchAvailableFlows(appliedSearch, newCategories);
+        }
+    };
+
+    const handleViewDetails = (flow: FlowResult) => {
+        setSelectedFlow(flow);
+        setIsDetailsOpen(true);
+    };
 
     return (
         <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-950 p-4 md:p-6">
@@ -107,11 +172,14 @@ export function AICallFlowOptionsContent() {
                 </div>
 
                 {/* Active Tags */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 min-h-[32px]">
                     {activeTags.map(tag => (
                         <div key={tag.id} className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-full text-sm font-medium">
                             {tag.label}
-                            <X className="w-4 h-4 cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" />
+                            <X
+                                className="w-4 h-4 cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                                onClick={() => removeTag(tag)}
+                            />
                         </div>
                     ))}
                 </div>
@@ -165,6 +233,7 @@ export function AICallFlowOptionsContent() {
                                 <Input
                                     value={titleSearch}
                                     onChange={(e) => setTitleSearch(e.target.value)}
+                                    onKeyDown={handleSearchKeyDown}
                                     className="h-10 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950"
                                 />
                             )}
@@ -188,17 +257,11 @@ export function AICallFlowOptionsContent() {
                             {isTitleTypeExpanded && (
                                 <div className="flex flex-wrap gap-2">
                                     {titleTypes.map(type => {
-                                        const isSelected = selectedTypes.includes(type)
+                                        const isSelected = selectedCategories.includes(type)
                                         return (
                                             <button
                                                 key={type}
-                                                onClick={() => {
-                                                    if (isSelected) {
-                                                        setSelectedTypes(selectedTypes.filter(t => t !== type))
-                                                    } else {
-                                                        setSelectedTypes([...selectedTypes, type])
-                                                    }
-                                                }}
+                                                onClick={() => toggleCategory(type)}
                                                 className={`px-3 py-1 rounded-full text-sm font-medium border flex items-center gap-1 transition-colors ${isSelected
                                                     ? "bg-blue-600 border-blue-600 text-white"
                                                     : "bg-white dark:bg-gray-950 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-400"
@@ -252,7 +315,10 @@ export function AICallFlowOptionsContent() {
                                                 </div>
                                             </div>
 
-                                            <button className="p-2 px-6 hover:bg-blue-700 rounded text-white bg-blue-600 dark:bg-blue-600 transition-colors font-medium">
+                                            <button
+                                                onClick={() => handleViewDetails(flow)}
+                                                className="p-2 px-6 hover:bg-blue-700 rounded text-white bg-blue-600 dark:bg-blue-600 transition-colors font-medium"
+                                            >
                                                 View
                                             </button>
                                         </div>
@@ -267,6 +333,95 @@ export function AICallFlowOptionsContent() {
                     </div>
                 </div>
             </div>
+
+            {/* Flow Details Modal */}
+            <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+                <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 rounded-2xl">
+                    {selectedFlow && (
+                        <div className="flex flex-col h-full">
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+                                <div className="flex gap-6 items-start">
+                                    {/* Image left from Name */}
+                                    <div className="w-24 h-32 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 dark:bg-gray-900">
+                                        <img src={selectedFlow.picture} alt={selectedFlow.name} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="space-y-2 flex-grow">
+                                        <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                                            {selectedFlow.name}
+                                        </DialogTitle>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium capitalize">
+                                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.call_direction}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium uppercase tracking-wider">
+                                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.flow_category.replace(/_/g, ' ')}</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2">
+                                            {selectedFlow.flow_summary}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 bg-gray-50/50 dark:bg-gray-950/50">
+                                {/* How It Works - Left side */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                            <Settings2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">How It Works</h3>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {selectedFlow.how_works.map((step, index) => (
+                                            <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
+                                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                    {index + 1}
+                                                </span>
+                                                <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{step}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Required Resources - Right side from How It Works */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                                            <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">Required Resources</h3>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {selectedFlow.required_resources.map((resource, index) => (
+                                            <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
+                                                <div className="mt-1 flex-shrink-0">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500/60 group-hover:bg-green-500 transition-colors" />
+                                                </div>
+                                                <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{resource}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 flex flex-col sm:flex-row gap-3">
+                                <Button className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                    Add To Your Flows
+                                </Button>
+                                <Button variant="outline" className="flex-1 h-11 border-gray-200 dark:border-gray-800 font-bold rounded-xl gap-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
+                                    <Bookmark className="w-4 h-4" />
+                                    Book Mark
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </main>
     )
 }
