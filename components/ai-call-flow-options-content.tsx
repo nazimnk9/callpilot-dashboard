@@ -201,7 +201,7 @@ export function AICallFlowOptionsContent() {
 
     return (
         <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-950 p-4 md:p-6">
-            <div className="max-w-[1200px] mx-auto space-y-12">
+            <div className="max-w-[1200px] mx-auto space-y-6">
                 <div className="flex flex-row justify-between">
                     <div className="flex flex-col gap-1">
                         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Callpillot Flow Store</h1>
