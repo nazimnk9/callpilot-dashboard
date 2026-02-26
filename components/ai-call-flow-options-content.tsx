@@ -468,23 +468,20 @@ export function AICallFlowOptionsContent() {
                                 </Button>
                             </div>
                             <div className="p-4 flex flex-col gap-4 border-t border-gray-100 dark:border-gray-700">
-                    {/* <div className="w-14 h-20 border border-gray-200 dark:border-gray-600 rounded-md overflow-hidden bg-gray-50 dark:bg-gray-700 flex-shrink-0">
-                        <img src={flow.picture} alt={flow.name} className="w-full h-full object-cover" />
-                    </div> */}
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h1>
-                    </div>
-                    <div className="flex flex-col justify-center">
-                        <div className="flex items-center gap-2">
-                            <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
-                                <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
+                                <div className="flex flex-col gap-1">
+                                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h1>
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
+                                            <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
+                                        </div>
+                                        <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
+                                            <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
-                                <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
                         </div>
                     )}
                 </DialogContent>

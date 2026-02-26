@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MoreHorizontal, Globe, Loader2 } from "lucide-react"
+import { MoreHorizontal, Globe, Loader2, Bookmark, Settings2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import { ToastNotification } from "@/components/auth/toast-notification"
@@ -15,6 +15,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import Link from "next/link"
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
@@ -54,6 +60,9 @@ export function PhoneCallFlowsContent() {
     const [showResultDialog, setShowResultDialog] = useState(false)
     const [resultMessage, setResultMessage] = useState("")
     const [resultTitle, setResultTitle] = useState("")
+
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+    const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null)
 
     useEffect(() => {
         fetchMyFlows()
@@ -113,7 +122,13 @@ export function PhoneCallFlowsContent() {
                         <div className="flex-1">
                             <div className="flex justify-between items-start mb-4">
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">{flow.name}</h3>
-                                <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+                                <button
+                                    onClick={() => {
+                                        setSelectedFlow(flow);
+                                        setIsDetailsOpen(true);
+                                    }}
+                                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                                >
                                     <span className="text-sm font-medium underline">More</span>
                                 </button>
                             </div>
@@ -214,6 +229,116 @@ export function PhoneCallFlowsContent() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Flow Details Modal */}
+            <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+                <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 rounded-2xl">
+                    {selectedFlow && (
+                        <div className="flex flex-col h-full">
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+                                <div className="flex gap-6 items-start">
+                                    {/* Image left from Name */}
+                                    <div className="w-24 h-32 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 dark:bg-gray-900">
+                                        <img src={selectedFlow.picture} alt={selectedFlow.name} className="w-full h-full object-fixed" />
+                                    </div>
+                                    <div className="space-y-2 flex-grow">
+                                        <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                                            {selectedFlow.name}
+                                        </DialogTitle>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium capitalize">
+                                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.call_direction}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium uppercase tracking-wider">
+                                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.flow_category.replace(/_/g, ' ')}</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2">
+                                            {selectedFlow.flow_summary}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 bg-gray-50/50 dark:bg-gray-950/50">
+                                {/* How It Works - Left side */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                            <Settings2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">How It Works</h3>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {selectedFlow.how_works.map((step, index) => (
+                                            <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
+                                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                    {index + 1}
+                                                </span>
+                                                <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{step}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Required Resources - Right side from How It Works */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                                            <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">Required Resources</h3>
+                                    </div>
+                                    <ul className="space-y-3">
+                                        {selectedFlow.required_resources.map((resource, index) => (
+                                            <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
+                                                <div className="mt-1 flex-shrink-0">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500/60 group-hover:bg-green-500 transition-colors" />
+                                                </div>
+                                                <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{resource}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            {/* <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 flex flex-col sm:flex-row gap-3">
+                                <Button
+                                    onClick={() => setIsDetailsOpen(false)}
+                                    className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    Close
+                                </Button>
+                                <Button variant="outline" className="flex-1 h-11 border-gray-200 dark:border-gray-800 font-bold rounded-xl gap-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
+                                    <Bookmark className="w-4 h-4" />
+                                    Book Mark
+                                </Button>
+                            </div> */}
+
+                            {/* Compatible CRM Section */}
+                            <div className="p-4 flex flex-col gap-4 border-t border-gray-100 dark:border-gray-700">
+                                <div className="flex flex-col gap-1">
+                                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h1>
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
+                                            <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
+                                        </div>
+                                        <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
+                                            <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </main>
     )
 }
+
