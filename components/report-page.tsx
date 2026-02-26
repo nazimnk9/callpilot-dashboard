@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { X, ArrowLeft } from "lucide-react"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
@@ -46,6 +46,23 @@ interface DisplayReportItem {
     conversation_json: ChatMessage[]
 }
 
+interface DinerReportItem {
+    id: number
+    uid: string
+    created_at: string
+    updated_at: string
+    call_sid: string
+    from_number: string
+    to_number: string
+    booking_confirmed: boolean
+    customer_name: string | null
+    party_size: string
+    reservation_date: string | null
+    reservation_time: string | null
+    conversation_json: ChatMessage[] | null
+    organization: number
+}
+
 interface ReportPageProps {
     featureUid?: string
 }
@@ -69,15 +86,25 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
 
     // Main Reports State
     const [reports, setReports] = useState<DisplayReportItem[]>([])
+    const [dinerReports, setDinerReports] = useState<DinerReportItem[]>([])
+    const [isDiner, setIsDiner] = useState(false)
     const [loading, setLoading] = useState(true)
     const [featureName, setFeatureName] = useState("Reports")
     const [selectedInterview, setSelectedInterview] = useState<DisplayReportItem | null>(null)
+    const [selectedDinerReport, setSelectedDinerReport] = useState<DinerReportItem | null>(null)
     const router = useRouter()
+    const searchParams = useSearchParams()
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true)
+
+                let currentFlowCode = searchParams.get("code") || ""
+                if (currentFlowCode === "AICALL191") {
+                    setIsDiner(true)
+                    setFeatureName("AI Diner Ordering Assistant")
+                }
 
                 // Fetch Feature Name if UID is provided
                 if (featureUid) {
@@ -85,27 +112,36 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                     const currentFeature = featuresRes.data.results.find((f: any) => f.uid === featureUid)
                     if (currentFeature) {
                         setFeatureName(currentFeature.name)
+                        currentFlowCode = currentFeature.code || ""
+                        if (currentFlowCode === "AICALL191") {
+                            setIsDiner(true)
+                        }
                     }
                 }
 
-                // Fetch Call Interview Data
-                const reportsRes = await interviewService.getInterviews()
+                if (currentFlowCode === "AICALL191") {
+                    const res = await flowService.getDinerReports()
+                    setDinerReports(res.data.results)
+                } else {
+                    // Fetch Call Interview Data
+                    const reportsRes = await interviewService.getInterviews()
 
-                const normalized = reportsRes.data.results.map((item: any) => ({
-                    id: item.id,
-                    reports_uid: item.uid,
-                    uid: item.uid,
-                    candidate_id: item.candidate_id,
-                    candidate_name: item.candidate_name,
-                    candidate_email: item.candidate_email,
-                    candidate_phone: item.candidate_phone,
-                    started_at: item.started_at,
-                    status: item.status,
-                    ai_decision: item.ai_decision,
-                    updated_at: item.updated_at,
-                    conversation_json: item.interview_data?.conversation_json || []
-                }))
-                setReports(normalized)
+                    const normalized = reportsRes.data.results.map((item: any) => ({
+                        id: item.id,
+                        reports_uid: item.uid,
+                        uid: item.uid,
+                        candidate_id: item.candidate_id,
+                        candidate_name: item.candidate_name,
+                        candidate_email: item.candidate_email,
+                        candidate_phone: item.candidate_phone,
+                        started_at: item.started_at,
+                        status: item.status,
+                        ai_decision: item.ai_decision,
+                        updated_at: item.updated_at,
+                        conversation_json: item.interview_data?.conversation_json || []
+                    }))
+                    setReports(normalized)
+                }
 
             } catch (error) {
                 console.error("Error fetching data:", error)
@@ -117,13 +153,19 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
         fetchData()
     }, [featureUid])
 
-    const handleViewChat = (interview: DisplayReportItem) => {
-        setSelectedInterview(interview)
+    const handleViewChat = (item: DisplayReportItem | DinerReportItem) => {
+        if ("candidate_name" in item) {
+            setSelectedInterview(item)
+            setSelectedDinerReport(null)
+        } else {
+            setSelectedDinerReport(item)
+            setSelectedInterview(null)
+        }
         setIsChatModalOpen(true)
     }
 
     const formatDate = (dateString: string | null) => {
-        if (!dateString) return "-"
+        if (!dateString || dateString === "None") return "-"
         try {
             return new Date(dateString).toLocaleString()
         } catch (e) {
@@ -181,43 +223,89 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                         Report - {featureName}
                     </h1>
                     <p className="text-muted-foreground">
-                        View automation interview records for the {featureName}.
+                        {isDiner ? `View reservation records for the ${featureName}.` : `View automation interview records for the ${featureName}.`}
                     </p>
                 </div>
-                <Button
-                    onClick={() => setIsRecallModalOpen(true)}
-                    className="bg-primary hover:bg-primary/90 cursor-pointer"
-                >
-                    Retry Call Interview
-                </Button>
+                {!isDiner && (
+                    <Button
+                        onClick={() => setIsRecallModalOpen(true)}
+                        className="bg-primary hover:bg-primary/90 cursor-pointer"
+                    >
+                        Retry Call Interview
+                    </Button>
+                )}
             </div>
 
             <div className="border rounded-lg bg-card overflow-hidden mb-8">
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-muted/50">
-                            <TableHead className="font-semibold text-foreground">Interview ID</TableHead>
-                            <TableHead className="font-semibold text-foreground">Candidate ID</TableHead>
-                            <TableHead className="font-semibold text-foreground">Candidate Name</TableHead>
-                            <TableHead className="font-semibold text-foreground">Candidate Email</TableHead>
-                            <TableHead className="font-semibold text-foreground">Candidate Mobile</TableHead>
-                            <TableHead className="font-semibold text-foreground">First Message Sent At</TableHead>
-                            <TableHead className="font-semibold text-foreground">Status</TableHead>
-                            <TableHead className="font-semibold text-foreground">Ai Decision</TableHead>
-                            <TableHead className="font-semibold text-foreground">Updated At</TableHead>
-                            <TableHead className="font-semibold text-foreground">Chat History</TableHead>
-                            <TableHead className="font-semibold text-foreground">Retry call Interview</TableHead>
-                        </TableRow>
+                        {isDiner ? (
+                            <TableRow className="bg-muted/50">
+                                <TableHead className="font-semibold text-foreground text-nowrap">ID</TableHead>
+                                <TableHead className="font-semibold text-foreground text-nowrap">Customer Name</TableHead>
+                                <TableHead className="font-semibold text-foreground text-nowrap">Party Size</TableHead>
+                                <TableHead className="font-semibold text-foreground text-nowrap">Reservation Date</TableHead>
+                                <TableHead className="font-semibold text-foreground text-nowrap">Reservation Time</TableHead>
+                                <TableHead className="font-semibold text-foreground text-nowrap">Status</TableHead>
+                                <TableHead className="font-semibold text-foreground text-nowrap">Actions</TableHead>
+                            </TableRow>
+                        ) : (
+                            <TableRow className="bg-muted/50">
+                                <TableHead className="font-semibold text-foreground">Interview ID</TableHead>
+                                <TableHead className="font-semibold text-foreground">Candidate ID</TableHead>
+                                <TableHead className="font-semibold text-foreground">Candidate Name</TableHead>
+                                <TableHead className="font-semibold text-foreground">Candidate Email</TableHead>
+                                <TableHead className="font-semibold text-foreground">Candidate Mobile</TableHead>
+                                <TableHead className="font-semibold text-foreground">First Message Sent At</TableHead>
+                                <TableHead className="font-semibold text-foreground">Status</TableHead>
+                                <TableHead className="font-semibold text-foreground">Ai Decision</TableHead>
+                                <TableHead className="font-semibold text-foreground">Updated At</TableHead>
+                                <TableHead className="font-semibold text-foreground">Chat History</TableHead>
+                                <TableHead className="font-semibold text-foreground">Retry call Interview</TableHead>
+                            </TableRow>
+                        )}
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={11} className="text-center h-24">Loading records...</TableCell>
+                                <TableCell colSpan={isDiner ? 7 : 11} className="text-center h-24">Loading records...</TableCell>
                             </TableRow>
-                        ) : reports.length === 0 ? (
+                        ) : (isDiner ? dinerReports.length === 0 : reports.length === 0) ? (
                             <TableRow>
-                                <TableCell colSpan={11} className="text-center h-24">No records found.</TableCell>
+                                <TableCell colSpan={isDiner ? 7 : 11} className="text-center h-24">No records found.</TableCell>
                             </TableRow>
+                        ) : isDiner ? (
+                            dinerReports.map((row) => (
+                                <TableRow key={row.id} className="hover:bg-muted/30">
+                                    <TableCell className="text-sm">{row.uid}</TableCell>
+                                    <TableCell className="text-sm font-medium">{row.customer_name || "-"}</TableCell>
+                                    <TableCell className="text-sm">{row.party_size}</TableCell>
+                                    <TableCell className="text-sm">{row.reservation_date || "-"}</TableCell>
+                                    <TableCell className="text-sm">{row.reservation_time || "-"}</TableCell>
+                                    <TableCell className="text-sm">
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.booking_confirmed ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"}`}>
+                                            {row.booking_confirmed ? "Confirmed" : "Pending"}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-sm">
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="link"
+                                                className="text-primary hover:underline p-0 h-auto cursor-pointer"
+                                                onClick={() => handleViewChat(row)}
+                                            >
+                                                View
+                                            </Button>
+                                            <Button
+                                                variant="link"
+                                                className="text-[#64748b] dark:text-gray-400 hover:underline p-0 h-auto cursor-pointer font-semibold"
+                                            >
+                                                Change Status
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
                         ) : (
                             reports.map((row) => (
                                 <TableRow key={row.id} className="hover:bg-muted/30">
@@ -271,17 +359,10 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                 <DialogContent className="max-w-xl p-0 overflow-hidden">
                     <div className="flex items-center justify-between p-4 border-b">
                         <h2 className="text-xl font-semibold text-foreground">Chat History</h2>
-                        {/* <button
-                            onClick={() => setIsChatModalOpen(false)}
-                            className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none cursor-pointer"
-                        >
-                            <X className="h-5 w-5" />
-                            <span className="sr-only">Close</span>
-                        </button> */}
                     </div>
                     <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-                        {selectedInterview?.conversation_json && selectedInterview.conversation_json.length > 0 ? (
-                            selectedInterview.conversation_json.map((msg, idx) => (
+                        {(isDiner ? selectedDinerReport?.conversation_json : selectedInterview?.conversation_json) && (isDiner ? (selectedDinerReport?.conversation_json?.length || 0) > 0 : (selectedInterview?.conversation_json?.length || 0) > 0) ? (
+                            (isDiner ? selectedDinerReport?.conversation_json : selectedInterview!.conversation_json)!.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.role === "assistant" || msg.sender === "ai" ? "justify-start" : "justify-end"}`}>
                                     <div
                                         className={`max-w-[80%] p-3 rounded-xl text-sm leading-relaxed shadow-sm ${msg.role === "assistant" || msg.sender === "ai"

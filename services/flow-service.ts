@@ -70,5 +70,8 @@ export const flowService = {
     },
     async updateDinerConfig(payload: any) {
         return api.patch("/interview/bookings/details", payload);
+    },
+    async getDinerReports() {
+        return api.get("/interview/bookings/reports");
     }
 };
