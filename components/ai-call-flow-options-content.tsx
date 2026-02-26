@@ -223,7 +223,7 @@ export function AICallFlowOptionsContent() {
 
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Search filters</h1>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Search filters</h1>
 
                     <div className="flex items-center gap-4">
                         <button
@@ -259,7 +259,7 @@ export function AICallFlowOptionsContent() {
                                 className="flex items-center justify-between cursor-pointer group"
                                 onClick={() => setIsTitleNameExpanded(!isTitleNameExpanded)}
                             >
-                                <h3 className="font-bold text-sm">Categories/Types name</h3>
+                                <h3 className="font-semibold text-sm">Categories/Types name</h3>
                                 {isTitleNameExpanded ? (
                                     <ChevronUp className="w-4 h-4 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300" />
                                 ) : (
@@ -285,7 +285,7 @@ export function AICallFlowOptionsContent() {
                                 className="flex items-center justify-between cursor-pointer group"
                                 onClick={() => setIsTitleTypeExpanded(!isTitleTypeExpanded)}
                             >
-                                <h3 className="font-bold text-sm">Call flow Categories/Types</h3>
+                                <h3 className="font-semibold text-sm">Call flow Categories/Types</h3>
                                 {isTitleTypeExpanded ? (
                                     <ChevronUp className="w-4 h-4 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300" />
                                 ) : (
@@ -340,7 +340,7 @@ export function AICallFlowOptionsContent() {
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    <h2 className="text-lg font-bold group-hover:text-blue-600 cursor-pointer">
+                                                    <h2 className="text-lg font-semibold group-hover:text-blue-600 cursor-pointer">
                                                         {flow.name}
                                                     </h2>
                                                     <div className="flex items-center gap-3 text-sm text-gray-500 font-medium capitalize">
@@ -385,7 +385,7 @@ export function AICallFlowOptionsContent() {
                                         <img src={selectedFlow.picture} alt={selectedFlow.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="space-y-2 flex-grow">
-                                        <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                                        <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight">
                                             {selectedFlow.name}
                                         </DialogTitle>
                                         <div className="flex flex-col gap-4">
@@ -411,12 +411,12 @@ export function AICallFlowOptionsContent() {
                                         <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                                             <Settings2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                         </div>
-                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">How It Works</h3>
+                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">How It Works</h3>
                                     </div>
                                     <ul className="space-y-3">
                                         {selectedFlow.how_works.map((step, index) => (
                                             <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
-                                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-semibold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                                     {index + 1}
                                                 </span>
                                                 <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{step}</span>
@@ -431,7 +431,7 @@ export function AICallFlowOptionsContent() {
                                         <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
                                             <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                                         </div>
-                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">Required Resources</h3>
+                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">Required Resources</h3>
                                     </div>
                                     <ul className="space-y-3">
                                         {selectedFlow.required_resources.map((resource, index) => (
@@ -451,7 +451,7 @@ export function AICallFlowOptionsContent() {
                                 <Button
                                     onClick={handleConnectFlow}
                                     disabled={isConnecting}
-                                    className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     {isConnecting ? (
                                         <>
@@ -462,9 +462,9 @@ export function AICallFlowOptionsContent() {
                                         "Add To Your Flows"
                                     )}
                                 </Button>
-                                <Button variant="outline" className="flex-1 h-11 border-gray-200 dark:border-gray-800 font-bold rounded-xl gap-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
+                                <Button variant="outline" className="flex-1 h-11 border-gray-200 dark:border-gray-800 font-semibold rounded-xl gap-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
                                     <Bookmark className="w-4 h-4" />
-                                    Book Mark
+                                    Bookmark
                                 </Button>
                             </div>
                             <div className="p-4 flex flex-col gap-4 border-t border-gray-100 dark:border-gray-700">
