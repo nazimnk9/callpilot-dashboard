@@ -61,5 +61,14 @@ export const flowService = {
 
     async updateCallConfig(payload: any) {
         return api.patch("/interview/call/config/details", payload);
+    },
+    async getDinerConfig() {
+        return api.get("/interview/bookings/details");
+    },
+    async saveDinerConfig(payload: any) {
+        return api.post("/interview/bookings/", payload);
+    },
+    async updateDinerConfig(payload: any) {
+        return api.patch("/interview/bookings/details", payload);
     }
 };

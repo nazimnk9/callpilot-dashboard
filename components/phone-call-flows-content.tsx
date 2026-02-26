@@ -91,8 +91,8 @@ export function PhoneCallFlowsContent() {
         }
     }
 
-    const handleConfigureClick = (uid: string) => {
-        router.push(`/dashboard/configure/${uid}`)
+    const handleConfigureClick = (uid: string, name: string, code: string) => {
+        router.push(`/dashboard/configure/${uid}?name=${encodeURIComponent(name)}&code=${code}`)
     }
 
     const FlowCard = ({ item }: { item: MyFlowItem }) => {
@@ -141,7 +141,7 @@ export function PhoneCallFlowsContent() {
                     <div className="flex gap-2.5 mt-auto">
                         <Button
                             className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold h-11 px-8 rounded-lg text-sm transition-all shadow-sm"
-                            onClick={() => handleConfigureClick(item.uid)}
+                            onClick={() => handleConfigureClick(item.uid, flow.name, flow.code)}
                         >
                             Configure
                         </Button>

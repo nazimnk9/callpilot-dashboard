@@ -10,7 +10,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { flowService } from "@/services/flow-service"
 import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import {
     AlertDialog,
@@ -83,6 +83,7 @@ const CALLING_TIME_OPTIONS = [
 
 export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const router = useRouter()
+    const searchParams = useSearchParams()
 
     // Dropdown Data States
     const [statusOptions, setStatusOptions] = useState<InterviewStatus[]>([])
@@ -97,6 +98,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [platformUid, setPlatformUid] = useState("")
     const [voiceId, setVoiceId] = useState("")
     const [endCallNegative, setEndCallNegative] = useState("false")
+    const [restaurantName, setRestaurantName] = useState("")
+    const [assistantName, setAssistantName] = useState("")
 
     // Status Assignments
     const [jobAdStatus, setJobAdStatus] = useState("Current")
@@ -119,6 +122,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [resultTitle, setResultTitle] = useState("")
 
     useEffect(() => {
+        const nameParam = searchParams.get("name")
+        const codeParam = searchParams.get("code")
+        if (nameParam) {
+            setFeatureName(nameParam)
+        }
+
         const fetchData = async () => {
             try {
                 const [statusRes, platformRes, phoneRes, featuresRes, questionsRes] = await Promise.all([
@@ -139,37 +148,53 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     setFeatureName(currentFeature.name)
                 }
 
-                try {
-                    const configRes = await flowService.getCallConfig()
-                    const configData = configRes.data
-
-                    if (configData) {
-                        setIsUpdateMode(true)
-
-                        setPlatformUid(configData.platform?.uid || "")
-                        setPhoneNumberUid(configData.phone?.uid || "")
-                        setVoiceId(configData.voice_id || "")
-                        setEndCallNegative(configData.end_call_if_primary_answer_negative ? "true" : "false")
-
-                        setJobAdStatus(configData.jobad_status_for_calling || "Current")
-                        setApplicationStatus(String(configData.application_status_for_calling || ""))
-                        setCallingTime(String(configData.calling_time_after_status_update || "15"))
-                        setUnsuccessfulStatus(String(configData.status_for_unsuccessful_call || ""))
-                        setSuccessfulStatus(String(configData.status_for_successful_call || ""))
-                        setPlacedStatus(String(configData.status_when_call_is_placed || ""))
-
-                        if (configData.primary_questions && Array.isArray(configData.primary_questions)) {
-                            const mappedQuestions = configData.primary_questions.map((q: any) => ({
-                                tempId: crypto.randomUUID(),
-                                uid: q.uid,
-                                value: q.question,
-                                isSaved: true
-                            }))
-                            setQuestions(mappedQuestions.length > 0 ? mappedQuestions : [{ tempId: crypto.randomUUID(), value: "", isSaved: false }])
+                if (codeParam === "AICALL191") {
+                    try {
+                        const dinerRes = await flowService.getDinerConfig()
+                        const dinerData = dinerRes.data
+                        if (dinerData) {
+                            setPhoneNumberUid(dinerData.phone?.uid || "")
+                            setVoiceId(dinerData.voice_id || "")
+                            setRestaurantName(dinerData.restaurant_name || "")
+                            setAssistantName(dinerData.assistant_name || "")
+                            setIsUpdateMode(true)
                         }
+                    } catch (dinerErr) {
+                        // No diner config yet
                     }
-                } catch (configErr) {
-                    // No config yet
+                } else {
+                    try {
+                        const configRes = await flowService.getCallConfig()
+                        const configData = configRes.data
+
+                        if (configData) {
+                            setIsUpdateMode(true)
+
+                            setPlatformUid(configData.platform?.uid || "")
+                            setPhoneNumberUid(configData.phone?.uid || "")
+                            setVoiceId(configData.voice_id || "")
+                            setEndCallNegative(configData.end_call_if_primary_answer_negative ? "true" : "false")
+
+                            setJobAdStatus(configData.jobad_status_for_calling || "Current")
+                            setApplicationStatus(String(configData.application_status_for_calling || ""))
+                            setCallingTime(String(configData.calling_time_after_status_update || "15"))
+                            setUnsuccessfulStatus(String(configData.status_for_unsuccessful_call || ""))
+                            setSuccessfulStatus(String(configData.status_for_successful_call || ""))
+                            setPlacedStatus(String(configData.status_when_call_is_placed || ""))
+
+                            if (configData.primary_questions && Array.isArray(configData.primary_questions)) {
+                                const mappedQuestions = configData.primary_questions.map((q: any) => ({
+                                    tempId: crypto.randomUUID(),
+                                    uid: q.uid,
+                                    value: q.question,
+                                    isSaved: true
+                                }))
+                                setQuestions(mappedQuestions.length > 0 ? mappedQuestions : [{ tempId: crypto.randomUUID(), value: "", isSaved: false }])
+                            }
+                        }
+                    } catch (configErr) {
+                        // No config yet
+                    }
                 }
 
                 setIsLoading(false)
@@ -224,6 +249,37 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
     const handleSaveConfiguration = async () => {
         setError("")
+        const codeParam = searchParams.get("code")
+
+        if (codeParam === "AICALL191") {
+            try {
+                setIsSaving(true)
+                const payload = {
+                    phone_uid: phoneNumberUid,
+                    voice_id: voiceId,
+                    restaurant_name: restaurantName,
+                    assistant_name: assistantName
+                }
+
+                if (isUpdateMode) {
+                    await flowService.updateDinerConfig(payload)
+                } else {
+                    await flowService.saveDinerConfig(payload)
+                }
+
+                setResultTitle("Success")
+                setResultMessage(isUpdateMode ? "Configuration updated successfully!" : "Configuration saved successfully!")
+                setShowResultDialog(true)
+            } catch (err: any) {
+                console.error("Error saving diner configuration:", err)
+                setResultTitle("Error")
+                setResultMessage(err.response?.data?.message || err.message || "Failed to save configuration")
+                setShowResultDialog(true)
+            } finally {
+                setIsSaving(false)
+            }
+            return
+        }
 
         const selectedStatuses = [applicationStatus, unsuccessfulStatus, successfulStatus, placedStatus].filter(Boolean)
         const uniqueStatuses = new Set(selectedStatuses)
@@ -337,203 +393,274 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Left Column */}
-                    <div className="space-y-8">
-                        <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform</Label>
-                                    <Select value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
-                                        <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                            <SelectValue placeholder="Select Platform" />
-                                        </SelectTrigger>
-                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                            <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                            {platformOptions.map(p => (
-                                                <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">{p.platform.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
-                                    <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                        <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                            <SelectValue placeholder="Select phone number" />
-                                        </SelectTrigger>
-                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                            <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                            {phoneNumberOptions.map(p => (
-                                                <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
-                                                    {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                                        Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New Number</Link>
-                                    </p>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
-                                    <Input
-                                        value={voiceId}
-                                        onChange={(e) => setVoiceId(e.target.value)}
-                                        placeholder="Enter Voice ID"
-                                        className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                </div>
-
-                                <div className="space-y-3 pt-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">End call if primary answer is negative?</Label>
-                                    <RadioGroup value={endCallNegative} onValueChange={setEndCallNegative} className="flex gap-4">
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="true" id="ec-yes" className="dark:border-gray-500 dark:text-gray-100" />
-                                            <Label htmlFor="ec-yes" className="font-medium text-gray-600 dark:text-gray-400 cursor-pointer">Yes</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="false" id="ec-no" className="dark:border-gray-500 dark:text-gray-100" />
-                                            <Label htmlFor="ec-no" className="font-medium text-gray-600 dark:text-gray-400 cursor-pointer">No</Label>
-                                        </div>
-                                    </RadioGroup>
-                                </div>
-                            </div>
-                        </Card>
-
-                        <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Interview Questions</h2>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
-                                Add primary questions for the interview. Save each question before saving the full configuration.
-                            </p>
-
-                            <div className="space-y-5">
-                                {questions.map((q, index) => (
-                                    <div key={q.tempId} className="space-y-2">
-                                        <div className="flex gap-2 items-center">
-                                            <Input
-                                                value={q.value}
-                                                onChange={(e) => handleQuestionChange(index, e.target.value)}
-                                                placeholder="Type a question"
-                                                className={`h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${q.isSaved ? "border-green-500 bg-green-50/20 dark:bg-green-500/10 dark:border-green-600" : ""}`}
-                                                disabled={q.isSaved}
-                                            />
-                                            <div className="flex gap-2 shrink-0">
-                                                {!q.isSaved ? (
-                                                    <Button size="sm" variant="outline" onClick={() => handleSaveQuestion(index)} className="h-12 px-5 border-2 rounded-xl font-bold cursor-pointer dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700" >Save</Button>
-                                                ) : (
-                                                    <div className="h-12 w-12 flex items-center justify-center text-green-500 dark:text-green-400" title="Saved"><CheckCircle2 className="h-6 w-6" /></div>
-                                                )}
-                                                <Button size="icon" variant="ghost" onClick={() => handleDeleteQuestion(index)} className="h-12 w-12 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl cursor-pointer"><Trash2 className="h-5 w-5" /></Button>
-                                            </div>
-                                        </div>
-                                        {!q.value && !q.isSaved && suggestedQuestions.length > 0 && (
-                                            <div className="border border-gray-100 dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-900/30 space-y-3">
-                                                <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Suggested Questions:</p>
-                                                <div className="flex flex-col gap-2">
-                                                    {suggestedQuestions.map(s => (
-                                                        <div key={s.id} onClick={() => handleSuggestionClick(index, s.question)} className="text-sm p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg cursor-pointer transition-all shadow-sm dark:text-gray-100">{s.question}</div>
+                    {searchParams.get("code") === "AICALL191" ? (
+                        <>
+                            {/* Left Column */}
+                            <div className="space-y-8">
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
+                                            <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select phone number" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {phoneNumberOptions.map(p => (
+                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
+                                                            {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
+                                                        </SelectItem>
                                                     ))}
-                                                </div>
-                                            </div>
-                                        )}
+                                                </SelectContent>
+                                            </Select>
+                                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New Number</Link>
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
+                                            <Input
+                                                value={voiceId}
+                                                onChange={(e) => setVoiceId(e.target.value)}
+                                                placeholder="Enter Voice ID"
+                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            />
+                                        </div>
                                     </div>
-                                ))}
-                                <Button onClick={handleAddQuestion} variant="outline" className="h-12 px-6 border-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 transition-all">
-                                    <Plus className="h-4 w-4 mr-2" /> Add More Question
-                                </Button>
+                                </Card>
                             </div>
-                        </Card>
-                    </div>
 
-                    {/* Right Column */}
-                    <div className="space-y-8">
-                        <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Automation Logic</h2>
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Job Ad Status for Calling</Label>
-                                    <Select value={jobAdStatus} onValueChange={handleSelectChange(setJobAdStatus)}>
-                                        <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                            <SelectItem value="Current" className="dark:text-gray-100">Current</SelectItem>
-                                            <SelectItem value="Expired" className="dark:text-gray-100">Expired</SelectItem>
-                                            <SelectItem value="Draft" className="dark:text-gray-100">Draft</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Application Status for Calling</Label>
-                                    <Select value={applicationStatus} onValueChange={handleSelectChange(setApplicationStatus)}>
-                                        <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                            <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                            {statusOptions.map(s => (<SelectItem key={s.id} value={String(s.id)} className="dark:text-gray-100">{s.name}</SelectItem>))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Calling Time After Status Update</Label>
-                                    <Select value={callingTime} onValueChange={handleSelectChange(setCallingTime)}>
-                                        <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                            <SelectValue placeholder="Select time" />
-                                        </SelectTrigger>
-                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                            <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                            {CALLING_TIME_OPTIONS.map(opt => (<SelectItem key={opt.value} value={String(opt.value)} className="dark:text-gray-100">{opt.label}</SelectItem>))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status When Call is Placed</Label>
-                                    <Select value={placedStatus} onValueChange={handleSelectChange(setPlacedStatus)}>
-                                        <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                            <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                            {statusOptions.map(s => (<SelectItem key={s.id} value={String(s.id)} className="dark:text-gray-100">{s.name}</SelectItem>))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status for Successful Call</Label>
-                                    <Select value={successfulStatus} onValueChange={handleSelectChange(setSuccessfulStatus)}>
-                                        <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                            <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                            {statusOptions.map(s => (<SelectItem key={s.id} value={String(s.id)} className="dark:text-gray-100">{s.name}</SelectItem>))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status for Unsuccessful Call</Label>
-                                    <Select value={unsuccessfulStatus} onValueChange={handleSelectChange(setUnsuccessfulStatus)}>
-                                        <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                            <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                            {statusOptions.map(s => (<SelectItem key={s.id} value={String(s.id)} className="dark:text-gray-100">{s.name}</SelectItem>))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            {/* Right Column */}
+                            <div className="space-y-8">
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Assistant Settings</h2>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Restaurant Name</Label>
+                                            <Input
+                                                value={restaurantName}
+                                                onChange={(e) => setRestaurantName(e.target.value)}
+                                                placeholder="Enter Restaurant Name"
+                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Assistant Name</Label>
+                                            <Input
+                                                value={assistantName}
+                                                onChange={(e) => setAssistantName(e.target.value)}
+                                                placeholder="Enter Assistant Name"
+                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </Card>
                             </div>
-                        </Card>
-                    </div>
+                        </>
+                    ) : (
+                        <>
+                            {/* Left Column */}
+                            <div className="space-y-8">
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform</Label>
+                                            <Select value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select Platform" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {platformOptions.map(p => (
+                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">{p.platform.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
+                                            <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select phone number" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {phoneNumberOptions.map(p => (
+                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
+                                                            {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New Number</Link>
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
+                                            <Input
+                                                value={voiceId}
+                                                onChange={(e) => setVoiceId(e.target.value)}
+                                                placeholder="Enter Voice ID"
+                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-3 pt-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">End call if primary answer is negative?</Label>
+                                            <RadioGroup value={endCallNegative} onValueChange={setEndCallNegative} className="flex gap-4">
+                                                <div className="flex items-center space-x-2">
+                                                    <RadioGroupItem value="true" id="ec-yes" className="dark:border-gray-500 dark:text-gray-100" />
+                                                    <Label htmlFor="ec-yes" className="font-medium text-gray-600 dark:text-gray-400 cursor-pointer">Yes</Label>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <RadioGroupItem value="false" id="ec-no" className="dark:border-gray-500 dark:text-gray-100" />
+                                                    <Label htmlFor="ec-no" className="font-medium text-gray-600 dark:text-gray-400 cursor-pointer">No</Label>
+                                                </div>
+                                            </RadioGroup>
+                                        </div>
+                                    </div>
+                                </Card>
+
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Interview Questions</h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
+                                        Add primary questions for the interview. Save each question before saving the full configuration.
+                                    </p>
+
+                                    <div className="space-y-5">
+                                        {questions.map((q, index) => (
+                                            <div key={q.tempId} className="space-y-2">
+                                                <div className="flex gap-2 items-center">
+                                                    <Input
+                                                        value={q.value}
+                                                        onChange={(e) => handleQuestionChange(index, e.target.value)}
+                                                        placeholder="Type a question"
+                                                        className={`h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${q.isSaved ? "border-green-500 bg-green-50/20 dark:bg-green-500/10 dark:border-green-600" : ""}`}
+                                                        disabled={q.isSaved}
+                                                    />
+                                                    <div className="flex gap-2 shrink-0">
+                                                        {!q.isSaved ? (
+                                                            <Button size="sm" variant="outline" onClick={() => handleSaveQuestion(index)} className="h-12 px-5 border-2 rounded-xl font-bold cursor-pointer dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700" >Save</Button>
+                                                        ) : (
+                                                            <div className="h-12 w-12 flex items-center justify-center text-green-500 dark:text-green-400" title="Saved"><CheckCircle2 className="h-6 w-6" /></div>
+                                                        )}
+                                                        <Button size="icon" variant="ghost" onClick={() => handleDeleteQuestion(index)} className="h-12 w-12 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl cursor-pointer"><Trash2 className="h-5 w-5" /></Button>
+                                                    </div>
+                                                </div>
+                                                {!q.value && !q.isSaved && suggestedQuestions.length > 0 && (
+                                                    <div className="border border-gray-100 dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-900/30 space-y-3">
+                                                        <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Suggested Questions:</p>
+                                                        <div className="flex flex-col gap-2">
+                                                            {suggestedQuestions.map(s => (
+                                                                <div key={s.id} onClick={() => handleSuggestionClick(index, s.question)} className="text-sm p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg cursor-pointer transition-all shadow-sm dark:text-gray-100">{s.question}</div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <Button onClick={handleAddQuestion} variant="outline" className="h-12 px-6 border-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 transition-all">
+                                            <Plus className="h-4 w-4 mr-2" /> Add More Question
+                                        </Button>
+                                    </div>
+                                </Card>
+                            </div>
+
+                            {/* Right Column */}
+                            <div className="space-y-8">
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Automation Logic</h2>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Job Ad Status for Calling</Label>
+                                            <Select value={jobAdStatus} onValueChange={handleSelectChange(setJobAdStatus)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="Current" className="dark:text-gray-100">Current</SelectItem>
+                                                    <SelectItem value="Expired" className="dark:text-gray-100">Expired</SelectItem>
+                                                    <SelectItem value="Draft" className="dark:text-gray-100">Draft</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Application Status for Calling</Label>
+                                            <Select value={applicationStatus} onValueChange={handleSelectChange(setApplicationStatus)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {statusOptions.map(s => (<SelectItem key={s.id} value={String(s.id)} className="dark:text-gray-100">{s.name}</SelectItem>))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Calling Time After Status Update</Label>
+                                            <Select value={callingTime} onValueChange={handleSelectChange(setCallingTime)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select time" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {CALLING_TIME_OPTIONS.map(opt => (<SelectItem key={opt.value} value={String(opt.value)} className="dark:text-gray-100">{opt.label}</SelectItem>))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status When Call is Placed</Label>
+                                            <Select value={placedStatus} onValueChange={handleSelectChange(setPlacedStatus)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {statusOptions.map(s => (<SelectItem key={s.id} value={String(s.id)} className="dark:text-gray-100">{s.name}</SelectItem>))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status for Successful Call</Label>
+                                            <Select value={successfulStatus} onValueChange={handleSelectChange(setSuccessfulStatus)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {statusOptions.map(s => (<SelectItem key={s.id} value={String(s.id)} className="dark:text-gray-100">{s.name}</SelectItem>))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status for Unsuccessful Call</Label>
+                                            <Select value={unsuccessfulStatus} onValueChange={handleSelectChange(setUnsuccessfulStatus)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {statusOptions.map(s => (<SelectItem key={s.id} value={String(s.id)} className="dark:text-gray-100">{s.name}</SelectItem>))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </Card>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Bottom Save Bar */}
