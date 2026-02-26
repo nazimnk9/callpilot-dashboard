@@ -250,7 +250,7 @@ export function AICallFlowOptionsContent() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-4">
                     {/* Sidebar Filters */}
                     <aside className="space-y-6 border border-gray-200 dark:border-gray-800 rounded-xl p-6 bg-gray-50/30 dark:bg-gray-900/30 h-fit">
                         {/* Title Name Filter */}
