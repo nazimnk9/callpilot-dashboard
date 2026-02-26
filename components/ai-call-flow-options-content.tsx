@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
     Search,
     X,
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/dialog"
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
+import { toast } from "sonner"
 
 interface FilterTag {
     id: string
@@ -63,11 +65,13 @@ const CATEGORY_MAP: Record<string, string> = {
 };
 
 export function AICallFlowOptionsContent() {
+    const router = useRouter()
     const [titleSearch, setTitleSearch] = useState("")
     const [appliedSearch, setAppliedSearch] = useState("")
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [isDetailsOpen, setIsDetailsOpen] = useState(false)
     const [selectedFlow, setSelectedFlow] = useState<FlowResult | null>(null)
+    const [isConnecting, setIsConnecting] = useState(false)
 
     // Toggle states for sidebar filters
     const [isTitleNameExpanded, setIsTitleNameExpanded] = useState(true)
@@ -107,7 +111,8 @@ export function AICallFlowOptionsContent() {
                 }
             });
 
-            const url = `${BASE_URL}/flows/available-flow/${params.toString() ? `?${params.toString()}` : ""}`;
+            const queryStr = params.toString();
+            const url = `${BASE_URL}/flows/available-flow/${queryStr ? `?${queryStr}` : ""}`;
 
             const response = await fetch(url, {
                 headers: {
@@ -161,6 +166,38 @@ export function AICallFlowOptionsContent() {
         setSelectedFlow(flow);
         setIsDetailsOpen(true);
     };
+
+    const handleConnectFlow = async () => {
+        if (!selectedFlow) return;
+
+        setIsConnecting(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/flows/available-flow/${selectedFlow.uid}/connect`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                toast.success("Flow connected successfully!");
+                router.push("/dashboard/phone-call-flows/");
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.message || "Failed to connect flow");
+            }
+        } catch (error) {
+            console.error("Error connecting flow:", error);
+            toast.error("An error occurred while connecting the flow");
+        } finally {
+            setIsConnecting(false);
+        }
+    };
+
+    // Filter out flows that are already connected
+    const availableResults = results.filter(flow => !flow.is_connected);
 
     return (
         <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-950 p-4 md:p-6">
@@ -285,13 +322,13 @@ export function AICallFlowOptionsContent() {
                                 <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
                                 <p className="text-gray-500 font-medium">Fetching available flows...</p>
                             </div>
-                        ) : results.length === 0 ? (
+                        ) : availableResults.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 gap-2 text-gray-500">
                                 <p className="font-medium">No flows found.</p>
                                 <p className="text-sm text-gray-400">Try adjusting your filters.</p>
                             </div>
                         ) : (
-                            results.map(flow => (
+                            availableResults.map(flow => (
                                 <div key={flow.id} className="group relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden flex shadow-sm hover:shadow-md transition-shadow">
                                     {/* Flow Info */}
                                     <div className="p-4 flex-1 space-y-1">
@@ -411,14 +448,43 @@ export function AICallFlowOptionsContent() {
 
                             {/* Modal Footer */}
                             <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 flex flex-col sm:flex-row gap-3">
-                                <Button className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                                    Add To Your Flows
+                                <Button
+                                    onClick={handleConnectFlow}
+                                    disabled={isConnecting}
+                                    className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    {isConnecting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                            Connecting...
+                                        </>
+                                    ) : (
+                                        "Add To Your Flows"
+                                    )}
                                 </Button>
                                 <Button variant="outline" className="flex-1 h-11 border-gray-200 dark:border-gray-800 font-bold rounded-xl gap-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
                                     <Bookmark className="w-4 h-4" />
                                     Book Mark
                                 </Button>
                             </div>
+                            <div className="p-4 flex flex-col gap-4 border-t border-gray-100 dark:border-gray-700">
+                    {/* <div className="w-14 h-20 border border-gray-200 dark:border-gray-600 rounded-md overflow-hidden bg-gray-50 dark:bg-gray-700 flex-shrink-0">
+                        <img src={flow.picture} alt={flow.name} className="w-full h-full object-cover" />
+                    </div> */}
+                    <div className="flex flex-col gap-1">
+                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h1>
+                    </div>
+                    <div className="flex flex-col justify-center">
+                        <div className="flex items-center gap-2">
+                            <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
+                                <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
+                                <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
                         </div>
                     )}
                 </DialogContent>
