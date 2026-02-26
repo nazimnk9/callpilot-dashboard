@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     Search,
     X,
@@ -13,32 +13,34 @@ import {
     Grid,
     ArrowDownWideNarrow,
     ArrowUpWideNarrow,
-    Plus
+    Plus,
+    Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { BASE_URL } from "@/lib/baseUrl";
+import { cookieUtils } from "@/services/auth-service";
 
 interface FilterTag {
     id: string
     label: string
 }
 
-interface MovieResult {
-    id: number
-    rank: number
-    title: string
-    year: number
-    duration: string
-    ageRating: string
-    metascore: number
-    rating: number
-    ratingCount: string
-    description: string
-    image: string
+interface FlowResult {
+    id: number;
+    uid: string;
+    name: string;
+    picture: string;
+    call_direction: string;
+    flow_category: string;
+    flow_summary: string;
+    code: string;
+    status: string;
+    is_connected: boolean;
 }
 
 export function AICallFlowOptionsContent() {
-    const [titleSearch, setTitleSearch] = useState("live")
+    const [titleSearch, setTitleSearch] = useState("")
     const [selectedTypes, setSelectedTypes] = useState<string[]>(["Movie", "TV Series", "Podcast Series"])
 
     // Toggle states for sidebar filters
@@ -68,21 +70,32 @@ export function AICallFlowOptionsContent() {
         "Podcast Series", "Podcast Episode"
     ]
 
-    const results: MovieResult[] = [
-        {
-            id: 1,
-            rank: 1,
-            title: "The Lives of Others",
-            year: 2006,
-            duration: "2h 17m",
-            ageRating: "15",
-            metascore: 89,
-            rating: 8.4,
-            ratingCount: "441K",
-            description: "In 1984 East Berlin, an agent of the secret police conducting surveillance on a writer and his lover finds himself becoming increasingly absorbed by their lives.",
-            image: "https://m.media-amazon.com/images/M/MV5BMmI3Y2I4NWItODE0Mi00ZGNhLWI4YmMtY2E1YmZkODk4NWRmXkEyXkFqcGdeQXVyMTAwMzUyOTc@._V1_QL75_UX140_CR0,1,140,207_.jpg"
-        }
-    ]
+    const [results, setResults] = useState<FlowResult[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchAvailableFlows = async () => {
+            setIsLoading(true);
+            try {
+                const token = cookieUtils.get("access");
+                const response = await fetch(`${BASE_URL}/flows/available-flow/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setResults(data.results || []);
+                }
+            } catch (error) {
+                console.error("Error fetching available flows:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAvailableFlows();
+    }, []);
 
     return (
         <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-950 p-4 md:p-6">
@@ -141,7 +154,7 @@ export function AICallFlowOptionsContent() {
                                 className="flex items-center justify-between cursor-pointer group"
                                 onClick={() => setIsTitleNameExpanded(!isTitleNameExpanded)}
                             >
-                                <h3 className="font-bold text-sm">Title name</h3>
+                                <h3 className="font-bold text-sm">Categories/Types name</h3>
                                 {isTitleNameExpanded ? (
                                     <ChevronUp className="w-4 h-4 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300" />
                                 ) : (
@@ -165,7 +178,7 @@ export function AICallFlowOptionsContent() {
                                 className="flex items-center justify-between cursor-pointer group"
                                 onClick={() => setIsTitleTypeExpanded(!isTitleTypeExpanded)}
                             >
-                                <h3 className="font-bold text-sm">Title type</h3>
+                                <h3 className="font-bold text-sm">Call flow Categories/Types</h3>
                                 {isTitleTypeExpanded ? (
                                     <ChevronUp className="w-4 h-4 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300" />
                                 ) : (
@@ -202,51 +215,55 @@ export function AICallFlowOptionsContent() {
                     </aside>
 
                     {/* Main Results Container */}
-                    <div className="space-y-4 border border-gray-200 dark:border-gray-800 rounded-xl p-6 bg-gray-50/30 dark:bg-gray-900/30">
-                        {results.map(movie => (
-                            <div key={movie.id} className="group relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden flex shadow-sm hover:shadow-md transition-shadow">
-                                {/* Movie Info */}
-                                <div className="p-4 flex-1 space-y-1">
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex gap-4 items-start">
-                                            {/* Image on left side of title */}
-                                            <div className="p-2 w-20 h-28 border border-gray-200 dark:border-gray-600 rounded-md overflow-hidden bg-gray-50 dark:bg-gray-800 flex-shrink-0">
-                                                <img src={movie.image} alt={movie.title} className="w-full h-full object-cover" />
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <h2 className="text-lg font-bold group-hover:text-blue-600 cursor-pointer">
-                                                    {movie.title}
-                                                </h2>
-                                                <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-                                                    <span>Incoming / Outgoing</span>
-                                                    <Info size={14} className="cursor-help" />
+                    <div className="space-y-4 border border-gray-200 dark:border-gray-800 rounded-xl p-6 bg-gray-50/30 dark:bg-gray-900/30 min-h-[400px]">
+                        {isLoading ? (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+                                <p className="text-gray-500 font-medium">Fetching available flows...</p>
+                            </div>
+                        ) : results.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 gap-2 text-gray-500">
+                                <p className="font-medium">No flows found.</p>
+                                <p className="text-sm text-gray-400">Try adjusting your filters.</p>
+                            </div>
+                        ) : (
+                            results.map(flow => (
+                                <div key={flow.id} className="group relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden flex shadow-sm hover:shadow-md transition-shadow">
+                                    {/* Flow Info */}
+                                    <div className="p-4 flex-1 space-y-1">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex gap-4 items-start">
+                                                {/* Image on left side of title */}
+                                                <div className="w-20 h-28 border border-gray-200 dark:border-gray-600 rounded-md overflow-hidden bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                                                    <img src={flow.picture} alt={flow.name} className="w-full h-full object-fixed" />
                                                 </div>
-                                                <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-                                                    <span>Category / Sub-Category</span>
-                                                </div>
 
-                                                <div className="flex items-center gap-4 py-2">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                                        <span className="font-bold text-sm">{movie.rating}</span>
-                                                        <span className="text-xs text-gray-400">({movie.ratingCount})</span>
+                                                <div className="space-y-1">
+                                                    <h2 className="text-lg font-bold group-hover:text-blue-600 cursor-pointer">
+                                                        {flow.name}
+                                                    </h2>
+                                                    <div className="flex items-center gap-3 text-sm text-gray-500 font-medium capitalize">
+                                                        <span>{flow.call_direction}</span>
+                                                        <Info size={14} className="cursor-help" />
+                                                    </div>
+                                                    <div className="flex items-center gap-3 text-sm text-gray-500 font-medium uppercase text-xs tracking-wider">
+                                                        <span>{flow.flow_category.replace(/_/g, ' ')}</span>
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <button className="p-2 px-6 hover:bg-blue-700 rounded text-white bg-blue-600 dark:bg-blue-600 transition-colors font-medium">
+                                                View
+                                            </button>
                                         </div>
 
-                                        <button className="p-2 px-6 hover:bg-blue-700 rounded text-white bg-blue-600 dark:bg-blue-600 transition-colors font-medium">
-                                            View
-                                        </button>
+                                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-normal line-clamp-2 mt-2">
+                                            {flow.flow_summary}
+                                        </p>
                                     </div>
-
-                                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-normal line-clamp-2 mt-2">
-                                        {movie.description}
-                                    </p>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

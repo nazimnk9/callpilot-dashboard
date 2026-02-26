@@ -625,14 +625,14 @@ export function BillingContent() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                             <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                 <DialogTrigger asChild>
-                                    <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+                                    <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 w-full sm:w-auto">
                                         Top-up Minutes
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-[480px] p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
+                                <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
                                     <DialogHeader className="p-0">
                                         <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
                                             Add to credit balance
@@ -745,17 +745,17 @@ export function BillingContent() {
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-end gap-3 pt-4">
+                                    <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
                                         <Button
                                             onClick={() => setIsTopUpOpen(false)}
-                                            className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                            className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto w-full sm:w-auto"
                                         >
                                             Cancel
                                         </Button>
                                         <Button
                                             onClick={handleTopUp}
                                             disabled={isTopUpSubmitting || !selectedPmForTopUp || !topUpAmount}
-                                            className="bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                            className="bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2 w-full sm:w-auto"
                                         >
                                             {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                             Continue
@@ -949,7 +949,7 @@ export function BillingContent() {
                                         setSelectedPlan(null);
                                         setIsSubscriptionModalOpen(true);
                                     }}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 w-full sm:w-auto"
                                 >
                                     Add Subscription Plan
                                 </Button>
@@ -960,7 +960,7 @@ export function BillingContent() {
                                         fetchCurrentSubscription();
                                         setIsUpdateSubscriptionModalOpen(true);
                                     }}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 w-full sm:w-auto"
                                 >
                                     Change Subscription Plan
                                 </Button>
@@ -968,7 +968,7 @@ export function BillingContent() {
                             {orgData?.current_plan && (
                                 <Button
                                     onClick={() => setIsCancelPlanModalOpen(true)}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 w-full sm:w-auto"
                                 >
                                     Cancel plan
                                 </Button>
