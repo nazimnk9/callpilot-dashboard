@@ -231,6 +231,7 @@ export function AICallFlowOptionsContent() {
                             </div>
                             {isTitleNameExpanded && (
                                 <Input
+                                    placeholder="Search by name"
                                     value={titleSearch}
                                     onChange={(e) => setTitleSearch(e.target.value)}
                                     onKeyDown={handleSearchKeyDown}
