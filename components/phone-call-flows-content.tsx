@@ -121,7 +121,7 @@ export function PhoneCallFlowsContent() {
                         </div>
                         <div className="flex-1">
                             <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">{flow.name}</h3>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight">{flow.name}</h3>
                                 <button
                                     onClick={() => {
                                         setSelectedFlow(flow);
@@ -140,14 +140,14 @@ export function PhoneCallFlowsContent() {
 
                     <div className="flex gap-2.5 mt-auto">
                         <Button
-                            className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold h-11 px-8 rounded-lg text-sm transition-all shadow-sm"
+                            className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm"
                             onClick={() => handleConfigureClick(item.uid, flow.name, flow.code)}
                         >
                             Configure
                         </Button>
                         <Link href={flow.code === "AICALL191" ? `/dashboard/report?code=${flow.code}` : `/dashboard/report/${item.uid}`}>
                             <Button
-                                className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-bold h-11 px-8 rounded-lg text-sm transition-all border-none"
+                                className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none"
                             >
                                 {flow.code === "AICALL191" ? "Reservations" : "Interviews"}
                             </Button>
@@ -243,7 +243,7 @@ export function PhoneCallFlowsContent() {
                                         <img src={selectedFlow.picture} alt={selectedFlow.name} className="w-full h-full object-fixed" />
                                     </div>
                                     <div className="space-y-2 flex-grow">
-                                        <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                                        <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight">
                                             {selectedFlow.name}
                                         </DialogTitle>
                                         <div className="flex flex-col gap-4">
@@ -269,12 +269,12 @@ export function PhoneCallFlowsContent() {
                                         <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                                             <Settings2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                         </div>
-                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">How It Works</h3>
+                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">How It Works</h3>
                                     </div>
                                     <ul className="space-y-3">
                                         {selectedFlow.how_works.map((step, index) => (
                                             <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
-                                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-semibold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                                     {index + 1}
                                                 </span>
                                                 <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{step}</span>
@@ -289,7 +289,7 @@ export function PhoneCallFlowsContent() {
                                         <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
                                             <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                                         </div>
-                                        <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base">Required Resources</h3>
+                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">Required Resources</h3>
                                     </div>
                                     <ul className="space-y-3">
                                         {selectedFlow.required_resources.map((resource, index) => (
