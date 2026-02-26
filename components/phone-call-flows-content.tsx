@@ -178,7 +178,7 @@ export function PhoneCallFlowsContent() {
                     <div>
                         <Link href="/dashboard/ai-call-flow-options">
                             <button
-                                className="bg-white border border-black dark:bg-gray-100 text-black dark:text-gray-900 text-xs transition-all duration-200 gap-2 flex justify-center items-center rounded-md px-2 py-1"
+                                className="bg-white border border-black dark:bg-gray-100 text-black dark:text-gray-900 text-xs transition-all duration-200 gap-2 flex justify-center items-center rounded-md px-2 py-2 text-base"
                             >
                                 <Globe className="w-4 h-4 text-green-600" />
                                 AI Call Flow Options
