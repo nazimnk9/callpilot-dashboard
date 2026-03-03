@@ -156,7 +156,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                       className={`${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}
                     />
                   )}
-                  <span className={isActive || item.isBold ? 'text-sm font-semibold' : 'text-xs font-medium'}>
+                  <span className={isActive || item.isBold ? 'text-xs font-semibold' : 'text-xs font-medium'}>
                     {item.label}
                   </span>
                 </a>
