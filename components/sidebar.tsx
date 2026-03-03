@@ -134,7 +134,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {currentMenuItems.map((item, index) => {
               if (item.isHeader) {
                 return (
-                  <div key={index} className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-6 mb-2 px-3">
+                  <div key={index} className="text-[13px] font-medium text-gray-400 dark:text-gray-500 mt-6 mb-2 px-3">
                     {item.label}
                   </div>
                 );
@@ -156,7 +156,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                       className={`${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}
                     />
                   )}
-                  <span className={isActive || item.isBold ? 'text-sm font-semibold' : 'text-sm font-medium'}>
+                  <span className={isActive || item.isBold ? 'text-sm font-semibold' : 'text-xs font-medium'}>
                     {item.label}
                   </span>
                 </a>
