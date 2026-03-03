@@ -416,7 +416,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 </SelectContent>
                                             </Select>
                                             <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New Number</Link>
+                                                Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
                                             </p>
                                         </div>
 
@@ -498,7 +498,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 </SelectContent>
                                             </Select>
                                             <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New Number</Link>
+                                                Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
                                             </p>
                                         </div>
 
