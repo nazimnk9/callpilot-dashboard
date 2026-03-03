@@ -430,7 +430,7 @@ export function CallLogsContent() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Settings2 className="w-5 h-5" />
-                            Auto-Delete Configuration
+                            Call Data Retention
                         </DialogTitle>
                         <DialogDescription>
                             Configure automated cleanup for your call logs.
