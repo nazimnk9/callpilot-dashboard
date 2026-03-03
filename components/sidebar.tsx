@@ -60,7 +60,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const menuItems = [
     { icon: LayoutGrid, label: 'Dashboard', href: '/dashboard', isBold: true },
     { label: 'Integrations', isHeader: true },
-    { icon: Globe, label: 'Connect CRMs', href: '/dashboard/connect-crms', isBold: true },
+    { icon: Globe, label: 'Connect ATS', href: '/dashboard/connect-crms', isBold: true },
     { icon: Phone, label: 'Phone Numbers', href: '/dashboard/phone-numbers', isBold: true },
     { label: 'AI Flows', isHeader: true },
     { icon: Shuffle, label: 'Phone Call Flows', href: '/dashboard/phone-call-flows', isBold: true },
