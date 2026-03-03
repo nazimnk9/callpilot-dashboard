@@ -58,7 +58,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   }, [pathname, isSettingsPage]);
 
   const menuItems = [
-    { icon: LayoutGrid, label: 'Dashboard', href: '/dashboard', isBold: true },
+    { icon: LayoutGrid, label: 'AI Control Centre', href: '/dashboard', isBold: true },
     { label: 'Integrations', isHeader: true },
     { icon: Globe, label: 'Connect ATS', href: '/dashboard/connect-ats', isBold: true },
     { icon: Phone, label: 'Phone Numbers', href: '/dashboard/phone-numbers', isBold: true },
