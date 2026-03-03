@@ -159,14 +159,14 @@ export function OrganizationContent() {
             <div className="max-w-4xl mx-auto space-y-12">
                 {/* Page Title */}
                 <div>
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Organization settings</h1>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Company Details</h1>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-x-12 gap-y-8">
                     {/* Left Column - Section Header */}
-                    <div>
+                    {/* <div>
                         <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Details</h2>
-                    </div>
+                    </div> */}
 
                     {/* Right Column - Inputs */}
                     <div className="max-w-md space-y-8">

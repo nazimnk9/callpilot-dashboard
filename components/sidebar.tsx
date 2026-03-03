@@ -70,9 +70,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const settingsMenuItems = [
     { label: 'Settings', isHeader: true },
-    { icon: User, label: 'Your Profile', href: '/dashboard/profile', isBold: true },
+    { icon: User, label: 'Profile', href: '/dashboard/profile', isBold: true },
     { label: 'Organization', isHeader: true },
-    { icon: FileText, label: 'General', href: '/dashboard/organization', isBold: true },
+    { icon: FileText, label: 'Company Details', href: '/dashboard/organization', isBold: true },
     { icon: CreditCard, label: 'Billing', href: '/dashboard/billing', isBold: true },
   ];
 
