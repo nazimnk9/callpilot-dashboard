@@ -253,8 +253,8 @@ export function CRMIntegrationContent() {
 
             <div className="max-w-7xl mx-auto space-y-8">
                 <div>
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Available CRMS to Connect</h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your business integrations and settings</p>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Available ATS to Connect</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your ATS integrations and settings</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
