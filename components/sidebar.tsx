@@ -134,7 +134,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {currentMenuItems.map((item, index) => {
               if (item.isHeader) {
                 return (
-                  <div key={index} className="text-[13px] font-medium text-gray-400 dark:text-gray-500 mt-6 mb-2 px-3">
+                  <div key={index} className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-6 mb-2 px-3">
                     {item.label}
                   </div>
                 );
