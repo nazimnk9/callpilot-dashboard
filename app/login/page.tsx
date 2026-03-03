@@ -92,7 +92,14 @@ export default function SignInPage() {
             const data = await response.json();
 
             if (response.ok) {
-                setShowSuccessDialog(true);
+                if (data.otp_required) {
+                    setShowSuccessDialog(true);
+                } else {
+                    // Directly login if OTP is not required
+                    cookieUtils.set("access", data.access, 7);
+                    cookieUtils.set("refresh", data.refresh, 7);
+                    router.push("/dashboard");
+                }
             } else {
                 let errorMsg = "Something went wrong. Please try again.";
                 if (typeof data === "object") {
