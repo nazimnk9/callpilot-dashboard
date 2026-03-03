@@ -223,8 +223,8 @@ export function CallLogsContent() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg font-semibold text-foreground tracking-tight">Call Logs</h1>
-                        <p className="text-muted-foreground mt-2">View and manage candidate interview conversations</p>
+                        <h1 className="text-lg font-semibold text-foreground tracking-tight">Call Activity</h1>
+                        <p className="text-muted-foreground mt-2">View and manage call activities of your business.</p>
                     </div>
                     <Button
                         onClick={() => {
@@ -234,7 +234,7 @@ export function CallLogsContent() {
                         className="gap-2 bg-black dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900"
                     >
                         <Settings2 className="w-4 h-4" />
-                        Configure
+                        Settings
                     </Button>
                 </div>
 

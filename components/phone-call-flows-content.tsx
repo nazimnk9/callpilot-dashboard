@@ -172,8 +172,8 @@ export function PhoneCallFlowsContent() {
             <div className="max-w-7xl mx-auto space-y-12">
                 <div className="flex flex-row justify-between">
                     <div className="flex flex-col gap-1">
-                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Phone Call Flows</h1>
-                        <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered recruitment call flows.</p>
+                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">AI Call Builder</h1>
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered call flows.</p>
                     </div>
                     <div>
                         <Link href="/dashboard/ai-call-flow-options">

@@ -61,11 +61,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: LayoutGrid, label: 'AI Control Centre', href: '/dashboard', isBold: true },
     { label: 'Integrations', isHeader: true },
     { icon: Globe, label: 'Connect ATS', href: '/dashboard/connect-ats', isBold: true },
-    { icon: Phone, label: 'Phone Numbers', href: '/dashboard/phone-numbers', isBold: true },
+    { icon: Phone, label: 'AI Phone Numbers', href: '/dashboard/phone-numbers', isBold: true },
     { label: 'AI Flows', isHeader: true },
-    { icon: Shuffle, label: 'Phone Call Flows', href: '/dashboard/phone-call-flows', isBold: true },
+    { icon: Shuffle, label: 'AI Call Builder', href: '/dashboard/phone-call-flows', isBold: true },
     { label: 'Report', isHeader: true },
-    { icon: FileText, label: 'Call Logs', href: '/dashboard/call-logs', isBold: true },
+    { icon: FileText, label: 'Call Activity', href: '/dashboard/call-logs', isBold: true },
   ];
 
   const settingsMenuItems = [

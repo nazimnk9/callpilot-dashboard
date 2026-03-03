@@ -59,8 +59,8 @@ export function PhoneNumbersContent() {
                             <Phone size={24} className="text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                            <h2 className="text-md font-semibold text-gray-900 dark:text-gray-100">Manage Phone Numbers</h2>
-                            <p className="text-gray-500 dark:text-gray-400 mt-1">Manage the phone numbers used by your automations.</p>
+                            <h2 className="text-md font-semibold text-gray-900 dark:text-gray-100">AI Voice Numbers</h2>
+                            <p className="text-gray-500 dark:text-gray-400 mt-1">Manage the phone numbers used by your AI automations.</p>
                         </div>
                     </div>
 
@@ -71,7 +71,7 @@ export function PhoneNumbersContent() {
                             onClick={() => router.push("/dashboard/number-list")}
                         >
                             <Phone size={18} />
-                            My Numbers
+                            My AI Numbers
                         </Button>
                         <Button
                             variant="default"
@@ -80,7 +80,7 @@ export function PhoneNumbersContent() {
                             disabled={isLoading}
                         >
                             <Plus size={18} />
-                            Buy Phone Number
+                            Buy AI Number
                         </Button>
                     </div>
                 </div>
