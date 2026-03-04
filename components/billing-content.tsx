@@ -59,13 +59,16 @@ export function BillingContent() {
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
     const [transactions, setTransactions] = useState<any[]>([]);
     const [topUpAmount, setTopUpAmount] = useState("");
+    const [topUpMinutes, setTopUpMinutes] = useState("");
     const [selectedPmForTopUp, setSelectedPmForTopUp] = useState<any>(null);
     const [isTopUpSubmitting, setIsTopUpSubmitting] = useState(false);
     const [isPmSelectorOpen, setIsPmSelectorOpen] = useState(false);
     const [errorDetail, setErrorDetail] = useState<string | null>(null);
+    const [successDetail, setSuccessDetail] = useState<string | null>(null);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [pmToDelete, setPmToDelete] = useState<any>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [emailingInvoiceId, setEmailingInvoiceId] = useState<number | null>(null);
     const [isSetDefaultOpen, setIsSetDefaultOpen] = useState(false);
     const [pmToSetDefault, setPmToSetDefault] = useState<any>(null);
     const [isSettingDefault, setIsSettingDefault] = useState(false);
@@ -81,6 +84,8 @@ export function BillingContent() {
     const [currentSubscription, setCurrentSubscription] = useState<any>(null);
     const [isFetchingSubscription, setIsFetchingSubscription] = useState(false);
     const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
+    const [fetchedPlans, setFetchedPlans] = useState<any[]>([]);
+    const [isFetchingPlans, setIsFetchingPlans] = useState(false);
 
     const tabs = ["Overview", "Payment methods", "Billing history"]
 
@@ -141,6 +146,21 @@ export function BillingContent() {
         }
     };
 
+    const fetchPlans = async () => {
+        setIsFetchingPlans(true);
+        try {
+            const response = await fetch(`${BASE_URL}/payment/subscriptions/plans`);
+            if (response.ok) {
+                const data = await response.json();
+                setFetchedPlans(data.results || []);
+            }
+        } catch (err) {
+            console.error("Error fetching plans:", err);
+        } finally {
+            setIsFetchingPlans(false);
+        }
+    };
+
     const fetchCurrentSubscription = async () => {
         setIsFetchingSubscription(true);
         try {
@@ -153,9 +173,6 @@ export function BillingContent() {
             if (response.ok) {
                 const data = await response.json();
                 setCurrentSubscription(data);
-                // Pre-fill selected plan
-                if (data.plan === 'starter') setSelectedPlan("Starter");
-                else if (data.plan === 'pro') setSelectedPlan("Medium");
             }
         } catch (err) {
             console.error("Error fetching current subscription:", err);
@@ -173,7 +190,22 @@ export function BillingContent() {
         fetchOrgData();
         fetchPaymentMethods();
         fetchTransactions();
+        fetchCurrentSubscription();
+        fetchPlans();
     }, []);
+
+    // Sync selected plan with current subscription status
+    useEffect(() => {
+        const currentPlanId = currentSubscription?.plan || orgData?.current_plan;
+        if (currentPlanId && fetchedPlans.length > 0) {
+            const matchedPlan = fetchedPlans.find(p =>
+                p.name.toLowerCase() === String(currentPlanId).toLowerCase()
+            );
+            if (matchedPlan) {
+                setSelectedPlan(matchedPlan.name);
+            }
+        }
+    }, [currentSubscription, orgData, fetchedPlans]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -344,6 +376,8 @@ export function BillingContent() {
             if (response.ok) {
                 toast.success("Wallet topped up successfully");
                 setIsTopUpOpen(false);
+                setTopUpMinutes("");
+                setTopUpAmount("");
 
                 // Refresh organization data (wallet minutes)
                 const fetchOrgData = async () => {
@@ -366,6 +400,33 @@ export function BillingContent() {
             setErrorDetail("An error occurred during top-up");
         } finally {
             setIsTopUpSubmitting(false);
+        }
+    };
+
+    const handleEmailInvoice = async (transactionId: number) => {
+        setEmailingInvoiceId(transactionId);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/transactions/${transactionId}/send-invoice`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setSuccessDetail(data.message || "Invoice emailed successfully");
+            } else {
+                const errData = await response.json();
+                setErrorDetail(errData.detail || "Failed to email invoice");
+            }
+        } catch (err) {
+            console.error("Email invoice error:", err);
+            setErrorDetail("An error occurred while emailing the invoice");
+        } finally {
+            setEmailingInvoiceId(null);
         }
     };
 
@@ -444,6 +505,7 @@ export function BillingContent() {
         }
 
         setIsSubscriptionSubmitting(true);
+        setErrorDetail(null);
         try {
             const token = cookieUtils.get("access");
             const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
@@ -453,7 +515,7 @@ export function BillingContent() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    plan: selectedPlan === "Starter" ? "starter" : (selectedPlan === "Medium" ? "pro" : ""),
+                    plan: selectedPlan,
                     payment_method_id: selectedPmForSubscription.id
                 })
             });
@@ -462,9 +524,16 @@ export function BillingContent() {
                 toast.success("Subscription plan created successfully");
                 setIsSubscriptionModalOpen(false);
                 fetchOrgData();
+                fetchCurrentSubscription();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.detail || "Failed to create subscription plan");
+                if (errData.plan && Array.isArray(errData.plan)) {
+                    setErrorDetail(errData.plan[0]);
+                } else if (errData.detail) {
+                    setErrorDetail(errData.detail);
+                } else {
+                    setErrorDetail("Failed to create subscription plan");
+                }
             }
         } catch (err) {
             console.error("Subscription error:", err);
@@ -507,23 +576,24 @@ export function BillingContent() {
             return;
         }
 
-        const backendPlan = selectedPlan === "Starter" ? "starter" : (selectedPlan === "Medium" ? "pro" : "");
-        if (backendPlan === currentSubscription?.plan) {
+        if (selectedPlan.toLowerCase() === (currentSubscription?.plan ? String(currentSubscription.plan).toLowerCase() : "") ||
+            selectedPlan.toLowerCase() === (orgData?.current_plan ? String(orgData.current_plan).toLowerCase() : "")) {
             setErrorDetail("You are already on this plan. Please select a different plan to update.");
             return;
         }
 
         setIsUpdateSubmitting(true);
+        setErrorDetail(null);
         try {
             const token = cookieUtils.get("access");
             const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    plan: backendPlan,
+                    plan: selectedPlan,
                     payment_method_id: selectedPmForSubscription.id
                 })
             });
@@ -532,9 +602,16 @@ export function BillingContent() {
                 toast.success("Subscription plan updated successfully");
                 setIsUpdateSubscriptionModalOpen(false);
                 fetchOrgData();
+                fetchCurrentSubscription();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.detail || "Failed to update subscription plan");
+                if (errData.plan && Array.isArray(errData.plan)) {
+                    setErrorDetail(errData.plan[0]);
+                } else if (errData.detail) {
+                    setErrorDetail(errData.detail);
+                } else {
+                    setErrorDetail("Failed to update subscription plan");
+                }
             }
         } catch (err) {
             console.error("Update error:", err);
@@ -544,42 +621,33 @@ export function BillingContent() {
         }
     };
 
-    const pricingTiers = [
-        {
-            name: "Starter",
-            price: "$15",
-            unit: "/mo",
-            icon: Rocket,
-            description: "Perfect for small businesses starting their AI journey.",
-            minimumMinutes: "Includes 100 minutes",
-            features: ["100 Minutes included", "Standard AI Voice", "Email Support"],
-            cta: "Select Starter",
-            popular: false,
-        },
-        {
-            name: "Medium",
-            price: "$49",
-            unit: "/mo",
-            icon: Zap,
-            description: "Ideal for growing teams with higher call volumes.",
-            minimumMinutes: "Includes 500 minutes",
-            features: ["500 Minutes included", "HD AI Voices", "Priority Support", "Advanced Analytics"],
-            cta: "Select Medium",
-            popular: true,
-        },
-        {
-            name: "Enterprise",
-            price: "Custom",
-            unit: "",
-            icon: Building2,
-            description: "Tailored solutions for large-scale operations.",
-            minimumMinutes: "Custom minutes available",
-            features: ["Unlimited Minutes", "Custom AI Models", "Dedicated Manager", "24/7 Phone Support"],
-            cta: "Contact Sales",
-            popular: false,
-            disabled: true,
-        }
-    ];
+    const dynamicPricingTiers = fetchedPlans.map((plan: any) => ({
+        name: plan.name,
+        price: `$${parseFloat(plan.price).toFixed(0)}`,
+        unit: "/mo",
+        icon: plan.name === "Starter" ? Rocket : (plan.name === "Pro" ? Zap : Zap), // Default to Zap for others
+        description: plan.description || (plan.name === "Starter" ? "Perfect for getting started with AI voice calls." : ""),
+        minimumMinutes: `Includes ${plan.limit} minutes`,
+        features: plan.des_list || [],
+        cta: `Select ${plan.name}`,
+        popular: plan.name === "Pro", // Matches the "Medium" (Growing) popular status
+        disabled: false,
+    }));
+
+    const enterpriseTier = {
+        name: "Enterprise",
+        price: "Custom",
+        unit: "",
+        icon: Building2,
+        description: "Tailored solutions for large-scale operations.",
+        minimumMinutes: "Custom minutes available",
+        features: ["Unlimited Minutes", "Custom AI Models", "Dedicated Manager", "24/7 Phone Support"],
+        cta: "Contact Sales",
+        popular: false,
+        disabled: true,
+    };
+
+    const pricingTiers = [...dynamicPricingTiers, enterpriseTier];
 
     const filteredCountries = countries.filter(c =>
         c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
@@ -613,249 +681,174 @@ export function BillingContent() {
 
                 {/* Tab Content */}
                 {activeTab === "Overview" ? (
-                    <div className="space-y-6 pt-4">
-                        <div className="space-y-1">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{orgData?.current_plan || "No Active Plan"}</h2>
-                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                <span className="text-sm font-medium">Minute balance</span>
-                                <Info size={14} className="cursor-help" />
-                            </div>
-                            <div className="text-[40px] font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-                                {orgData?.wallet_minutes || "0.00"} Minutes
+                    <div className="space-y-8 pt-6">
+                        {/* Current Plan Card */}
+                        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="space-y-4">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50">
+                                        <Zap size={14} className="fill-current" />
+                                        <span className="text-xs font-bold uppercase tracking-wider">Current Plan</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
+                                            {orgData?.current_plan || "No Active Plan"}
+                                        </h3>
+                                        {orgData?.current_plan && (
+                                            <p className="text-gray-500 dark:text-gray-400 font-medium">
+                                                Your organization is currently on the {(orgData?.current_plan || "Starter").toLowerCase()} plan.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            if (orgData?.current_plan) {
+                                                fetchCurrentSubscription();
+                                                setIsUpdateSubscriptionModalOpen(true);
+                                            } else {
+                                                setSelectedPlan(null);
+                                                setIsSubscriptionModalOpen(true);
+                                            }
+                                        }}
+                                        className="w-full bg-[#1a1c1e] hover:bg-black hover:text-white text-white px-8 py-6 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
+                                    </Button>
+
+                                    {orgData?.current_plan && (
+                                        <button
+                                            onClick={() => setIsCancelPlanModalOpen(true)}
+                                            className="text-sm font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-full p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
+                                        >
+                                            Cancel Subscription
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
-                                <DialogTrigger asChild>
-                                    <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 w-full sm:w-auto">
-                                        Top-up Minutes
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
-                                    <DialogHeader className="p-0">
-                                        <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
-                                            Add to credit balance
-                                        </DialogTitle>
-                                    </DialogHeader>
-
-                                    <div className="space-y-6">
-                                        {/* Amount Section */}
-                                        <div className="space-y-2">
-                                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                Amount to add
-                                            </label>
-                                            <div className="relative group">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-900 dark:text-gray-100 text-[16px] font-medium">
-                                                    $
+                        {/* Usage & Minutes Card */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity duration-500">
+                                    <BarChart3 size={120} />
+                                </div>
+                                <div className="relative space-y-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-600 dark:text-green-400">
+                                            <BarChart3 size={20} />
+                                        </div>
+                                        <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">Usage</h4>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Remaining Minutes</p>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-4xl font-black text-gray-900 dark:text-gray-100 tabular-nums leading-none">
+                                                    {orgData?.wallet_minutes?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
                                                 </span>
-                                                <input
-                                                    type="number"
-                                                    value={topUpAmount}
-                                                    onChange={(e) => setTopUpAmount(e.target.value)}
-                                                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3.5 pl-8 pr-4 text-[16px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow"
-                                                />
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
-                                                    Enter an amount between $5 and $489
-                                                </p>
-                                                <button className="text-[13px] text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-1 transition-colors font-medium">
-                                                    Model pricing <ExternalLink size={12} />
-                                                </button>
+                                                <span className="text-lg font-bold text-gray-400">minutes</span>
                                             </div>
                                         </div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                                            Usage is billed per minute of successfully processed audio.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
 
-                                        {/* Payment Method Section */}
-                                        <div className="space-y-2">
-                                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                Payment method
-                                            </label>
-                                            <div className="relative">
-                                                <div
-                                                    onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
-                                                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
-                                                            {selectedPmForTopUp?.card.brand === 'visa' ? (
-                                                                <span className="text-white font-bold italic text-[8px]">VISA</span>
-                                                            ) : (
-                                                                <div className="flex -space-x-1.5">
-                                                                    <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                                    <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                            {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
-                                                        <ChevronUp size={16} />
-                                                        <ChevronDown size={16} />
-                                                    </div>
-                                                </div>
-
-                                                {isPmSelectorOpen && (
-                                                    <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                        <div className="max-h-[200px] overflow-y-auto">
-                                                            {paymentMethods.map((pm) => (
-                                                                <div
-                                                                    key={pm.id}
-                                                                    onClick={() => {
-                                                                        setSelectedPmForTopUp(pm);
-                                                                        setIsPmSelectorOpen(false);
-                                                                    }}
-                                                                    className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
-                                                                >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
-                                                                            {pm.card.brand === 'visa' ? (
-                                                                                <span className="text-white font-bold italic text-[6px]">VISA</span>
-                                                                            ) : (
-                                                                                <div className="flex -space-x-1">
-                                                                                    <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                                    <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                        <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
-                                                                    </div>
-                                                                    {selectedPmForTopUp?.id === pm.id && (
-                                                                        <Check size={14} className="text-gray-900 dark:text-gray-100" />
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex justify-end pt-1">
-                                                <button
-                                                    onClick={() => {
-                                                        setIsTopUpOpen(false)
-                                                        setIsAddPaymentOpen(true)
-                                                    }}
-                                                    className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
-                                                >
-                                                    + Add payment method
-                                                </button>
-                                            </div>
+                            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden relative group">
+                                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity duration-500">
+                                    <Zap size={120} />
+                                </div>
+                                <div className="relative space-y-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                                            <Zap size={20} />
                                         </div>
+                                        <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">Actions</h4>
                                     </div>
+                                    <div className="flex flex-col gap-4">
+                                        <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button className="w-full bg-[#1a1c1e] hover:bg-black text-white px-8 py-6 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] mt-16">
+                                                    Top Up Minutes
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
+                                                <DialogHeader className="p-0">
+                                                    <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                                                        Add to Minute balance
+                                                    </DialogTitle>
+                                                </DialogHeader>
 
-                                    <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-                                        <Button
-                                            onClick={() => setIsTopUpOpen(false)}
-                                            className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto w-full sm:w-auto"
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            onClick={handleTopUp}
-                                            disabled={isTopUpSubmitting || !selectedPmForTopUp || !topUpAmount}
-                                            className="bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2 w-full sm:w-auto"
-                                        >
-                                            {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                            Continue
-                                        </Button>
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-
-                            <Dialog open={isUpdateSubscriptionModalOpen} onOpenChange={setIsUpdateSubscriptionModalOpen}>
-                                <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
-                                    <DialogHeader>
-                                        <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                            Update Subscription Plan
-                                        </DialogTitle>
-                                    </DialogHeader>
-
-                                    <div className="space-y-10">
-                                        {isFetchingSubscription ? (
-                                            <div className="flex flex-col items-center justify-center py-20 gap-4">
-                                                <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
-                                                <p className="text-gray-500 font-medium">Fetching subscription details...</p>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                {/* Pricing Grid */}
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
-                                                    {pricingTiers.map((tier) => {
-                                                        const hidePopularHighlight = hoveredTier !== null && hoveredTier !== tier.name;
-                                                        const isHighlighted = tier.popular ? !hidePopularHighlight : hoveredTier === tier.name;
-                                                        const isSelected = selectedPlan === tier.name;
-
-                                                        return (
-                                                            <div
-                                                                key={tier.name}
-                                                                onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
-                                                                onMouseLeave={() => setHoveredTier(null)}
-                                                                onClick={() => !tier.disabled && setSelectedPlan(tier.name)}
-                                                                className={[
-                                                                    "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
-                                                                    tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
-                                                                    isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
-                                                                    !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
-                                                                ].join(" ")}
-                                                            >
-                                                                {tier.popular && !isSelected && (
-                                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black text-white dark:bg-white dark:text-gray-900">
-                                                                            Most Popular
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-
-                                                                <div className="flex items-center gap-3 mb-4">
-                                                                    <div className={[
-                                                                        "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
-                                                                        isSelected ? "bg-black/10 dark:bg-white/10" : "bg-gray-100 dark:bg-gray-800",
-                                                                    ].join(" ")}>
-                                                                        <tier.icon className={[
-                                                                            "w-5 h-5 transition-colors",
-                                                                            isSelected ? "text-black dark:text-white" : "text-gray-500",
-                                                                        ].join(" ")} />
-                                                                    </div>
-                                                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tier.name}</h3>
+                                                <div className="space-y-6">
+                                                    {/* Amount Section */}
+                                                    <div className="space-y-2">
+                                                        <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                            Minutes to add
+                                                        </label>
+                                                        <div className="relative">
+                                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
+                                                                <div className="w-5 h-5 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
+                                                                    <Zap size={10} className="text-blue-600 dark:text-blue-400 fill-current" />
                                                                 </div>
-
-                                                                <div className="mb-2">
-                                                                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tier.price}</span>
-                                                                    <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
-                                                                </div>
-
-                                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{tier.minimumMinutes}</p>
-                                                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
-
-                                                                <ul className="space-y-3 mb-8 flex-grow">
-                                                                    {tier.features.map((feature) => (
-                                                                        <li key={feature} className="flex items-start gap-2">
-                                                                            <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                                                            <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
-                                                                        </li>
-                                                                    ))}
-                                                                </ul>
                                                             </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                            <input
+                                                                type="number"
+                                                                value={topUpMinutes}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    if (val === "") {
+                                                                        setTopUpMinutes("");
+                                                                        setTopUpAmount("");
+                                                                        return;
+                                                                    }
+                                                                    const mins = Math.floor(parseInt(val));
+                                                                    if (isNaN(mins)) return;
 
-                                                {/* Payment Method Selector (Styled like Top-up modal) */}
-                                                <div className="max-w-md mx-auto w-full space-y-4">
+                                                                    setTopUpMinutes(mins.toString());
+                                                                    if (orgData?.top_up_min_per_dol) {
+                                                                        const total = (mins * parseFloat(orgData.top_up_min_per_dol)).toFixed(2);
+                                                                        setTopUpAmount(total);
+                                                                    }
+                                                                }}
+                                                                placeholder="Enter minutes"
+                                                                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center justify-between px-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <BarChart3 size={14} className="text-blue-500" />
+                                                                <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
+                                                                    Total Cost: ${topUpAmount || "0.00"}
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <Info size={14} className="text-gray-400" />
+                                                                <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+                                                                    Cost per minute: ${orgData?.top_up_min_per_dol || "0.00"}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Payment Method Selector */}
                                                     <div className="space-y-2">
                                                         <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                                             Payment method
                                                         </label>
                                                         <div className="relative">
                                                             <div
-                                                                onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
-                                                                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                                                onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
+                                                                className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-gray-50 dark:bg-gray-900 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-850 transition-all duration-200"
                                                             >
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
-                                                                        {selectedPmForSubscription?.card.brand === 'visa' ? (
+                                                                        {selectedPmForTopUp?.card.brand === 'visa' ? (
                                                                             <span className="text-white font-bold italic text-[8px]">VISA</span>
                                                                         ) : (
                                                                             <div className="flex -space-x-1.5">
@@ -865,7 +858,7 @@ export function BillingContent() {
                                                                         )}
                                                                     </div>
                                                                     <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                                        {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
+                                                                        {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
                                                                     </span>
                                                                 </div>
                                                                 <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
@@ -874,17 +867,17 @@ export function BillingContent() {
                                                                 </div>
                                                             </div>
 
-                                                            {isPmSelectorForSubOpen && (
-                                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                                    <div className="max-h-[200px] overflow-y-auto">
+                                                            {isPmSelectorOpen && (
+                                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                                    <div className="max-h-[240px] overflow-y-auto p-2">
                                                                         {paymentMethods.map((pm) => (
                                                                             <div
                                                                                 key={pm.id}
                                                                                 onClick={() => {
-                                                                                    setSelectedPmForSubscription(pm);
-                                                                                    setIsPmSelectorForSubOpen(false);
+                                                                                    setSelectedPmForTopUp(pm);
+                                                                                    setIsPmSelectorOpen(false);
                                                                                 }}
-                                                                                className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                                                className="px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 rounded-2xl cursor-pointer transition-colors"
                                                                             >
                                                                                 <div className="flex items-center gap-3">
                                                                                     <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
@@ -897,10 +890,10 @@ export function BillingContent() {
                                                                                             </div>
                                                                                         )}
                                                                                     </div>
-                                                                                    <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                                                    <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
                                                                                 </div>
-                                                                                {selectedPmForSubscription?.id === pm.id && (
-                                                                                    <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                                                {selectedPmForTopUp?.id === pm.id && (
+                                                                                    <Check size={16} className="text-gray-900 dark:text-gray-100" />
                                                                                 )}
                                                                             </div>
                                                                         ))}
@@ -909,271 +902,209 @@ export function BillingContent() {
                                                             )}
                                                         </div>
                                                     </div>
-                                                    <div className="flex justify-end pt-1">
+                                                    <div className="flex justify-start px-1">
                                                         <button
                                                             onClick={() => {
                                                                 setIsTopUpOpen(false)
                                                                 setIsAddPaymentOpen(true)
                                                             }}
-                                                            className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                                            className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2"
                                                         >
-                                                            + Add payment method
+                                                            <span className="text-lg">+</span> Add payment method
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex justify-end gap-3 pt-6">
+                                                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                                                     <Button
-                                                        onClick={() => setIsUpdateSubscriptionModalOpen(false)}
-                                                        className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                                        onClick={() => setIsTopUpOpen(false)}
+                                                        className="w-full sm:flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold px-6 py-4 rounded-2xl border-none shadow-none text-[15px] transition-colors h-auto"
                                                     >
                                                         Cancel
                                                     </Button>
                                                     <Button
-                                                        onClick={handleUpdateSubscription}
-                                                        disabled={isUpdateSubmitting || !selectedPlan || !selectedPmForSubscription}
-                                                        className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                                        onClick={handleTopUp}
+                                                        disabled={isTopUpSubmitting || !topUpAmount || !selectedPmForTopUp}
+                                                        className="w-full sm:flex-1 bg-[#1a1c1e] hover:bg-black text-white px-6 py-4 rounded-2xl text-[15px] font-bold transition-all h-auto flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none"
                                                     >
-                                                        {isUpdateSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                                        Update Subscription Plan
+                                                        {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                        Continue
                                                     </Button>
                                                 </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                            {!orgData?.current_plan && (
-                                <Button
-                                    onClick={() => {
-                                        setSelectedPlan(null);
-                                        setIsSubscriptionModalOpen(true);
-                                    }}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 w-full sm:w-auto"
-                                >
-                                    Add Subscription Plan
-                                </Button>
-                            )}
-                            {orgData?.current_plan && (
-                                <Button
-                                    onClick={() => {
-                                        fetchCurrentSubscription();
-                                        setIsUpdateSubscriptionModalOpen(true);
-                                    }}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 w-full sm:w-auto"
-                                >
-                                    Change Subscription Plan
-                                </Button>
-                            )}
-                            {orgData?.current_plan && (
-                                <Button
-                                    onClick={() => setIsCancelPlanModalOpen(true)}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-4 py-2 rounded-lg border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 w-full sm:w-auto"
-                                >
-                                    Cancel plan
-                                </Button>
-                            )}
-                        </div>
+                                            </DialogContent>
+                                        </Dialog>
 
-                        {/* Auto-recharge Banner */}
-                        {/* <div className="bg-white dark:bg-gray-900 border border-green-200 dark:border-green-900/30 rounded-2xl p-4 md:p-6 flex items-center justify-between gap-4">
-                            <div className="flex items-start gap-3">
-                                <div className="mt-0.5 bg-green-50 dark:bg-green-900/20 p-1 rounded-full">
-                                    <div className="w-4 h-4 rounded-full border-2 border-green-500 flex items-center justify-center">
-                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+
                                     </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[15px] font-bold text-green-600 dark:text-green-400">Auto recharge is on</p>
-                                    <p className="text-[15px] text-green-600/80 dark:text-green-400/80">
-                                        When your credit balance reaches $10.00, your payment method will be charged to bring the balance up to $15.00.
+                                    <p className="text-xs text-center text-gray-400 font-bold uppercase tracking-tighter">
+                                        Quickly add Minutes to your account
                                     </p>
                                 </div>
                             </div>
-                            <Button className="bg-[#1a1c1e] dark:bg-gray-100 hover:bg-black dark:hover:bg-white text-white dark:text-gray-900 font-bold px-6 py-2 rounded-xl text-sm whitespace-nowrap transition-colors">
-                                Modify
-                            </Button>
-                        </div> */}
+                        </div>
 
-                        {/* Quick Access Cards */}
-                        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                            <div className="flex items-center gap-4 p-5 rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer group" onClick={() => setActiveTab("Payment methods")}>
-                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-900 dark:text-gray-100 group-hover:bg-white dark:group-hover:bg-gray-750 transition-colors shadow-sm">
-                                    <CreditCard size={22} />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 dark:text-gray-100 text-[15px]">Payment methods</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Add or change payment method</p>
+                        {/* Quick Access Info */}
+                        <div className="bg-gray-50/50 dark:bg-gray-900/30 rounded-3xl p-6 border border-gray-100/50 dark:border-gray-800/50">
+                            <div className="flex items-start gap-4">
+                                <Info className="w-5 h-5 text-gray-400 mt-1 shrink-0" />
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Need help with billing?</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                                        If you have questions about your plan or charges, please visit our <button className="text-gray-900 dark:text-gray-100 font-bold hover:underline decoration-2 underline-offset-4">Help Center</button> or <button className="text-gray-900 dark:text-gray-100 font-bold hover:underline decoration-2 underline-offset-4">Contact Support</button>.
+                                    </p>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-4 p-5 rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer group" onClick={() => setActiveTab("Billing history")}>
-                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-900 dark:text-gray-100 group-hover:bg-white dark:group-hover:bg-gray-750 transition-colors shadow-sm">
-                                    <History size={22} />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 dark:text-gray-100 text-[15px]">Billing history</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">View past and current invoices</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 p-5 rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer group">
-                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-900 dark:text-gray-100 group-hover:bg-white dark:group-hover:bg-gray-750 transition-colors shadow-sm">
-                                    <Settings size={22} />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 dark:text-gray-100 text-[15px]">Preferences</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Manage billing information</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 p-5 rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer group">
-                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-900 dark:text-gray-100 group-hover:bg-white dark:group-hover:bg-gray-750 transition-colors shadow-sm">
-                                    <BarChart3 size={22} />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 dark:text-gray-100 text-[15px]">Usage limits</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Set monthly spend limits</p>
-                                </div>
-                            </div>
-                        </div> */}
-                    </div>
-                ) : activeTab === "Billing history" ? (
-                    <div className="space-y-6 pt-10">
-                        <p className="text-[15px] text-gray-500 dark:text-gray-400">
-                            Showing invoices within the past 12 months
-                        </p>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider border-b border-transparent">
-                                        <th className="pb-4 pr-4">Invoice</th>
-                                        <th className="pb-4 px-4">Status</th>
-                                        <th className="pb-4 px-4 text-right">Amount</th>
-                                        <th className="pb-4 pl-4">Created</th>
-                                        <th className="pb-4 w-10"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-[15px]">
-                                    {transactions.length > 0 ? (
-                                        transactions.map((tx, index) => (
-                                            <tr key={index} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
-                                                <td className="py-5 pr-4 font-medium text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-800">
-                                                    {tx.type_display}
-                                                </td>
-                                                <td className="py-5 px-4 border-b border-gray-100 dark:border-gray-800">
-                                                    <span className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${tx.status === 'paid'
-                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                                                        : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-                                                        }`}>
-                                                        {tx.status_display}
-                                                    </span>
-                                                </td>
-                                                <td className="py-5 px-4 text-right font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
-                                                    ${tx.amount}
-                                                </td>
-                                                <td className="py-5 pl-4 text-gray-900 dark:text-gray-100 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
-                                                    {new Date(tx.created_at).toLocaleString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric',
-                                                        hour: 'numeric',
-                                                        minute: '2-digit',
-                                                        hour12: true
-                                                    })}
-                                                </td>
-                                                <td className="py-5 text-right whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
-                                                    {tx.stripe_invoice_url ? (
-                                                        <button
-                                                            onClick={() => window.open(tx.stripe_invoice_url, '_blank')}
-                                                            className="text-gray-900 dark:text-gray-100 hover:text-black font-bold text-[14px] transition-colors pr-2"
-                                                        >
-                                                            View
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-gray-300 dark:text-gray-700 text-[14px] font-medium pr-2 cursor-not-allowed">
-                                                            N/A
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={5} className="py-12 text-center text-gray-500 dark:text-gray-400 text-sm italic">
-                                                No billing history found.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
                         </div>
                     </div>
-                ) : activeTab === "Payment methods" ? (
-                    <div className="space-y-8 pt-10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {paymentMethods.length > 0 ? (
-                                paymentMethods.map((pm) => (
-                                    <div key={pm.id} className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 md:p-6 space-y-6 relative hover:shadow-sm transition-shadow">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-8 bg-black dark:bg-gray-800 rounded-md flex items-center justify-center relative overflow-hidden">
-                                                    {pm.card.brand === 'visa' ? (
-                                                        <span className="text-white font-bold italic text-xs">VISA</span>
-                                                    ) : (
-                                                        <div className="flex -space-x-2">
-                                                            <div className="w-5 h-5 rounded-full bg-red-600 opacity-80" />
-                                                            <div className="w-5 h-5 rounded-full bg-yellow-500 opacity-80" />
+                ) :
+                    activeTab === "Billing history" ? (
+                        <div className="space-y-6 pt-10">
+                            <p className="text-[15px] text-gray-500 dark:text-gray-400">
+                                Showing invoices within the past 12 months
+                            </p>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider border-b border-transparent">
+                                            <th className="pb-4 pr-4">Invoice</th>
+                                            <th className="pb-4 px-4">Status</th>
+                                            <th className="pb-4 px-4 text-right">Amount</th>
+                                            <th className="pb-4 pl-4">Created</th>
+                                            <th className="pb-4 w-10"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-[15px]">
+                                        {transactions.length > 0 ? (
+                                            transactions.map((tx, index) => (
+                                                <tr key={index} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
+                                                    <td className="py-5 pr-4 font-medium text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-800">
+                                                        {tx.type_display}
+                                                    </td>
+                                                    <td className="py-5 px-4 border-b border-gray-100 dark:border-gray-800">
+                                                        <span className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${tx.status === 'paid'
+                                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                                            : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                                            }`}>
+                                                            {tx.status_display}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-5 px-4 text-right font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+                                                        ${tx.amount}
+                                                    </td>
+                                                    <td className="py-5 pl-4 text-gray-900 dark:text-gray-100 whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+                                                        {new Date(tx.created_at).toLocaleString('en-US', {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            year: 'numeric',
+                                                            hour: 'numeric',
+                                                            minute: '2-digit',
+                                                            hour12: true
+                                                        })}
+                                                    </td>
+                                                    <td className="py-5 text-right whitespace-nowrap border-b border-gray-100 dark:border-gray-800">
+                                                        <div className="flex items-center justify-end gap-4">
+                                                            <button
+                                                                onClick={() => handleEmailInvoice(tx.id)}
+                                                                disabled={emailingInvoiceId === tx.id}
+                                                                className="text-gray-900 dark:text-gray-100 hover:text-black font-bold text-[14px] transition-colors flex items-center gap-2"
+                                                            >
+                                                                {emailingInvoiceId === tx.id ? (
+                                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                                ) : null}
+                                                                Email Me
+                                                            </button>
+                                                            {tx.stripe_invoice_url ? (
+                                                                <button
+                                                                    onClick={() => window.open(tx.stripe_invoice_url, '_blank')}
+                                                                    className="text-gray-900 dark:text-gray-100 hover:text-black font-bold text-[14px] transition-colors"
+                                                                >
+                                                                    View
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-gray-300 dark:text-gray-700 text-[14px] font-medium cursor-not-allowed">
+                                                                    N/A
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                    )}
-                                                </div>
-                                                <div className="space-y-0.5">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">••••{pm.card.last4}</span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={5} className="py-12 text-center text-gray-500 dark:text-gray-400 text-sm italic">
+                                                    No billing history found.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : activeTab === "Payment methods" ? (
+                        <div className="space-y-8 pt-10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {paymentMethods.length > 0 ? (
+                                    paymentMethods.map((pm) => (
+                                        <div key={pm.id} className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 md:p-6 space-y-6 relative hover:shadow-sm transition-shadow">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-8 bg-black dark:bg-gray-800 rounded-md flex items-center justify-center relative overflow-hidden">
+                                                        {pm.card.brand === 'visa' ? (
+                                                            <span className="text-white font-bold italic text-xs">VISA</span>
+                                                        ) : (
+                                                            <div className="flex -space-x-2">
+                                                                <div className="w-5 h-5 rounded-full bg-red-600 opacity-80" />
+                                                                <div className="w-5 h-5 rounded-full bg-yellow-500 opacity-80" />
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                                                        Expires {pm.card.exp_month.toString().padStart(2, '0')}/{pm.card.exp_year}
-                                                    </p>
+                                                    <div className="space-y-0.5">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">••••{pm.card.last4}</span>
+                                                        </div>
+                                                        <p className="text-[13px] text-gray-500 dark:text-gray-400">
+                                                            Expires {pm.card.exp_month.toString().padStart(2, '0')}/{pm.card.exp_year}
+                                                        </p>
+                                                    </div>
                                                 </div>
+                                                {pm.is_default && (
+                                                    <span className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-[12px] font-bold px-3 py-1 rounded-lg">
+                                                        Default
+                                                    </span>
+                                                )}
                                             </div>
-                                            {pm.is_default && (
-                                                <span className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-[12px] font-bold px-3 py-1 rounded-lg">
-                                                    Default
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="pt-2 flex items-center gap-6">
-                                            {!pm.is_default && (
+                                            <div className="pt-2 flex items-center gap-6">
+                                                {!pm.is_default && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setPmToSetDefault(pm);
+                                                            setIsSetDefaultOpen(true);
+                                                        }}
+                                                        className="text-gray-900 dark:text-gray-100 hover:text-black text-[14px] font-bold transition-colors"
+                                                    >
+                                                        Set as default
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => {
-                                                        setPmToSetDefault(pm);
-                                                        setIsSetDefaultOpen(true);
+                                                        setPmToDelete(pm);
+                                                        setIsDeleteOpen(true);
                                                     }}
-                                                    className="text-gray-900 dark:text-gray-100 hover:text-black text-[14px] font-bold transition-colors"
+                                                    className="text-red-500 hover:text-red-600 text-[14px] font-bold transition-colors"
                                                 >
-                                                    Set as default
+                                                    Delete
                                                 </button>
-                                            )}
-                                            <button
-                                                onClick={() => {
-                                                    setPmToDelete(pm);
-                                                    setIsDeleteOpen(true);
-                                                }}
-                                                className="text-red-500 hover:text-red-600 text-[14px] font-bold transition-colors"
-                                            >
-                                                Delete
-                                            </button>
+                                            </div>
                                         </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-full py-12 text-center text-gray-500 dark:text-gray-400 text-sm italic">
+                                        No payment methods found.
                                     </div>
-                                ))
-                            ) : (
-                                <div className="col-span-full py-12 text-center text-gray-500 dark:text-gray-400 text-sm italic">
-                                    No payment methods found.
-                                </div>
-                            )}
+                                )}
 
-                            {/* Add Payment Method Card */}
-                            {/* <div
+                                {/* Add Payment Method Card */}
+                                {/* <div
                                 onClick={() => setIsAddPaymentOpen(true)}
                                 className="border border-dashed border-gray-200 dark:border-gray-800 rounded-2xl p-5 md:p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors group"
                             >
@@ -1182,22 +1113,23 @@ export function BillingContent() {
                                 </div>
                                 <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">Add payment method</span>
                             </div> */}
-                        </div>
+                            </div>
 
-                        <div className="pt-4">
-                            <Button
-                                onClick={() => setIsAddPaymentOpen(true)}
-                                className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-5 py-2.5 rounded-xl border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-                            >
-                                Add payment method
-                            </Button>
+                            <div className="pt-4">
+                                <Button
+                                    onClick={() => setIsAddPaymentOpen(true)}
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-5 py-2.5 rounded-xl border-none shadow-none text-sm transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                                >
+                                    Add payment method
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <div className="pt-8 text-gray-500 dark:text-gray-400 text-sm italic">
-                        Content for {activeTab} will appear here.
-                    </div>
-                )}
+                    ) : (
+                        <div className="pt-8 text-gray-500 dark:text-gray-400 text-sm italic">
+                            Content for {activeTab} will appear here.
+                        </div>
+                    )
+                }
 
                 {/* Add Payment Method Modal */}
                 <Dialog open={isAddPaymentOpen} onOpenChange={(open) => {
@@ -1418,6 +1350,32 @@ export function BillingContent() {
                     </AlertDialogContent>
                 </AlertDialog>
 
+                <AlertDialog open={!!successDetail} onOpenChange={() => setSuccessDetail(null)}>
+                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                        <AlertDialogHeader>
+                            <div className="flex justify-center items-center gap-3 mb-2">
+                                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
+                                    <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <AlertDialogTitle className="text-lg font-bold text-green-600 dark:text-green-400">
+                                    Success
+                                </AlertDialogTitle>
+                            </div>
+                            <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">
+                                {successDetail}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="pt-4">
+                            <AlertDialogAction
+                                onClick={() => setSuccessDetail(null)}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
+                            >
+                                Continue
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
                 {/* Delete Confirmation Modal */}
                 <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
                     <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
@@ -1460,7 +1418,7 @@ export function BillingContent() {
 
                         <div className="space-y-10">
                             {/* Pricing Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
                                 {pricingTiers.map((tier) => {
                                     const hidePopularHighlight = hoveredTier !== null && hoveredTier !== tier.name;
                                     const isHighlighted = tier.popular ? !hidePopularHighlight : hoveredTier === tier.name;
@@ -1509,7 +1467,7 @@ export function BillingContent() {
                                             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
 
                                             <ul className="space-y-3 mb-8 flex-grow">
-                                                {tier.features.map((feature) => (
+                                                {tier.features.map((feature: string) => (
                                                     <li key={feature} className="flex items-start gap-2">
                                                         <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                                                         <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
@@ -1621,6 +1579,222 @@ export function BillingContent() {
                     </DialogContent>
                 </Dialog>
 
+                <Dialog open={isUpdateSubscriptionModalOpen} onOpenChange={setIsUpdateSubscriptionModalOpen}>
+                    <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                Update Subscription Plan
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-10">
+                            {isFetchingSubscription || isFetchingPlans ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                                    <p className="text-gray-500 font-medium">Fetching details...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Previous Operation Section */}
+                                    {/* {currentSubscription && (
+                                        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 mb-2">
+                                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Previous Operation</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
+                                                <div>
+                                                    <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-1">Current Plan</p>
+                                                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100 capitalize">{currentSubscription.plan || "Starter"}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[12px] font-bold bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 capitalize">
+                                                        {currentSubscription.status || "active"}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-1">Amount</p>
+                                                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                        ${currentSubscription.amount || (
+                                                            currentSubscription.plan === 'starter' ? '400.00' :
+                                                                (currentSubscription.plan === 'growing' ? '1000.00' : '1500.00')
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-1">Next Bill Date</p>
+                                                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                        {currentSubscription.current_period_end
+                                                            ? new Date(currentSubscription.current_period_end * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                            : "N/A"
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )} */}
+                                    {/* Pricing Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
+                                        {pricingTiers.map((tier) => {
+                                            const hidePopularHighlight = hoveredTier !== null && hoveredTier !== tier.name;
+                                            const isHighlighted = tier.popular ? !hidePopularHighlight : hoveredTier === tier.name;
+                                            const isSelected = selectedPlan === tier.name;
+
+                                            return (
+                                                <div
+                                                    key={tier.name}
+                                                    onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
+                                                    onMouseLeave={() => setHoveredTier(null)}
+                                                    onClick={() => !tier.disabled && setSelectedPlan(tier.name)}
+                                                    className={[
+                                                        "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
+                                                        tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
+                                                        isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
+                                                        !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
+                                                    ].join(" ")}
+                                                >
+                                                    {tier.popular && !isSelected && (
+                                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black text-white dark:bg-white dark:text-gray-900">
+                                                                Most Popular
+                                                            </span>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <div className={[
+                                                            "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                                                            isSelected ? "bg-black/10 dark:bg-white/10" : "bg-gray-100 dark:bg-gray-800",
+                                                        ].join(" ")}>
+                                                            <tier.icon className={[
+                                                                "w-5 h-5 transition-colors",
+                                                                isSelected ? "text-black dark:text-white" : "text-gray-500",
+                                                            ].join(" ")} />
+                                                        </div>
+                                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tier.name}</h3>
+                                                    </div>
+
+                                                    <div className="mb-2">
+                                                        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tier.price}</span>
+                                                        <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
+                                                    </div>
+
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{tier.minimumMinutes}</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
+
+                                                    <ul className="space-y-3 mb-8 flex-grow">
+                                                        {tier.features.map((feature: string) => (
+                                                            <li key={feature} className="flex items-start gap-2">
+                                                                <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                                                <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Payment Method Selector (Styled like Top-up modal) */}
+                                    <div className="max-w-md mx-auto w-full space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                Payment method
+                                            </label>
+                                            <div className="relative">
+                                                <div
+                                                    onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
+                                                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                            {selectedPmForSubscription?.card.brand === 'visa' ? (
+                                                                <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                            ) : (
+                                                                <div className="flex -space-x-1.5">
+                                                                    <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                                    <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                            {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                                        <ChevronUp size={16} />
+                                                        <ChevronDown size={16} />
+                                                    </div>
+                                                </div>
+
+                                                {isPmSelectorForSubOpen && (
+                                                    <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                        <div className="max-h-[200px] overflow-y-auto">
+                                                            {paymentMethods.map((pm) => (
+                                                                <div
+                                                                    key={pm.id}
+                                                                    onClick={() => {
+                                                                        setSelectedPmForSubscription(pm);
+                                                                        setIsPmSelectorForSubOpen(false);
+                                                                    }}
+                                                                    className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                            {pm.card.brand === 'visa' ? (
+                                                                                <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                            ) : (
+                                                                                <div className="flex -space-x-1">
+                                                                                    <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                                    <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                                    </div>
+                                                                    {selectedPmForSubscription?.id === pm.id && (
+                                                                        <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex justify-end pt-1">
+                                                <button
+                                                    onClick={() => {
+                                                        setIsTopUpOpen(false)
+                                                        setIsAddPaymentOpen(true)
+                                                    }}
+                                                    className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                                >
+                                                    + Add payment method
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end gap-3 pt-6">
+                                            <Button
+                                                onClick={() => setIsUpdateSubscriptionModalOpen(false)}
+                                                className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                onClick={handleUpdateSubscription}
+                                                disabled={isUpdateSubmitting || !selectedPlan || !selectedPmForSubscription}
+                                                className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                            >
+                                                {isUpdateSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                Update Subscription Plan
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
                 <Dialog open={isCancelPlanModalOpen} onOpenChange={setIsCancelPlanModalOpen}>
                     <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
                         <DialogHeader className="p-0 space-y-2 text-left">
@@ -1683,7 +1857,7 @@ export function BillingContent() {
                         </div>
                     </DialogContent>
                 </Dialog>
-            </div>
-        </main>
+            </div >
+        </main >
     )
 }
