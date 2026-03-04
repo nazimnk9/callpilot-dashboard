@@ -686,12 +686,12 @@ export function BillingContent() {
                         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div className="space-y-4">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50">
+                                    <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50">
                                         <Zap size={14} className="fill-current" />
-                                        <span className="text-xs font-bold uppercase tracking-wider">Current Plan</span>
+                                        <span className="text-[12px] font-bold uppercase tracking-wider">Current Plan</span>
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
+                                        <h3 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
                                             {orgData?.current_plan || "No Active Plan"}
                                         </h3>
                                         {orgData?.current_plan && (
@@ -702,8 +702,8 @@ export function BillingContent() {
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <Button
-                                        variant="outline"
+                                    <button
+                                        //variant="outline"
                                         onClick={() => {
                                             if (orgData?.current_plan) {
                                                 fetchCurrentSubscription();
@@ -713,15 +713,15 @@ export function BillingContent() {
                                                 setIsSubscriptionModalOpen(true);
                                             }
                                         }}
-                                        className="w-full bg-[#1a1c1e] hover:bg-black hover:text-white text-white px-8 py-6 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
+                                        className="w-full bg-[#1a1c1e] hover:bg-black hover:text-white text-white p-2 rounded-2xl text-[12px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
-                                    </Button>
+                                    </button>
 
                                     {orgData?.current_plan && (
                                         <button
                                             onClick={() => setIsCancelPlanModalOpen(true)}
-                                            className="text-sm font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-full p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
+                                            className="text-[12px] font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-full p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
                                         >
                                             Cancel Subscription
                                         </button>
@@ -730,18 +730,19 @@ export function BillingContent() {
                             </div>
                         </div>
 
-                        {/* Usage & Minutes Card */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity duration-500">
-                                    <BarChart3 size={120} />
-                                </div>
-                                <div className="relative space-y-6">
+                        {/* Usage & Actions Card */}
+                        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+                            <div className="absolute top-0 right-[-20px] md:right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity duration-500">
+                                <BarChart3 size={120} />
+                            </div>
+                            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                {/* Left Side: Usage Info */}
+                                <div className="space-y-6">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-600 dark:text-green-400">
                                             <BarChart3 size={20} />
                                         </div>
-                                        <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">Usage</h4>
+                                        <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">Usage & Actions</h4>
                                     </div>
                                     <div className="space-y-4">
                                         <div className="space-y-1">
@@ -754,188 +755,174 @@ export function BillingContent() {
                                             </div>
                                         </div>
                                         <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                                            Usage is billed per minute of successfully processed audio.
+                                            Usage is billed per minute of successfully processed audio. Quickly add Minutes to your account.
                                         </p>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden relative group">
-                                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity duration-500">
-                                    <Zap size={120} />
-                                </div>
-                                <div className="relative space-y-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                                            <Zap size={20} />
-                                        </div>
-                                        <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">Actions</h4>
-                                    </div>
-                                    <div className="flex flex-col gap-4">
-                                        <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
-                                            <DialogTrigger asChild>
-                                                <Button className="w-full bg-[#1a1c1e] hover:bg-black text-white px-8 py-6 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] mt-16">
-                                                    Top Up Minutes
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
-                                                <DialogHeader className="p-0">
-                                                    <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
-                                                        Add to Minute balance
-                                                    </DialogTitle>
-                                                </DialogHeader>
+                                {/* Right Side: Actions */}
+                                <div className="flex flex-col gap-4">
+                                    <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
+                                        <DialogTrigger asChild>
+                                            <button className="bg-[#1a1c1e] hover:bg-black text-white p-2 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] mt-0 md:mt-32">
+                                                Top Up Minutes
+                                            </button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
+                                            <DialogHeader className="p-0">
+                                                <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                                                    Add to Minute balance
+                                                </DialogTitle>
+                                            </DialogHeader>
 
-                                                <div className="space-y-6">
-                                                    {/* Amount Section */}
-                                                    <div className="space-y-2">
-                                                        <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                            Minutes to add
-                                                        </label>
-                                                        <div className="relative">
-                                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
-                                                                <div className="w-5 h-5 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
-                                                                    <Zap size={10} className="text-blue-600 dark:text-blue-400 fill-current" />
-                                                                </div>
-                                                            </div>
-                                                            <input
-                                                                type="number"
-                                                                value={topUpMinutes}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value;
-                                                                    if (val === "") {
-                                                                        setTopUpMinutes("");
-                                                                        setTopUpAmount("");
-                                                                        return;
-                                                                    }
-                                                                    const mins = Math.floor(parseInt(val));
-                                                                    if (isNaN(mins)) return;
-
-                                                                    setTopUpMinutes(mins.toString());
-                                                                    if (orgData?.top_up_min_per_dol) {
-                                                                        const total = (mins * parseFloat(orgData.top_up_min_per_dol)).toFixed(2);
-                                                                        setTopUpAmount(total);
-                                                                    }
-                                                                }}
-                                                                placeholder="Enter minutes"
-                                                                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                                                            />
-                                                        </div>
-                                                        <div className="flex items-center justify-between px-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <BarChart3 size={14} className="text-blue-500" />
-                                                                <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
-                                                                    Total Cost: ${topUpAmount || "0.00"}
-                                                                </p>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <Info size={14} className="text-gray-400" />
-                                                                <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
-                                                                    Cost per minute: ${orgData?.top_up_min_per_dol || "0.00"}
-                                                                </p>
+                                            <div className="space-y-6">
+                                                {/* Amount Section */}
+                                                <div className="space-y-2">
+                                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                        Minutes to add
+                                                    </label>
+                                                    <div className="relative">
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
+                                                            <div className="w-5 h-5 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
+                                                                <Zap size={10} className="text-blue-600 dark:text-blue-400 fill-current" />
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                        <input
+                                                            type="number"
+                                                            value={topUpMinutes}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val === "") {
+                                                                    setTopUpMinutes("");
+                                                                    setTopUpAmount("");
+                                                                    return;
+                                                                }
+                                                                const mins = Math.floor(parseInt(val));
+                                                                if (isNaN(mins)) return;
 
-                                                    {/* Payment Method Selector */}
-                                                    <div className="space-y-2">
-                                                        <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                            Payment method
-                                                        </label>
-                                                        <div className="relative">
-                                                            <div
-                                                                onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
-                                                                className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-gray-50 dark:bg-gray-900 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-850 transition-all duration-200"
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
-                                                                        {selectedPmForTopUp?.card.brand === 'visa' ? (
-                                                                            <span className="text-white font-bold italic text-[8px]">VISA</span>
-                                                                        ) : (
-                                                                            <div className="flex -space-x-1.5">
-                                                                                <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                                                <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                    <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                                        {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
-                                                                    <ChevronUp size={16} />
-                                                                    <ChevronDown size={16} />
-                                                                </div>
-                                                            </div>
-
-                                                            {isPmSelectorOpen && (
-                                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                                    <div className="max-h-[240px] overflow-y-auto p-2">
-                                                                        {paymentMethods.map((pm) => (
-                                                                            <div
-                                                                                key={pm.id}
-                                                                                onClick={() => {
-                                                                                    setSelectedPmForTopUp(pm);
-                                                                                    setIsPmSelectorOpen(false);
-                                                                                }}
-                                                                                className="px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 rounded-2xl cursor-pointer transition-colors"
-                                                                            >
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
-                                                                                        {pm.card.brand === 'visa' ? (
-                                                                                            <span className="text-white font-bold italic text-[6px]">VISA</span>
-                                                                                        ) : (
-                                                                                            <div className="flex -space-x-1">
-                                                                                                <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                                                <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </div>
-                                                                                    <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
-                                                                                </div>
-                                                                                {selectedPmForTopUp?.id === pm.id && (
-                                                                                    <Check size={16} className="text-gray-900 dark:text-gray-100" />
-                                                                                )}
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-start px-1">
-                                                        <button
-                                                            onClick={() => {
-                                                                setIsTopUpOpen(false)
-                                                                setIsAddPaymentOpen(true)
+                                                                setTopUpMinutes(mins.toString());
+                                                                if (orgData?.top_up_min_per_dol) {
+                                                                    const total = (mins * parseFloat(orgData.top_up_min_per_dol)).toFixed(2);
+                                                                    setTopUpAmount(total);
+                                                                }
                                                             }}
-                                                            className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2"
-                                                        >
-                                                            <span className="text-lg">+</span> Add payment method
-                                                        </button>
+                                                            placeholder="Enter minutes"
+                                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center justify-between px-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <BarChart3 size={14} className="text-blue-500" />
+                                                            <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
+                                                                Total Cost: ${topUpAmount || "0.00"}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Info size={14} className="text-gray-400" />
+                                                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+                                                                Cost per minute: ${orgData?.top_up_min_per_dol || "0.00"}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                                                    <Button
-                                                        onClick={() => setIsTopUpOpen(false)}
-                                                        className="w-full sm:flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold px-6 py-4 rounded-2xl border-none shadow-none text-[15px] transition-colors h-auto"
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                    <Button
-                                                        onClick={handleTopUp}
-                                                        disabled={isTopUpSubmitting || !topUpAmount || !selectedPmForTopUp}
-                                                        className="w-full sm:flex-1 bg-[#1a1c1e] hover:bg-black text-white px-6 py-4 rounded-2xl text-[15px] font-bold transition-all h-auto flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none"
-                                                    >
-                                                        {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                                        Continue
-                                                    </Button>
+                                                {/* Payment Method Selector */}
+                                                <div className="space-y-2">
+                                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                        Payment method
+                                                    </label>
+                                                    <div className="relative">
+                                                        <div
+                                                            onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
+                                                            className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-gray-50 dark:bg-gray-900 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-850 transition-all duration-200"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                                    {selectedPmForTopUp?.card.brand === 'visa' ? (
+                                                                        <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                                    ) : (
+                                                                        <div className="flex -space-x-1.5">
+                                                                            <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                                            <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                                    {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                                                <ChevronUp size={16} />
+                                                                <ChevronDown size={16} />
+                                                            </div>
+                                                        </div>
+
+                                                        {isPmSelectorOpen && (
+                                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                                <div className="max-h-[240px] overflow-y-auto p-2">
+                                                                    {paymentMethods.map((pm) => (
+                                                                        <div
+                                                                            key={pm.id}
+                                                                            onClick={() => {
+                                                                                setSelectedPmForTopUp(pm);
+                                                                                setIsPmSelectorOpen(false);
+                                                                            }}
+                                                                            className="px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 rounded-2xl cursor-pointer transition-colors"
+                                                                        >
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                                    {pm.card.brand === 'visa' ? (
+                                                                                        <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                                    ) : (
+                                                                                        <div className="flex -space-x-1">
+                                                                                            <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                                            <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                                <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                                            </div>
+                                                                            {selectedPmForTopUp?.id === pm.id && (
+                                                                                <Check size={16} className="text-gray-900 dark:text-gray-100" />
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </DialogContent>
-                                        </Dialog>
+                                                <div className="flex justify-start px-1">
+                                                    <button
+                                                        onClick={() => {
+                                                            setIsTopUpOpen(false)
+                                                            setIsAddPaymentOpen(true)
+                                                        }}
+                                                        className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2"
+                                                    >
+                                                        <span className="text-lg">+</span> Add payment method
+                                                    </button>
+                                                </div>
+                                            </div>
 
-
-                                    </div>
+                                            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                                                <Button
+                                                    onClick={() => setIsTopUpOpen(false)}
+                                                    className="w-full sm:flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold px-6 py-4 rounded-2xl border-none shadow-none text-[15px] transition-colors h-auto"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    onClick={handleTopUp}
+                                                    disabled={isTopUpSubmitting || !topUpAmount || !selectedPmForTopUp}
+                                                    className="w-full sm:flex-1 bg-[#1a1c1e] hover:bg-black text-white px-6 py-4 rounded-2xl text-[15px] font-bold transition-all h-auto flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none"
+                                                >
+                                                    {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                    Continue
+                                                </Button>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                     <p className="text-xs text-center text-gray-400 font-bold uppercase tracking-tighter">
                                         Quickly add Minutes to your account
                                     </p>
