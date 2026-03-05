@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, Loader2, Rocket, Zap, Building2 } from 'lucide-react';
+import { BarChart3, Loader2, Rocket, Zap } from 'lucide-react';
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
+import { useRouter } from 'next/navigation';
 
 export function DashboardContent() {
+    const router = useRouter();
     const [orgData, setOrgData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -47,13 +49,6 @@ export function DashboardContent() {
             iconColor: 'text-purple-600 dark:text-purple-400',
             bgColor: 'bg-purple-50 dark:bg-purple-900/20',
         },
-        // {
-        //     title: 'Organization',
-        //     value: orgData?.name || 'Loading...',
-        //     icon: Building2,
-        //     iconColor: 'text-green-600 dark:text-green-400',
-        //     bgColor: 'bg-green-50 dark:bg-green-900/20',
-        // },
     ];
 
     return (
@@ -76,7 +71,8 @@ export function DashboardContent() {
                         cards.map((card, index) => (
                             <div
                                 key={index}
-                                className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                onClick={() => router.push('/dashboard/billing')}
+                                className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
                             >
                                 {/* soft gradient glow */}
                                 <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
