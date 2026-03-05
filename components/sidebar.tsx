@@ -109,9 +109,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="h-16 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-800 relative">
           <div className="flex items-center justify-center">
             <img
+              onClick={() => router.push('/dashboard')}
               src="/callpilot_logo.png"
               alt="CallPilot Logo"
-              className="h-12 w-auto object-contain brightness-100"
+              className="h-12 w-auto object-contain brightness-100 cursor-pointer"
             />
           </div>
           <button
