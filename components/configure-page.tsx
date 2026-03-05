@@ -130,11 +130,11 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
         const fetchData = async () => {
             try {
-                const [statusRes, platformRes, phoneRes, featuresRes, questionsRes] = await Promise.all([
+                const [statusRes, platformRes, phoneRes, questionsRes] = await Promise.all([
                     flowService.getInterviewStatus(),
                     flowService.getMyPlatforms(),
                     flowService.getPhoneNumbers(),
-                    flowService.getFlows(),
+                    //flowService.getFlows(),
                     flowService.getPrimaryQuestions(),
                 ])
 
@@ -143,10 +143,10 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 if (phoneRes) setPhoneNumberOptions(phoneRes.data.results)
                 if (questionsRes) setSuggestedQuestions(questionsRes.data.results)
 
-                const currentFeature = featuresRes.data.results.find((f: any) => f.uid === featureUid)
-                if (currentFeature) {
-                    setFeatureName(currentFeature.name)
-                }
+                //const currentFeature = featuresRes.data.results.find((f: any) => f.uid === featureUid)
+                //if (currentFeature) {
+                //    setFeatureName(currentFeature.name)
+                //}
 
                 if (codeParam === "AICALL191") {
                     try {
@@ -362,116 +362,116 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {searchParams.get("code") === "AICALL191" ? (
-                        <>
-                                {/* Left Column */}
-                                <div className="space-y-8">
-                                    <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
-                                        <div className="space-y-6">
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
-                                                <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                                    <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                        <SelectValue placeholder="Select phone number" />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                        <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                                        {phoneNumberOptions.map(p => (
-                                                            <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
-                                                                {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                    Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
-                                                </p>
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
-                                                <Input
-                                                    value={voiceId}
-                                                    onChange={(e) => setVoiceId(e.target.value)}
-                                                    placeholder="Enter Voice ID"
-                                                    className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                                />
-                                            </div>
-                                        </div>
-                                    </Card>
-                                </div>
-
-                                {/* Right Column */}
-                                <div className="space-y-8">
-                                    <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Assistant Settings</h2>
-                                        <div className="space-y-6">
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Restaurant Name</Label>
-                                                <Input
-                                                    value={restaurantName}
-                                                    onChange={(e) => setRestaurantName(e.target.value)}
-                                                    placeholder="Enter Restaurant Name"
-                                                    className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Assistant Name</Label>
-                                                <Input
-                                                    value={assistantName}
-                                                    onChange={(e) => setAssistantName(e.target.value)}
-                                                    placeholder="Enter Assistant Name"
-                                                    className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                                />
-                                            </div>
-                                        </div>
-                                    </Card>
-                                </div>
-                        </>
-                        ) : (
+                    {searchParams.get("code") === "AICALL191" ? (
                         <>
                             {/* Left Column */}
                             <div className="space-y-8">
-                            <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
-                                <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform</Label>
-                                        <Select value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
-                                            <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                <SelectValue placeholder="Select Platform" />
-                                            </SelectTrigger>
-                                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                                {platformOptions.map(p => (
-                                                    <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">{p.platform.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
+                                            <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select phone number" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {phoneNumberOptions.map(p => (
+                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
+                                                            {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
+                                            </p>
+                                        </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
-                                        <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                            <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                <SelectValue placeholder="Select phone number" />
-                                            </SelectTrigger>
-                                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                                {phoneNumberOptions.map(p => (
-                                                    <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
-                                                        {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <p className="text-xs text-gray-400 dark:text-gray-500">
-                                            Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
-                                        </p>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
+                                            <Input
+                                                value={voiceId}
+                                                onChange={(e) => setVoiceId(e.target.value)}
+                                                placeholder="Enter Voice ID"
+                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            </Card>
+                                </Card>
+                            </div>
+
+                            {/* Right Column */}
+                            <div className="space-y-8">
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Assistant Settings</h2>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Restaurant Name</Label>
+                                            <Input
+                                                value={restaurantName}
+                                                onChange={(e) => setRestaurantName(e.target.value)}
+                                                placeholder="Enter Restaurant Name"
+                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Assistant Name</Label>
+                                            <Input
+                                                value={assistantName}
+                                                onChange={(e) => setAssistantName(e.target.value)}
+                                                placeholder="Enter Assistant Name"
+                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </Card>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {/* Left Column */}
+                            <div className="space-y-8">
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform</Label>
+                                            <Select value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select Platform" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {platformOptions.map(p => (
+                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">{p.platform.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
+                                            <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
+                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select phone number" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                    {phoneNumberOptions.map(p => (
+                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
+                                                            {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </Card>
 
                                 {/* <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Interview Questions</h2>
