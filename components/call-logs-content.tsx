@@ -70,7 +70,7 @@ interface CallLogConfig {
 
 const DAY_OPTIONS = [
     { label: "1 day", value: 1 },
-    { label: "5 days (Default)", value: 5 },
+    { label: "5 days", value: 5 },
     { label: "7 days", value: 7 },
     { label: "14 days", value: 14 },
     { label: "30 days", value: 30 },
@@ -94,7 +94,7 @@ export function CallLogsContent() {
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
     const [config, setConfig] = useState<CallLogConfig>({
         action: "NEVER_DELETE",
-        delete_hours: null
+        delete_hours: 120
     })
     const [isConfigLoading, setIsConfigLoading] = useState(false)
     const [configError, setConfigError] = useState<string | null>(null)
@@ -135,7 +135,7 @@ export function CallLogsContent() {
             if (response.data) {
                 setConfig({
                     action: response.data.action || "NEVER_DELETE",
-                    delete_hours: response.data.delete_hours
+                    delete_hours: response.data.delete_hours !== null ? response.data.delete_hours : 120
                 })
             }
         } catch (err: any) {
