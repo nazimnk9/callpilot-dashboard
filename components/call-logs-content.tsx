@@ -68,6 +68,14 @@ interface CallLogConfig {
     delete_hours: number | string | null
 }
 
+const DAY_OPTIONS = [
+    { label: "1 day", value: 1 },
+    { label: "5 days (Default)", value: 5 },
+    { label: "7 days", value: 7 },
+    { label: "14 days", value: 14 },
+    { label: "30 days", value: 30 },
+]
+
 export function CallLogsContent() {
     const [callLogs, setCallLogs] = useState<CallLog[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -203,8 +211,6 @@ export function CallLogsContent() {
         if (activeTab === "Outgoing") return log.state === "OUTGOING"
         return true
     })
-
-    const hourOptions = Array.from({ length: 8 }, (_, i) => (i + 1) * 6)
 
     return (
         <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950">
@@ -450,25 +456,25 @@ export function CallLogsContent() {
                                 <SelectContent>
                                     <SelectItem value="NEVER_DELETE">Never Auto delete</SelectItem>
                                     <SelectItem value="ALWAYS_DELETE">Always auto delete instantly</SelectItem>
-                                    <SelectItem value="CUSTOM_DELETE">Auto Delete Within 'x' hours</SelectItem>
+                                    <SelectItem value="CUSTOM_DELETE">Auto Delete Within 'x' Days</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         {config.action === "CUSTOM_DELETE" && (
                             <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <Label>Hour Select</Label>
+                                <Label>Days Select</Label>
                                 <Select
-                                    value={config.delete_hours !== null ? Number(config.delete_hours).toFixed(1) : undefined}
-                                    onValueChange={(value) => setConfig({ ...config, delete_hours: parseFloat(value) })}
+                                    value={config.delete_hours !== null ? String(Number(config.delete_hours) / 24) : undefined}
+                                    onValueChange={(value) => setConfig({ ...config, delete_hours: parseInt(value) * 24 })}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select hours" />
+                                        <SelectValue placeholder="Select days" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {hourOptions.map(hour => (
-                                            <SelectItem key={hour} value={hour.toFixed(1)}>
-                                                {hour} hours
+                                        {DAY_OPTIONS.map(opt => (
+                                            <SelectItem key={opt.value} value={String(opt.value)}>
+                                                {opt.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
