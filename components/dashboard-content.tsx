@@ -112,7 +112,7 @@ export function DashboardContent() {
                 </div>
 
                 {/* Placeholder for more content to make it look full */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
+                {/* <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
                     <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center mb-4">
                         <BarChart3 className="text-gray-400 dark:text-gray-500" size={32} />
                     </div>
@@ -120,7 +120,7 @@ export function DashboardContent() {
                     <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mt-2">
                         We're processing your data to provide deep insights into your call performance and user engagement.
                     </p>
-                </div>
+                </div> */}
             </div>
         </main>
     );
