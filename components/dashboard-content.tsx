@@ -554,7 +554,7 @@ export function DashboardContent() {
                 </div>
 
                 {/* 3 cards in same row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {isLoading ? (
                         Array(2).fill(0).map((_, i) => (
                             <div key={i} className="h-32 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
@@ -590,7 +590,7 @@ export function DashboardContent() {
                                             </div>
 
                                             <div className="min-w-0">
-                                                <div className="flex items-center justify-between gap-4 mt-1">
+                                                <div className="flex items-center justify-between gap-28 mt-1">
                                                     <div>
                                                         <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                                             {card.title}
@@ -767,7 +767,7 @@ export function DashboardContent() {
                                                     )}
                                                 </div>
                                                 {card.title === 'Current Plan' && (
-                                                    <div className="flex flex-col gap-2 mt-4">
+                                                    <div className="flex flex-row gap-2 mt-4">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -779,7 +779,7 @@ export function DashboardContent() {
                                                                     setIsSubscriptionModalOpen(true);
                                                                 }
                                                             }}
-                                                            className="w-full bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-2 py-1 rounded-2xl text-[10px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
+                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[12px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
                                                         >
                                                             {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
                                                         </button>
@@ -790,7 +790,7 @@ export function DashboardContent() {
                                                                     e.stopPropagation();
                                                                     setIsCancelPlanModalOpen(true);
                                                                 }}
-                                                                className="text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-full px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
+                                                                className="text-[9px] md:text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-[100px] md:w-[110px] sm:w-[15%] px-1 py-1 md:px-1 md:py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
                                                             >
                                                                 Cancel Subscription
                                                             </button>
