@@ -616,12 +616,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
                                         Add primary questions for the interview. Save each question before saving the full configuration.
                                     </p>
-
+                                    
                                     <div className="space-y-5">
                                         {questions.map((q, index) => (
                                             <div key={q.tempId} className="space-y-2">
                                                 <div className="flex gap-2 items-center">
-                                                    <Input
+                                                <Input
                                                         value={q.value}
                                                         onChange={(e) => handleQuestionChange(index, e.target.value)}
                                                         placeholder="Type a question"
@@ -641,7 +641,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                     <div className="border border-gray-100 dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-900/30 space-y-3">
                                                         <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Suggested Questions:</p>
                                                         <div className="flex flex-col gap-2">
-                                                            {suggestedQuestions.map(s => (
+                                                        {suggestedQuestions.map(s => (
                                                                 <div key={s.id} onClick={() => handleSuggestionClick(index, s.question)} className="text-sm p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg cursor-pointer transition-all shadow-sm dark:text-gray-100">{s.question}</div>
                                                             ))}
                                                         </div>
@@ -655,6 +655,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     </div>
                                 </Card> */}
                             </div>
+                                                            
 
                             {/* Right Column */}
                             <div className="space-y-8 flex flex-col h-full">
@@ -817,7 +818,20 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     </div>
                                 </Card> */}
                             </div>
+                            <Card className="lg:col-span-2 p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Setup Requirement</h2>
+                                                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                                                                    Please create the following 5 statuses in your JobAdder account under the Job Application's Status creation section (if they are not already present):
+                                                                </p>
+                                                                <ul className="mt-4 space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside">
+                                                                    <li>Applied</li>
+                                                                    <li>AI Call No Reply</li>
+                                                                    <li>Link Sent</li>
+                                                                    <li>Unsuccessful</li>
+                                                                </ul>
+                                                            </Card>
                         </>
+
                     )}
                 </div>
 
@@ -923,6 +937,6 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div >
+        </div>
     )
 }
