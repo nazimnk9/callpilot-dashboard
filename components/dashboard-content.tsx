@@ -548,13 +548,28 @@ export function DashboardContent() {
         {
             title: 'Last System check: 10 seconds ago',
             value: 'AI Call Status',
-            icon: Rocket,
+            icon: () => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
             iconColor: 'text-blue-600 dark:text-blue-400',
             bgColor: 'bg-blue-50 dark:bg-blue-900/20',
         },
         {
             title: 'System Health',
-            value: orgData?.wallet_minutes ? `${orgData.wallet_minutes} Minutes` : '0 Minutes',
+            value: (
+                <div className="space-y-1.5 mt-2">
+                    <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Voice API</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Call Trigger</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Queue</span>
+                    </div>
+                </div>
+            ) as any,
             icon: Zap,
             iconColor: 'text-purple-600 dark:text-purple-400',
             bgColor: 'bg-purple-50 dark:bg-purple-900/20',
