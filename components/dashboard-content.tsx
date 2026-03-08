@@ -555,7 +555,7 @@ export function DashboardContent() {
         {
             title: 'System Health',
             value: (
-                <div className="space-y-1.5 mt-2">
+                <div className="flex gap-6 mt-2">
                     <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Voice API</span>
@@ -570,7 +570,7 @@ export function DashboardContent() {
                     </div>
                 </div>
             ) as any,
-            icon: Zap,
+            icon: () => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
             iconColor: 'text-purple-600 dark:text-purple-400',
             bgColor: 'bg-purple-50 dark:bg-purple-900/20',
         },
