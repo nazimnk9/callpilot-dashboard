@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { flowService } from "@/services/flow-service"
-import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus } from "lucide-react"
+import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import {
@@ -21,6 +21,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface ConfigurePageProps {
     featureUid?: string
@@ -60,6 +61,13 @@ interface SuggestedQuestion {
     status: string
 }
 
+interface TimelineDay {
+    day: string
+    startTime: string
+    endTime: string
+    isActive: boolean
+}
+
 interface AppFeature {
     uid: string
     name: string
@@ -80,6 +88,13 @@ const CALLING_TIME_OPTIONS = [
     { label: "55 min", value: 55 },
     { label: "60 min", value: 60 },
 ]
+
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
+    const hours = Math.floor(i / 2)
+    const minutes = i % 2 === 0 ? "00" : "30"
+    const time = `${String(hours).padStart(2, '0')}:${minutes}:00`
+    return { label: time.slice(0, 5), value: time }
+})
 
 export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const router = useRouter()
@@ -109,6 +124,19 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [successfulStatus, setSuccessfulStatus] = useState<string>("")
     const [placedStatus, setPlacedStatus] = useState<string>("")
 
+    const INITIAL_TIMELINE: TimelineDay[] = [
+        { day: "Monday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
+        { day: "Tuesday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
+        { day: "Wednesday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
+        { day: "Thursday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
+        { day: "Friday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
+        { day: "Saturday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
+        { day: "Sunday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
+    ]
+
+    // Timeline State
+    const [timeline, setTimeline] = useState<TimelineDay[]>(INITIAL_TIMELINE)
+
     // Dynamic Questions
     const [questions, setQuestions] = useState<QuestionInput[]>([{ tempId: crypto.randomUUID(), value: "", isSaved: false }])
 
@@ -120,6 +148,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [showResultDialog, setShowResultDialog] = useState(false)
     const [resultMessage, setResultMessage] = useState("")
     const [resultTitle, setResultTitle] = useState("")
+    const [isEditing, setIsEditing] = useState(false)
+    const [myFlowUid, setMyFlowUid] = useState("")
+    const [showReleaseDialog, setShowReleaseDialog] = useState(false)
 
     useEffect(() => {
         const nameParam = searchParams.get("name")
@@ -165,32 +196,36 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 } else {
                     try {
                         const configRes = await flowService.getCallConfig()
-                        const configData = configRes.data
+                        const configList = configRes.data.results
 
-                        if (configData) {
+                        if (configList && configList.length > 0) {
+                            const configData = configList[0]
                             setIsUpdateMode(true)
 
                             setPlatformUid(configData.platform?.uid || "")
                             setPhoneNumberUid(configData.phone?.uid || "")
                             setVoiceId(configData.voice_id || "")
-                            setEndCallNegative(configData.end_call_if_primary_answer_negative ? "true" : "false")
+                            setMyFlowUid(configData.my_flow?.uid || "")
+                            // setEndCallNegative(configData.end_call_if_primary_answer_negative ? "true" : "false")
 
-                            setJobAdStatus(configData.jobad_status_for_calling || "Current")
-                            setApplicationStatus(String(configData.application_status_for_calling || ""))
-                            setCallingTime(String(configData.calling_time_after_status_update || "15"))
-                            setUnsuccessfulStatus(String(configData.status_for_unsuccessful_call || ""))
-                            setSuccessfulStatus(String(configData.status_for_successful_call || ""))
-                            setPlacedStatus(String(configData.status_when_call_is_placed || ""))
+                            // setJobAdStatus(configData.jobad_status_for_calling || "Current")
+                            // setApplicationStatus(String(configData.application_status_for_calling || ""))
+                            // setCallingTime(String(configData.calling_time_after_status_update || "15"))
+                            // setUnsuccessfulStatus(String(configData.status_for_unsuccessful_call || ""))
+                            // setSuccessfulStatus(String(configData.status_for_successful_call || ""))
+                            // setPlacedStatus(String(configData.status_when_call_is_placed || ""))
 
-                            if (configData.primary_questions && Array.isArray(configData.primary_questions)) {
-                                const mappedQuestions = configData.primary_questions.map((q: any) => ({
-                                    tempId: crypto.randomUUID(),
-                                    uid: q.uid,
-                                    value: q.question,
-                                    isSaved: true
-                                }))
-                                setQuestions(mappedQuestions.length > 0 ? mappedQuestions : [{ tempId: crypto.randomUUID(), value: "", isSaved: false }])
-                            }
+                            // Load flattened timeline fields
+                            const loadedTimeline = INITIAL_TIMELINE.map(dayInfo => {
+                                const dayKey = dayInfo.day.toLowerCase()
+                                return {
+                                    ...dayInfo,
+                                    isActive: configData[`${dayKey}_enabled`] ?? dayInfo.isActive,
+                                    startTime: configData[`${dayKey}_start`] || dayInfo.startTime,
+                                    endTime: configData[`${dayKey}_end`] || dayInfo.endTime,
+                                }
+                            })
+                            setTimeline(loadedTimeline)
                         }
                     } catch (configErr) {
                         // No config yet
@@ -247,6 +282,37 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         }
     }
 
+    const handleTimelineChange = (index: number, field: keyof TimelineDay, value: any) => {
+        const newTimeline = [...timeline]
+        newTimeline[index] = { ...newTimeline[index], [field]: value }
+        setTimeline(newTimeline)
+    }
+
+    const parseTime = (timeStr: string) => {
+        // Regex to match "HH:MM am/pm" where HH and MM can be empty or digits
+        const match = timeStr.match(/^([^:]*):([^ ]*) (am|pm)$/)
+        if (match) {
+            return { hh: match[1], mm: match[2], period: match[3] }
+        }
+        return { hh: "09", mm: "00", period: "am" }
+    }
+
+    const updateTimePart = (index: number, field: "startTime" | "endTime", part: "hh" | "mm" | "period", value: string) => {
+        const currentVal = timeline[index][field]
+        const { hh, mm, period } = parseTime(currentVal)
+        let newTime = ""
+        if (part === "hh") newTime = `${value}:${mm} ${period}`
+        else if (part === "mm") newTime = `${hh}:${value} ${period}`
+        else if (part === "period") newTime = `${hh}:${mm} ${value}`
+
+        handleTimelineChange(index, field, newTime)
+    }
+
+    const convertTo24Hour = (timeStr: string) => {
+        // Now timeStr is already in HH:mm:ss format from Select
+        return timeStr || "00:00:00"
+    }
+
     const handleSaveConfiguration = async () => {
         setError("")
         const codeParam = searchParams.get("code")
@@ -284,10 +350,18 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         try {
             setIsSaving(true)
 
-            const payload = {
+            const payload: any = {
                 platform_uid: platformUid,
                 phone_uid: phoneNumberUid,
             }
+
+            // Add flattened timeline fields in 24h format
+            timeline.forEach(dayInfo => {
+                const dayKey = dayInfo.day.toLowerCase()
+                payload[`${dayKey}_enabled`] = dayInfo.isActive
+                payload[`${dayKey}_start`] = convertTo24Hour(dayInfo.startTime)
+                payload[`${dayKey}_end`] = convertTo24Hour(dayInfo.endTime)
+            })
 
             if (isUpdateMode) {
                 await flowService.updateCallConfig(payload)
@@ -298,6 +372,37 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             setResultTitle("Success")
             setResultMessage(isUpdateMode ? "Configuration updated successfully!" : "Configuration saved successfully!")
             setShowResultDialog(true)
+            setIsEditing(false) // Exit editing mode on success
+
+            // Hit GET API to refresh data and transition UI to Running state
+            try {
+                const configRes = await flowService.getCallConfig()
+                const configList = configRes.data.results
+
+                if (configList && configList.length > 0) {
+                    const configData = configList[0]
+                    setIsUpdateMode(true)
+
+                    setPlatformUid(configData.platform?.uid || "")
+                    setPhoneNumberUid(configData.phone?.uid || "")
+                    setVoiceId(configData.voice_id || "")
+                    setMyFlowUid(configData.my_flow?.uid || "")
+
+                    // Load flattened timeline fields
+                    const loadedTimeline = INITIAL_TIMELINE.map(dayInfo => {
+                        const dayKey = dayInfo.day.toLowerCase()
+                        return {
+                            ...dayInfo,
+                            isActive: configData[`${dayKey}_enabled`] ?? dayInfo.isActive,
+                            startTime: configData[`${dayKey}_start`] || dayInfo.startTime,
+                            endTime: configData[`${dayKey}_end`] || dayInfo.endTime,
+                        }
+                    })
+                    setTimeline(loadedTimeline)
+                }
+            } catch (configErr) {
+                // Ignore refresh error
+            }
 
         } catch (err: any) {
             console.error("Error saving configuration:", err)
@@ -305,7 +410,17 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             setResultTitle("Error")
             const errorData = err.response?.data
             let errorMessage = "Failed to save configuration"
-            if (Array.isArray(errorData) && errorData.length > 0) {
+
+            if (errorData && typeof errorData === "object" && !Array.isArray(errorData)) {
+                const errorMessages = Object.entries(errorData).map(([key, value]: [string, any]) => {
+                    const field = key.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
+                    const error = Array.isArray(value) ? value[0] : value
+                    return `${field}: ${error}`
+                })
+                if (errorMessages.length > 0) {
+                    errorMessage = errorMessages.join("\n")
+                }
+            } else if (Array.isArray(errorData) && errorData.length > 0) {
                 errorMessage = errorData[0]
             } else if (typeof errorData === "string") {
                 errorMessage = errorData
@@ -322,6 +437,28 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         }
     }
 
+    const handleReleaseFlow = async () => {
+        if (!myFlowUid) {
+            setError("No flow UID found to release")
+            return
+        }
+
+        try {
+            setIsSaving(true)
+            await flowService.releaseFlow(myFlowUid)
+            setResultTitle("Success")
+            setResultMessage("Flow released successfully!")
+            setShowResultDialog(true)
+            // After clicking OK on Success, it will redirect via handleDialogClose update
+        } catch (err: any) {
+            console.error("Error releasing flow:", err)
+            setError(err.response?.data?.message || err.message || "Failed to release flow")
+        } finally {
+            setIsSaving(false)
+            setShowReleaseDialog(false)
+        }
+    }
+
     const handleSelectChange = (setter: (val: string) => void) => (val: string) => {
         if (val === "_CLEAR_") {
             setter("")
@@ -332,9 +469,10 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
     const handleDialogClose = () => {
         setShowResultDialog(false)
-        if (resultTitle === "Success") {
+        if (resultTitle === "Success" && resultMessage === "Flow released successfully!") {
             router.push("/dashboard/phone-call-flows")
         }
+        // otherwise stay on page for other successes
     }
 
     return (
@@ -432,13 +570,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     ) : (
                         <>
                             {/* Left Column */}
-                            <div className="space-y-8">
-                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                            <div className="space-y-8 flex flex-col h-full">
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform</Label>
-                                            <Select value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
+                                            <Select disabled={isUpdateMode && !isEditing} value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
                                                 <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select Platform" />
                                                 </SelectTrigger>
@@ -453,7 +591,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
-                                            <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
+                                            <Select disabled={isUpdateMode && !isEditing} value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
                                                 <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select phone number" />
                                                 </SelectTrigger>
@@ -519,8 +657,83 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             </div>
 
                             {/* Right Column */}
-                            {/* <div className="space-y-8">
-                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                            <div className="space-y-8 flex flex-col h-full">
+                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
+                                    <div className="flex items-center justify-between gap-2 mb-6">
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="h-6 w-6 text-gray-900 dark:text-gray-100" />
+                                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Call Active Timeline</h2>
+                                        </div>
+                                        {isUpdateMode && !isEditing && (
+                                            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full border border-green-100 dark:border-green-800/50">
+                                                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                                                <span className="text-xs font-bold uppercase tracking-wider">Running</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-12 gap-4 pb-2 border-b border-gray-100 dark:border-gray-700">
+                                            <div className="col-span-3 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Day</div>
+                                            <div className="col-span-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Start Time</div>
+                                            <div className="col-span-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">End Time</div>
+                                            <div className="col-span-1 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider text-right">Active</div>
+                                        </div>
+
+                                        {timeline.map((item, index) => (
+                                            <div key={item.day} className="grid grid-cols-12 gap-4 items-center">
+                                                <div className="col-span-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                                    {item.day}
+                                                </div>
+                                                <div className="col-span-4">
+                                                    <Select
+                                                        disabled={isUpdateMode && !isEditing}
+                                                        value={item.startTime}
+                                                        onValueChange={(val) => handleTimelineChange(index, "startTime", val)}
+                                                    >
+                                                        <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
+                                                            <SelectValue placeholder="Start Time" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                            {TIME_OPTIONS.map(opt => (
+                                                                <SelectItem key={opt.value} value={opt.value} className="dark:text-gray-100">
+                                                                    {opt.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="col-span-4">
+                                                    <Select
+                                                        disabled={isUpdateMode && !isEditing}
+                                                        value={item.endTime}
+                                                        onValueChange={(val) => handleTimelineChange(index, "endTime", val)}
+                                                    >
+                                                        <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
+                                                            <SelectValue placeholder="End Time" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                            {TIME_OPTIONS.map(opt => (
+                                                                <SelectItem key={opt.value} value={opt.value} className="dark:text-gray-100">
+                                                                    {opt.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="col-span-1 flex justify-end">
+                                                    <Checkbox
+                                                        disabled={isUpdateMode && !isEditing}
+                                                        checked={item.isActive}
+                                                        onCheckedChange={(checked) => handleTimelineChange(index, "isActive", checked)}
+                                                        className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+
+                                {/* <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Automation Logic</h2>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
@@ -602,22 +815,66 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             </Select>
                                         </div>
                                     </div>
-                                </Card>
-                            </div> */}
+                                </Card> */}
+                            </div>
                         </>
                     )}
                 </div>
 
                 {/* Bottom Save Bar */}
-                <div className="mt-12 flex justify-center">
-                    <Button
-                        size="lg"
-                        onClick={handleSaveConfiguration}
-                        disabled={isSaving}
-                        className="h-14 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
-                    >
-                        {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
-                    </Button>
+                <div className="mt-12 flex justify-center gap-4">
+                    {searchParams.get("code") === "AICALL191" ? (
+                        <Button
+                            size="lg"
+                            onClick={handleSaveConfiguration}
+                            disabled={isSaving}
+                            className="h-14 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                        >
+                            {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
+                        </Button>
+                    ) : (
+                        <>
+                            {!isUpdateMode ? (
+                                <Button
+                                    size="lg"
+                                    onClick={handleSaveConfiguration}
+                                    disabled={isSaving}
+                                    className="h-14 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                >
+                                    {isSaving ? "Activating..." : "Active Now"}
+                                </Button>
+                            ) : (
+                                <>
+                                    {!isEditing ? (
+                                        <Button
+                                            size="lg"
+                                            onClick={() => setIsEditing(true)}
+                                            className="h-14 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                        >
+                                            Edit Configure
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="lg"
+                                            onClick={handleSaveConfiguration}
+                                            disabled={isSaving}
+                                            className="h-14 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                        >
+                                            {isSaving ? "Updating..." : "Update Configure"}
+                                        </Button>
+                                    )}
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        onClick={() => setShowReleaseDialog(true)}
+                                        className="h-14 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                    >
+                                        Release Flow
+                                    </Button>
+                                </>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -635,6 +892,34 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         <AlertDialogAction onClick={handleDialogClose} className="h-12 bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold rounded-xl px-8 border-none">
                             OK
                         </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={showReleaseDialog} onOpenChange={setShowReleaseDialog}>
+                <AlertDialogContent className="rounded-2xl dark:bg-gray-900 dark:border-gray-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-red-500 dark:text-red-400 text-xl font-bold">
+                            Release Flow
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-600 dark:text-gray-400 text-base font-medium">
+                            Are you sure you want to release this flow? This action will delete the current configuration.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowReleaseDialog(false)}
+                            className="h-12 border-2 rounded-xl px-8 font-bold dark:border-gray-700 dark:text-gray-100"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleReleaseFlow}
+                            className="h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl px-8 border-none"
+                        >
+                            Release Flow
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

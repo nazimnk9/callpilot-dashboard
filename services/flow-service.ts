@@ -52,6 +52,10 @@ export const flowService = {
     },
 
     async getCallConfig() {
+        return api.get("/interview/call/config/");
+    },
+
+    async getCallConfigDetails() {
         return api.get("/interview/call/config/details");
     },
 
@@ -61,6 +65,10 @@ export const flowService = {
 
     async updateCallConfig(payload: any) {
         return api.patch("/interview/call/config/details", payload);
+    },
+
+    async releaseFlow(uid: string) {
+        return api.delete(`/flows/available-flow/my_flow/release/${uid}`);
     },
     async getDinerConfig() {
         return api.get("/interview/bookings/details");
