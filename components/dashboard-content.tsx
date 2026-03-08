@@ -548,7 +548,7 @@ export function DashboardContent() {
         {
             title: 'Last System check: 10 seconds ago',
             value: 'AI Call Status',
-            icon: () => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
+            icon: (props: any) => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
             iconColor: 'text-blue-600 dark:text-blue-400',
             bgColor: 'bg-blue-50 dark:bg-blue-900/20',
         },
@@ -570,7 +570,7 @@ export function DashboardContent() {
                     </div>
                 </div>
             ) as any,
-            icon: () => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
+            icon: (props: any) => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
             iconColor: 'text-purple-600 dark:text-purple-400',
             bgColor: 'bg-purple-50 dark:bg-purple-900/20',
         },
@@ -883,9 +883,9 @@ export function DashboardContent() {
                                                         <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                                             {card.title}
                                                         </p>
-                                                        <p className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
+                                                        <div className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
                                                             {card.value}
-                                                        </p>
+                                                        </div>
                                                     </div>
                                                     {card.title === 'Remaining Balance' && (
                                                         <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>

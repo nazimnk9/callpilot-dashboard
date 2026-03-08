@@ -93,7 +93,7 @@ export function CallLogsContent() {
     // Config states
     const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
     const [config, setConfig] = useState<CallLogConfig>({
-        action: "NEVER_DELETE",
+        action: "CUSTOM_DELETE",
         delete_hours: 120
     })
     const [isConfigLoading, setIsConfigLoading] = useState(false)
@@ -134,7 +134,7 @@ export function CallLogsContent() {
             const response = await interviewService.getCallLogConfig()
             if (response.data) {
                 setConfig({
-                    action: response.data.action || "NEVER_DELETE",
+                    action: "CUSTOM_DELETE",
                     delete_hours: response.data.delete_hours !== null ? response.data.delete_hours : 120
                 })
             }
@@ -454,8 +454,6 @@ export function CallLogsContent() {
                                     <SelectValue placeholder="Select an action" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="NEVER_DELETE">Never Auto delete</SelectItem>
-                                    <SelectItem value="ALWAYS_DELETE">Always auto delete instantly</SelectItem>
                                     <SelectItem value="CUSTOM_DELETE">Auto Delete Within 'x' Days</SelectItem>
                                 </SelectContent>
                             </Select>
