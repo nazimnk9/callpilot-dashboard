@@ -630,7 +630,7 @@ export function DashboardContent() {
                                                             {card.value}
                                                         </p>
                                                     </div>
-                                                    {card.title === 'Remaining Balance' && (
+                                                    {card.title === 'Minutes Remaining' && (
                                                         <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                                             <DialogTrigger asChild>
                                                                 <button
