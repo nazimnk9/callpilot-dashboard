@@ -819,14 +819,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 </Card> */}
                             </div>
                             <Card className="lg:col-span-2 p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Setup Requirement</h2>
+                                                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
                                                                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                                                                     Please create the following 5 statuses in your JobAdder account under the Job Application's Status creation section (if they are not already present):
                                                                 </p>
                                                                 <ul className="mt-4 space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside">
                                                                     <li>Applied</li>
-                                                                    <li>AI Call No Reply</li>
-                                                                    <li>Link Sent</li>
+                                                                    <li>AI Call - No Reply</li>
+                                                                    <li>AI Call - Link Sent</li>
                                                                     <li>Unsuccessful</li>
                                                                 </ul>
                                                             </Card>
