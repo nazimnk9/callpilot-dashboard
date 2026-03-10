@@ -820,7 +820,7 @@ export function DashboardContent() {
                                                             }}
                                                             className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
                                                         >
-                                                            {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
+                                                            {orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"}
                                                         </button>
 
                                                         {orgData?.current_plan && (
@@ -913,7 +913,7 @@ export function DashboardContent() {
                                                             }}
                                                             className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
                                                         >
-                                                            {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
+                                                            {orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"}
                                                         </button>
 
                                                         {orgData?.current_plan && (
