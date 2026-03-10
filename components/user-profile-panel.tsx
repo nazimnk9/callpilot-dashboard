@@ -135,9 +135,9 @@ export function UserProfilePanel({ onClose }: UserProfilePanelProps) {
         >
           Your profile
         </a>
-        
+
         <a
-          href="#"
+          href="/dashboard/help"
           className="block text-[14px] font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 px-3 py-2 rounded-xl transition"
         >
           Help
