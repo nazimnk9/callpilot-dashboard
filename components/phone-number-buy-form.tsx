@@ -410,10 +410,10 @@ export function PhoneNumberBuyForm() {
                 </div>
 
                 <Card className="border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 group">
-                    <CardHeader className="bg-white dark:bg-gray-800 transition-colors">
+                    {/* <CardHeader className="bg-white dark:bg-gray-800 transition-colors">
                         {/* <CardTitle className="text-md font-semibold text-gray-900 dark:text-gray-100">Phone Number Purchase</CardTitle>
-                        <CardDescription className="text-gray-500 dark:text-gray-400">Select your preferred country and payment method</CardDescription> */}
-                    </CardHeader>
+                        <CardDescription className="text-gray-500 dark:text-gray-400">Select your preferred country and payment method</CardDescription> 
+                    </CardHeader> */}
 
                     <CardContent className="pt-8 p-6">
                         <form onSubmit={handleSubmitPurchase} className="space-y-6">
