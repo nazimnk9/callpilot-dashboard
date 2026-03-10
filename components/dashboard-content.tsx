@@ -264,7 +264,7 @@ export function DashboardContent() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    amount: parseFloat(topUpAmount),
+                    topup_minute: parseInt(topUpMinutes),
                     payment_method_id: selectedPmForTopUp.id
                 })
             });
@@ -675,8 +675,13 @@ export function DashboardContent() {
 
                                                                                             setTopUpMinutes(mins.toString());
                                                                                             if (orgData?.top_up_min_per_dol) {
-                                                                                                const total = (mins * parseFloat(orgData.top_up_min_per_dol)).toFixed(2);
-                                                                                                setTopUpAmount(total);
+                                                                                                const rate = parseFloat(orgData.top_up_min_per_dol);
+                                                                                                if (rate > 0) {
+                                                                                                    const total = (mins / rate).toFixed(2);
+                                                                                                    setTopUpAmount(total);
+                                                                                                } else {
+                                                                                                    setTopUpAmount("0.00");
+                                                                                                }
                                                                                             }
                                                                                         }}
                                                                                         placeholder="Enter minutes"
@@ -693,7 +698,7 @@ export function DashboardContent() {
                                                                                     <div className="flex items-center gap-2">
                                                                                         <Info size={14} className="text-gray-400" />
                                                                                         <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
-                                                                                            Cost per minute: ${orgData?.top_up_min_per_dol || "0.00"}
+                                                                                            Cost per minute: ${orgData?.top_up_min_per_dol && parseFloat(orgData.top_up_min_per_dol) > 0 ? (1 / parseFloat(orgData.top_up_min_per_dol)).toFixed(2) : "0.00"}
                                                                                         </p>
                                                                                     </div>
                                                                                 </div>
