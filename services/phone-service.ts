@@ -60,5 +60,8 @@ export const phoneService = {
 
     async getPurchasedNumbers() {
         return api.get("/phone_number/");
+    },
+    async releaseNumber(uid: string) {
+        return api.delete(`/phone_number/${uid}/release`);
     }
 };
