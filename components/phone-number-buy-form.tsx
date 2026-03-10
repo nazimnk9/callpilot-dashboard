@@ -2,11 +2,11 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, ChevronDown, Search } from "lucide-react"
+import { ArrowLeft, ChevronDown, Search, CreditCard, ChevronUp, Loader2, Check, ChevronsUpDown, AlertCircle, Info } from "lucide-react"
 import { phoneService } from "@/services/phone-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import { ToastNotification } from "@/components/auth/toast-notification"
@@ -24,6 +24,11 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
+import { BASE_URL } from "@/lib/baseUrl";
+import { cookieUtils } from "@/services/auth-service";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { toast as sonnerToast } from "sonner";
 
 interface Country {
     country: string
@@ -44,7 +49,6 @@ interface Bundle {
 
 export function PhoneNumberBuyForm() {
     const [isLoading, setIsLoading] = useState(false)
-    const [isFetching, setIsFetching] = useState(false)
     const [error, setError] = useState("")
     const [showErrorDialog, setShowErrorDialog] = useState(false)
     const [successMessage, setSuccessMessage] = useState("")
@@ -52,23 +56,48 @@ export function PhoneNumberBuyForm() {
     const [toast, setToast] = useState<any>(null)
     const router = useRouter()
 
+    // Stripe states
+    const [stripe, setStripe] = useState<Stripe | null>(null);
+    const [elements, setElements] = useState<StripeElements | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const cardNumberRef = useRef<any>(null);
+    const cardExpiryRef = useRef<any>(null);
+    const cardCvcRef = useRef<any>(null);
+    const cardNumberContainerRef = useRef<HTMLDivElement>(null);
+    const cardExpiryContainerRef = useRef<HTMLDivElement>(null);
+    const cardCvcContainerRef = useRef<HTMLDivElement>(null);
+    const countrySelectRef = useRef<HTMLDivElement>(null);
+    const pmSelectorRef = useRef<HTMLDivElement>(null);
+
+    // Payment method states
+    const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+    const [selectedPmForTopUp, setSelectedPmForTopUp] = useState<any>(null);
+    const [isPmSelectorOpen, setIsPmSelectorOpen] = useState(false);
+    const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
+
+    // Add Payment Method form state
+    const [cardholderName, setCardholderName] = useState("");
+    const [addressLine1, setAddressLine1] = useState("");
+    const [addressLine2, setAddressLine2] = useState("");
+    const [city, setCity] = useState("");
+    const [postalCode, setPostalCode] = useState("");
+    const [stateRegion, setStateRegion] = useState("");
+    const [isDefault, setIsDefault] = useState(true);
+    const [errorDetail, setErrorDetail] = useState<string | null>(null);
+
     // Country selection
     const [countries, setCountries] = useState<Country[]>([])
     const [selectedCountry, setSelectedCountry] = useState("")
     const [countrySearch, setCountrySearch] = useState("")
     const [showCountriesDropdown, setShowCountriesDropdown] = useState(false)
 
-    // Phone number selection
+    // Phone number selection (kept in state but removed from form as per request)
     const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([])
     const [selectedPhoneNumber, setSelectedPhoneNumber] = useState("")
-    const [phoneSearch, setPhoneSearch] = useState("")
-    const [showPhoneDropdown, setShowPhoneDropdown] = useState(false)
 
-    // Bundle selection
+    // Bundle selection (kept in state but removed from form as per request)
     const [bundles, setBundles] = useState<Bundle[]>([])
     const [selectedBundle, setSelectedBundle] = useState("")
-    const [bundleSearch, setBundleSearch] = useState("")
-    const [showBundleDropdown, setShowBundleDropdown] = useState(false)
 
     // Modals
     const [showCreateBundleModal, setShowCreateBundleModal] = useState(false)
@@ -78,11 +107,154 @@ export function PhoneNumberBuyForm() {
     const [createBundleStep, setCreateBundleStep] = useState(0)
 
     useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (countrySelectRef.current && !countrySelectRef.current.contains(event.target as Node)) {
+                setShowCountriesDropdown(false)
+            }
+            if (pmSelectorRef.current && !pmSelectorRef.current.contains(event.target as Node)) {
+                setIsPmSelectorOpen(false)
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside)
+        }
+    }, [])
+
+    useEffect(() => {
+        const initStripe = async () => {
+            const stripeInstance = await loadStripe('pk_test_51T28pm7kECw44sgCk3RxtMKst01YwUY02L1R93SaiJVPHloYcnWAar0NytN5TcduerTeWbS1yRa0hJehyB7N2JSC00WWO8y9aa');
+            setStripe(stripeInstance);
+        };
+        initStripe();
         if (typeof window !== "undefined") {
             fetchCountries()
             fetchBundles()
+            fetchPaymentMethods()
         }
     }, [])
+
+    useEffect(() => {
+        if (isAddPaymentOpen && stripe && !cardNumberRef.current) {
+            const timer = setTimeout(() => {
+                if (!cardNumberContainerRef.current) return;
+
+                const els = stripe.elements();
+                setElements(els);
+
+                const style = {
+                    base: {
+                        fontSize: '15px',
+                        color: '#111827',
+                        fontFamily: 'Inter, sans-serif',
+                        '::placeholder': {
+                            color: '#9ca3af',
+                        },
+                    },
+                };
+
+                const number = els.create('cardNumber', { style });
+                const expiry = els.create('cardExpiry', { style });
+                const cvc = els.create('cardCvc', { style });
+
+                if (cardNumberContainerRef.current) number.mount(cardNumberContainerRef.current);
+                if (cardExpiryContainerRef.current) expiry.mount(cardExpiryContainerRef.current);
+                if (cardCvcContainerRef.current) cvc.mount(cardCvcContainerRef.current);
+
+                cardNumberRef.current = number;
+                cardExpiryRef.current = expiry;
+                cardCvcRef.current = cvc;
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+
+        return () => {
+            if (cardNumberRef.current) cardNumberRef.current.unmount();
+            if (cardExpiryRef.current) cardExpiryRef.current.unmount();
+            if (cardCvcRef.current) cardCvcRef.current.unmount();
+            cardNumberRef.current = null;
+            cardExpiryRef.current = null;
+            cardCvcRef.current = null;
+        };
+    }, [isAddPaymentOpen, stripe]);
+
+    const fetchPaymentMethods = async () => {
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/payment-methods`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data_res = await response.json();
+                setPaymentMethods(data_res);
+                const defaultCard = data_res.find((pm: any) => pm.is_default);
+                if (defaultCard) {
+                    setSelectedPmForTopUp(defaultCard);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching payment methods:", err);
+        }
+    };
+
+    const handleAddPaymentMethod = async () => {
+        if (!stripe || !elements || !cardNumberRef.current) return;
+
+        setIsSubmitting(true);
+        try {
+            const { paymentMethod, error } = await stripe.createPaymentMethod({
+                type: 'card',
+                card: cardNumberRef.current,
+                billing_details: {
+                    name: cardholderName,
+                    address: {
+                        line1: addressLine1,
+                        line2: addressLine2,
+                        city: city,
+                        postal_code: postalCode,
+                        state: stateRegion,
+                        country: selectedCountry || undefined // use selected country if available
+                    }
+                }
+            });
+
+            if (error) {
+                sonnerToast.error(error.message);
+                setIsSubmitting(false);
+                return;
+            }
+
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/payment-methods`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    payment_method_id: paymentMethod.id,
+                    set_as_default: isDefault
+                })
+            });
+
+            if (response.ok) {
+                sonnerToast.success("Payment method added successfully");
+                setIsAddPaymentOpen(false)
+                fetchPaymentMethods();
+            } else {
+                const errData = await response.json();
+                setErrorDetail(errData.detail || "Failed to add payment method");
+            }
+        } catch (err) {
+            console.error(err);
+            setErrorDetail("An unexpected error occurred");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const fetchCountries = async () => {
         try {
@@ -106,29 +278,11 @@ export function PhoneNumberBuyForm() {
         }
     }
 
-    const fetchPhoneNumbers = async (countryCode: string) => {
-        try {
-            setIsFetching(true)
-            const response = await phoneService.getAvailableNumbers(countryCode)
-            if (response.data.phone_numbers) {
-                setPhoneNumbers(response.data.phone_numbers)
-            }
-        } catch (err: any) {
-            console.log("Error fetching phone numbers:", err)
-            setError("Failed to load phone numbers")
-            setShowErrorDialog(true)
-        } finally {
-            setIsFetching(false)
-        }
-    }
 
     const handleCountrySelect = (countryCode: string) => {
         setSelectedCountry(countryCode)
         setShowCountriesDropdown(false)
         setCountrySearch("")
-        fetchPhoneNumbers(countryCode)
-        setSelectedPhoneNumber("")
-        setPhoneNumbers([])
     }
 
     const filteredCountries = countries.filter(
@@ -136,12 +290,6 @@ export function PhoneNumberBuyForm() {
             c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
             c.country_code.toLowerCase().includes(countrySearch.toLowerCase()),
     )
-
-    const filteredPhoneNumbers = phoneNumbers.filter((p) =>
-        p.phone_number.toLowerCase().includes(phoneSearch.toLowerCase()),
-    )
-
-    const filteredBundles = bundles.filter((b) => b.friendly_name.toLowerCase().includes(bundleSearch.toLowerCase()))
 
     const handleCreateBundleNext = () => {
         setCreateBundleStep(1)
@@ -172,8 +320,14 @@ export function PhoneNumberBuyForm() {
         e.preventDefault()
         setError("")
 
-        if (!selectedPhoneNumber || !selectedBundle) {
-            setError("Please select both phone number and bundle")
+        if (!selectedPmForTopUp) {
+            setError("Please select a payment method")
+            setShowErrorDialog(true)
+            return
+        }
+
+        if (!selectedCountry) {
+            setError("Please select a country")
             setShowErrorDialog(true)
             return
         }
@@ -181,8 +335,8 @@ export function PhoneNumberBuyForm() {
         try {
             setIsLoading(true)
             await phoneService.buyNumber({
-                phone_number: selectedPhoneNumber,
-                bundle_id: selectedBundle,
+                country_code: selectedCountry,
+                payment_method_id: selectedPmForTopUp.id
             });
 
             setSuccessMessage("Phone number purchased successfully");
@@ -204,7 +358,7 @@ export function PhoneNumberBuyForm() {
 
     return (
         <div className="flex-1 overflow-y-auto bg-background">
-            <LoaderOverlay isLoading={isLoading || isFetching} />
+            <LoaderOverlay isLoading={isLoading} />
             {toast && (
                 <ToastNotification
                     title={toast.title}
@@ -251,14 +405,14 @@ export function PhoneNumberBuyForm() {
                 <div className="space-y-4">
                     <div>
                         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Buy Phone Number</h1>
-                        <p className="text-gray-500 dark:text-gray-400 mt-2">Select country, phone number, and bundle to purchase</p>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">Select country and payment method to purchase</p>
                     </div>
                 </div>
 
                 <Card className="border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 group">
                     <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-6 rounded-t-xl group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/10 transition-colors">
                         <CardTitle className="text-md font-semibold text-gray-900 dark:text-gray-100">Phone Number Purchase</CardTitle>
-                        <CardDescription className="text-gray-500 dark:text-gray-400">Select your preferred country, phone number, and bundle</CardDescription>
+                        <CardDescription className="text-gray-500 dark:text-gray-400">Select your preferred country and payment method</CardDescription>
                     </CardHeader>
 
                     <CardContent className="pt-8 p-6">
@@ -266,7 +420,7 @@ export function PhoneNumberBuyForm() {
                             {/* Country Selection */}
                             <div>
                                 <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Select Country *</label>
-                                <div className="relative">
+                                <div className="relative" ref={countrySelectRef}>
                                     <button
                                         type="button"
                                         onClick={() => setShowCountriesDropdown(!showCountriesDropdown)}
@@ -308,120 +462,92 @@ export function PhoneNumberBuyForm() {
                                         </div>
                                     )}
                                 </div>
-                            </div>
-
-                            {/* Phone Number Selection */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Select Phone Number *</label>
-                                <div className="relative">
+                                <p className="mt-2 text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    If your business country is not listed, please{" "}
                                     <button
                                         type="button"
-                                        onClick={() => setShowPhoneDropdown(!showPhoneDropdown)}
-                                        disabled={!selectedCountry}
-                                        className="cursor-pointer w-full px-4 py-3 border-2 border-gray-100 dark:border-gray-700 rounded-lg bg-background text-foreground text-left flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        //onClick={() => router.push("/dashboard/support")}
+                                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium inline-block"
                                     >
-                                        <span>
-                                            {selectedPhoneNumber || (selectedCountry ? "Select Phone Number" : "Select a country first")}
-                                        </span>
-                                        <ChevronDown className={`w-5 h-5 transition-transform ${showPhoneDropdown ? "rotate-180" : ""}`} />
-                                    </button>
+                                        Send us a support ticket
+                                    </button>{" "}
+                                    and we'll help you add it.
+                                </p>
+                            </div>
 
-                                    {showPhoneDropdown && selectedCountry && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-background border-2 border-gray-100 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden flex flex-col">
-                                            <div className="p-2 border-b border-gray-100 dark:border-gray-700">
-                                                <div className="relative">
-                                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                    <Input
-                                                        placeholder="Search phone numbers..."
-                                                        value={phoneSearch}
-                                                        onChange={(e) => setPhoneSearch(e.target.value)}
-                                                        className="border border-gray-100 dark:border-gray-700 pl-9"
-                                                    />
-                                                </div>
+                            {/* Payment Method Selector (Copy from billing-content.tsx) */}
+                            <div className="space-y-3">
+                                <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                                    Payment method *
+                                </label>
+                                <div className="relative" ref={pmSelectorRef}>
+                                    <div
+                                        onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
+                                        className="flex items-center justify-between px-4 py-3 border-2 border-gray-100 dark:border-gray-700 rounded-lg bg-background text-foreground text-left cursor-pointer group hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                {selectedPmForTopUp?.card.brand === 'visa' ? (
+                                                    <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                ) : (
+                                                    <div className="flex -space-x-1.5">
+                                                        <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                        <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="overflow-y-auto">
-                                                {filteredPhoneNumbers.map((phone) => (
-                                                    <button
-                                                        key={phone.phone_number}
-                                                        type="button"
+                                            <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                            <ChevronUp size={16} />
+                                            <ChevronDown size={16} />
+                                        </div>
+                                    </div>
+
+                                    {isPmSelectorOpen && (
+                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-background border-2 border-gray-100 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="max-h-[240px] overflow-y-auto p-2">
+                                                {paymentMethods.map((pm) => (
+                                                    <div
+                                                        key={pm.id}
                                                         onClick={() => {
-                                                            setSelectedPhoneNumber(phone.phone_number)
-                                                            setShowPhoneDropdown(false)
-                                                            setPhoneSearch("")
+                                                            setSelectedPmForTopUp(pm);
+                                                            setIsPmSelectorOpen(false);
                                                         }}
-                                                        className="cursor-pointer w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 last:border-b-0"
+                                                        className="px-4 py-3.5 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition-colors"
                                                     >
-                                                        <div>
-                                                            <p className="font-medium">{phone.phone_number}</p>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                {phone.locality}, {phone.region}
-                                                            </p>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                {pm.card.brand === 'visa' ? (
+                                                                    <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                ) : (
+                                                                    <div className="flex -space-x-1">
+                                                                        <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                        <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
                                                         </div>
-                                                    </button>
+                                                        {selectedPmForTopUp?.id === pm.id && (
+                                                            <Check size={16} className="text-gray-900 dark:text-gray-100" />
+                                                        )}
+                                                    </div>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                            </div>
-
-                            {/* Bundle Selection */}
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100">Select Bundle *</label>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            setCreateBundleStep(0)
-                                            setShowCreateBundleModal(true)
-                                        }}
-                                        className="cursor-pointer text-xs bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-600 hover:text-white dark:hover:bg-gray-200 font-bold px-4 py-1 flex items-center gap-2 border-none rounded-lg"
-                                    >
-                                        + Create Bundle
-                                    </Button>
-                                </div>
-                                <div className="relative">
+                                <div className="flex justify-start px-1">
                                     <button
                                         type="button"
-                                        onClick={() => setShowBundleDropdown(!showBundleDropdown)}
-                                        className="cursor-pointer w-full px-4 py-3 border-2 border-gray-100 dark:border-gray-700 rounded-lg bg-background text-foreground text-left flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-500 transition-all"
+                                        onClick={() => setIsAddPaymentOpen(true)}
+                                        className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2"
                                     >
-                                        <span>
-                                            {selectedBundle ? bundles.find((b: any) => b.id === selectedBundle)?.friendly_name : "Select Bundle"}
-                                        </span>
-                                        <ChevronDown className={`w-5 h-5 transition-transform ${showBundleDropdown ? "rotate-180" : ""}`} />
+                                        <span className="text-lg">+</span> Add payment method
                                     </button>
-
-                                    {showBundleDropdown && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-background border-2 border-gray-100 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden flex flex-col">
-                                            <div className="p-2 border-b border-gray-100 dark:border-gray-700">
-                                                <Input
-                                                    placeholder="Search bundles..."
-                                                    value={bundleSearch}
-                                                    onChange={(e) => setBundleSearch(e.target.value)}
-                                                    className="border border-gray-100 dark:border-gray-700"
-                                                />
-                                            </div>
-                                            <div className="overflow-y-auto">
-                                                {filteredBundles.map((bundle: any) => (
-                                                    <button
-                                                        key={bundle.id}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setSelectedBundle(bundle.id)
-                                                            setShowBundleDropdown(false)
-                                                            setBundleSearch("")
-                                                        }}
-                                                        className="cursor-pointer w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground border-b border-gray-100 dark:border-gray-700/50 last:border-b-0"
-                                                    >
-                                                        {bundle.friendly_name}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 
@@ -438,7 +564,7 @@ export function PhoneNumberBuyForm() {
                                 </Button>
                                 <Button
                                     type="submit"
-                                    disabled={isLoading || !selectedPhoneNumber || !selectedBundle}
+                                    disabled={isLoading || !selectedPmForTopUp || !selectedCountry}
                                     className="cursor-pointer bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
                                 >
                                     {isLoading ? "Processing..." : "Submit Purchase"}
@@ -448,6 +574,175 @@ export function PhoneNumberBuyForm() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Add Payment Method Modal (Copy from billing-content.tsx) */}
+            <Dialog open={isAddPaymentOpen} onOpenChange={(open) => {
+                setIsAddPaymentOpen(open);
+                if (!open) {
+                    if (cardNumberRef.current) cardNumberRef.current.unmount();
+                    if (cardExpiryRef.current) cardExpiryRef.current.unmount();
+                    if (cardCvcRef.current) cardCvcRef.current.unmount();
+                    cardNumberRef.current = null;
+                    cardExpiryRef.current = null;
+                    cardCvcRef.current = null;
+                }
+            }}>
+                <DialogContent
+                    className="max-w-[calc(100vw-32px)] sm:max-w-[480px] p-5 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6 overflow-y-auto max-h-[90vh]"
+                >
+                    <DialogHeader className="p-0 space-y-2 text-left">
+                        <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                            Add payment method
+                        </DialogTitle>
+                        <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                            Add your credit card details below. This card will be saved to your account and can be removed at any time.
+                        </p>
+                    </DialogHeader>
+
+                    <div className="space-y-6">
+                        {/* Card Information */}
+                        <div className="space-y-2">
+                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                Card information
+                            </label>
+                            <div className="relative">
+                                <div className="flex items-center flex-wrap sm:flex-nowrap border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 px-4 py-3 gap-3 focus-within:ring-1 focus-within:ring-gray-300 dark:focus-within:ring-gray-700 transition-shadow">
+                                    <div className="flex-1 min-w-[180px] flex items-center gap-3">
+                                        <div className="w-6 h-4 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center shrink-0">
+                                            <CreditCard size={14} className="text-gray-400" />
+                                        </div>
+                                        <div ref={cardNumberContainerRef} className="flex-1" />
+                                    </div>
+                                    <div className="flex gap-3 text-[15px] font-medium text-gray-400 dark:text-gray-500 whitespace-nowrap w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100 dark:border-gray-800">
+                                        <div ref={cardExpiryContainerRef} className="w-16" />
+                                        <div ref={cardCvcContainerRef} className="w-12" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Name on Card */}
+                        <div className="space-y-2">
+                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                Name on card
+                            </label>
+                            <input
+                                type="text"
+                                value={cardholderName}
+                                onChange={(e) => setCardholderName(e.target.value)}
+                                placeholder="e.g. John Doe"
+                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                        </div>
+
+                        {/* Billing Address */}
+                        <div className="space-y-4">
+                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                Billing address
+                            </label>
+                            <div className="space-y-3">
+                                <input
+                                    type="text"
+                                    value={addressLine1}
+                                    onChange={(e) => setAddressLine1(e.target.value)}
+                                    placeholder="Address line 1"
+                                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                />
+                                <input
+                                    type="text"
+                                    value={addressLine2}
+                                    onChange={(e) => setAddressLine2(e.target.value)}
+                                    placeholder="Address line 2"
+                                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <input
+                                        type="text"
+                                        value={city}
+                                        onChange={(e) => setCity(e.target.value)}
+                                        placeholder="City"
+                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={postalCode}
+                                        onChange={(e) => setPostalCode(e.target.value)}
+                                        placeholder="Postal code"
+                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={stateRegion}
+                                    onChange={(e) => setStateRegion(e.target.value)}
+                                    placeholder="State, county, province, or region"
+                                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Set Default Checkbox */}
+                        <div className="flex items-center gap-3 pt-2">
+                            <div
+                                onClick={() => setIsDefault(!isDefault)}
+                                className={`w-[18px] h-[18px] border-2 rounded cursor-pointer flex items-center justify-center transition-colors ${isDefault ? 'border-gray-900 bg-gray-900 dark:border-gray-100 dark:bg-gray-100' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'}`}
+                            >
+                                {isDefault && <Check size={14} className="text-white dark:text-gray-900" strokeWidth={3} />}
+                            </div>
+                            <span
+                                onClick={() => setIsDefault(!isDefault)}
+                                className="text-[15px] font-medium text-gray-900 dark:text-gray-100 cursor-pointer select-none"
+                            >
+                                Set as default payment method
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                        <Button
+                            onClick={() => setIsAddPaymentOpen(false)}
+                            className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
+                            disabled={isSubmitting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleAddPaymentMethod}
+                            disabled={isSubmitting}
+                            className="w-full sm:w-auto bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                        >
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            Add payment method
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <AlertDialog open={!!errorDetail} onOpenChange={() => setErrorDetail(null)}>
+                <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                    <AlertDialogHeader>
+                        <div className="flex justify-center items-center gap-3 mb-2">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+                                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <AlertDialogTitle className="text-lg font-bold text-red-600 dark:text-red-400">
+                                Error
+                            </AlertDialogTitle>
+                        </div>
+                        <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">
+                            {errorDetail}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="pt-4">
+                        <AlertDialogAction
+                            onClick={() => setErrorDetail(null)}
+                            className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
+                        >
+                            Continue
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
                 <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
