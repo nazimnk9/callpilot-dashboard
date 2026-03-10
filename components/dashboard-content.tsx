@@ -644,16 +644,16 @@ export function DashboardContent() {
                                                                     <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
                                                                         <DialogHeader className="p-0">
                                                                             <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
-                                                                                Add to Minute balance
+                                                                                Add Minutes
                                                                             </DialogTitle>
                                                                         </DialogHeader>
 
                                                                         <div className="space-y-6">
                                                                             {/* Amount Section */}
                                                                             <div className="space-y-2">
-                                                                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                                                {/* <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                                                                     Minutes to add
-                                                                                </label>
+                                                                                </label> */}
                                                                                 <div className="relative">
                                                                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
                                                                                         <div className="w-5 h-5 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
