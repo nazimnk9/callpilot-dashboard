@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { profileService } from "@/services/profile-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
+import { Search, ChevronsUpDown, Check } from "lucide-react"
+import countriesData from "@/lib/countries.json";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -65,10 +67,30 @@ export function OrganizationContent() {
         description: [],
         variant: "default"
     })
+    const [countrySearch, setCountrySearch] = useState("");
+    const [isCountryOpen, setIsCountryOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const [countries] = useState<{ country: string, country_code: string }[]>(countriesData);
 
     useEffect(() => {
         fetchOrganization()
     }, [])
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsCountryOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filteredCountries = countries.filter(c =>
+        c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
+        c.country_code.toLowerCase().includes(countrySearch.toLowerCase())
+    );
 
     const fetchOrganization = async () => {
         try {
@@ -256,12 +278,59 @@ export function OrganizationContent() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="edit_country" className="text-sm font-semibold dark:text-gray-100">Country</Label>
-                                <Input
-                                    id="edit_country"
-                                    value={editOrg.country}
-                                    onChange={(e) => setEditOrg({ ...editOrg, country: e.target.value })}
-                                    className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                />
+                                <div className="relative" ref={dropdownRef}>
+                                    <div
+                                        onClick={() => setIsCountryOpen(!isCountryOpen)}
+                                        className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                                    >
+                                        <span className={editOrg.country ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
+                                            {editOrg.country || "Select country"}
+                                        </span>
+                                        <ChevronsUpDown size={16} className="text-gray-400" />
+                                    </div>
+
+                                    {isCountryOpen && (
+                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="p-2 border-b border-gray-100 dark:border-gray-800">
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                                    <input
+                                                        autoFocus
+                                                        type="text"
+                                                        placeholder="Search country..."
+                                                        value={countrySearch}
+                                                        onChange={(e) => setCountrySearch(e.target.value)}
+                                                        className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="max-h-[200px] overflow-y-auto">
+                                                {filteredCountries.length > 0 ? (
+                                                    filteredCountries.map((c) => (
+                                                        <div
+                                                            key={c.country_code}
+                                                            onClick={() => {
+                                                                setEditOrg({ ...editOrg, country: c.country });
+                                                                setIsCountryOpen(false);
+                                                                setCountrySearch("");
+                                                            }}
+                                                            className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                                        >
+                                                            <span>{c.country}</span>
+                                                            {editOrg.country === c.country && (
+                                                                <Check size={14} className="text-primary" />
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
+                                                        No countries found
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="edit_reg_number" className="text-sm font-semibold dark:text-gray-100">Registration Number</Label>
