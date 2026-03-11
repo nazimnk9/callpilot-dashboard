@@ -36,5 +36,29 @@ export const profileService = {
 
     async updateOrganization(data: any) {
         return api.patch("/organizations/me", data);
+    },
+
+    async getSupportTickets() {
+        return api.get("/organizations/support_ticket");
+    },
+
+    async createSupportTicket(data: any) {
+        return api.post("/organizations/support_ticket", data);
+    },
+
+    async uploadSupportMedia(data: FormData) {
+        return api.post("/organizations/support_ticket/media", data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+
+    async getSupportMedia() {
+        return api.get("/organizations/support_ticket/media");
+    },
+
+    async deleteSupportMedia(uid: string) {
+        return api.delete(`/organizations/support_ticket/media/${uid}`);
     }
 };

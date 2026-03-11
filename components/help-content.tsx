@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useRouter } from 'next/navigation';
 
 const helpSections = [
     {
@@ -82,6 +83,7 @@ const helpSections = [
 ];
 
 export function HelpContent() {
+    const router = useRouter();
     return (
         <div className="flex-1 overflow-y-auto bg-[#F9FAFB] dark:bg-gray-950">
             <div className="max-w-[800px] mx-auto py-12 px-4 sm:px-6">
@@ -139,7 +141,10 @@ export function HelpContent() {
                         <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-[400px] mx-auto">
                             Send a ticket to us and our support team will get back to you within 24 hours.
                         </p>
-                        <Button className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 rounded-xl h-auto text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20">
+                        <Button
+                            onClick={() => router.push('/dashboard/help/support-tickets')}
+                            className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 rounded-xl h-auto text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20"
+                        >
                             <Send size={18} className="mr-2" />
                             Write a Support Ticket
                         </Button>
