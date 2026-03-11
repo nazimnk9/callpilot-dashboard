@@ -69,11 +69,10 @@ interface CallLogConfig {
 }
 
 const DAY_OPTIONS = [
-    { label: "1 day", value: 1 },
     { label: "5 days", value: 5 },
-    { label: "7 days", value: 7 },
-    { label: "14 days", value: 14 },
     { label: "30 days", value: 30 },
+    { label: "60 days", value: 60 },
+    { label: "90 days", value: 90 },
 ]
 
 export function CallLogsContent() {
