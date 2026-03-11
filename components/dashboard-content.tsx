@@ -677,7 +677,8 @@ export function DashboardContent() {
                                                                                             if (orgData?.top_up_min_per_dol) {
                                                                                                 const rate = parseFloat(orgData.top_up_min_per_dol);
                                                                                                 if (rate > 0) {
-                                                                                                    const total = (mins / rate).toFixed(2);
+                                                                                                    const costPerMin = Math.round((1 / rate) * 100) / 100;
+                                                                                                    const total = (mins * costPerMin).toFixed(2);
                                                                                                     setTopUpAmount(total);
                                                                                                 } else {
                                                                                                     setTopUpAmount("0.00");
