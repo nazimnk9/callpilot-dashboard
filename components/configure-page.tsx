@@ -489,7 +489,6 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         </button>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Configure – {featureName || "Loading..."}</h1>
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 font-medium">Complete your setup and configure interview settings.</p>
                 </div>
 
                 {error && (
