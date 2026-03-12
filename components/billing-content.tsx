@@ -26,6 +26,72 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+const STATIC_PRICING_PLANS = [
+    {
+        name: "Starter",
+        price: "$400 / month + VAT",
+        minutes: "350 AI Voice Minutes",
+        description: "Ideal for organisations beginning to automate phone conversations using AI. Designed for small businesses starting AI voice calls.",
+        features: [
+            "Paid monthly in advance",
+            "Dedicated onboarding & customer support",
+            "$400 one-off setup fee",
+            "Setup fee returned as free minutes after 12 months",
+            "Additional minutes: $1.15 per minute"
+        ],
+        icon: Rocket,
+        popular: false
+    },
+    {
+        name: "Growing",
+        price: "$1,000 / month + VAT",
+        minutes: "900 AI Voice Minutes",
+        description: "Designed for businesses scaling AI voice calls across teams.",
+        features: [
+            "Paid monthly in advance",
+            "Dedicated onboarding & customer support",
+            "$400 one-off setup fee",
+            "Setup fee returned as free minutes after 12 months",
+            "Additional minutes: $1.15 per minute"
+        ],
+        icon: Zap,
+        popular: false
+    },
+    {
+        name: "Pro",
+        price: "$1,500 / month + VAT",
+        minutes: "1,400 AI Voice Minutes",
+        description: "Built for organisations running high-volume automated AI calls.",
+        features: [
+            "Paid monthly in advance",
+            "Priority onboarding & support",
+            "$400 one-off setup fee",
+            "Setup fee returned as free minutes after 12 months",
+            "Additional minutes: $1.15 per minute"
+        ],
+        icon: Zap,
+        popular: true,
+        displayName: "Pro"
+    },
+    {
+        name: "Enterprise",
+        price: "Custom Pricing",
+        minutes: "",
+        description: "Tailored AI voice solutions for large organisations & advanced automation to Tailored AI calling & automation.",
+        features: [
+            "Paid monthly in advance",
+            "Custom AI minute packages",
+            "Priority technical support",
+            "Volume discounts available",
+            "International calling packages",
+            "Custom API integrations"
+        ],
+        icon: Building2,
+        popular: false,
+        disabled: true
+    }
+];
+
 export function BillingContent() {
     const [activeTab, setActiveTab] = useState("Overview")
     const [isTopUpOpen, setIsTopUpOpen] = useState(false)
@@ -621,33 +687,13 @@ export function BillingContent() {
         }
     };
 
-    const dynamicPricingTiers = fetchedPlans.map((plan: any) => ({
-        name: plan.name,
-        price: `$${parseFloat(plan.price).toFixed(0)}`,
-        unit: "/mo",
-        icon: plan.name === "Starter" ? Rocket : (plan.name === "Pro" ? Zap : Zap), // Default to Zap for others
-        description: plan.description || (plan.name === "Starter" ? "Perfect for getting started with AI voice calls." : ""),
-        minimumMinutes: `Includes ${plan.limit} minutes`,
-        features: plan.des_list || [],
-        cta: `Select ${plan.name}`,
-        popular: plan.name === "Pro", // Matches the "Medium" (Growing) popular status
-        disabled: false,
+    const pricingTiers = STATIC_PRICING_PLANS.map(plan => ({
+        ...plan,
+        price: plan.price.split(' ')[0],
+        unit: plan.price.includes('/') ? ` / ${plan.price.split(' / ')[1]}` : "",
+        minimumMinutes: plan.minutes,
+        cta: plan.name === "Enterprise" ? "Contact Sales" : `Select ${plan.name}`,
     }));
-
-    const enterpriseTier = {
-        name: "Enterprise",
-        price: "Custom",
-        unit: "",
-        icon: Building2,
-        description: "Tailored solutions for large-scale operations.",
-        minimumMinutes: "Custom minutes available",
-        features: ["Unlimited Minutes", "Custom AI Models", "Dedicated Manager", "24/7 Phone Support"],
-        cta: "Contact Sales",
-        popular: false,
-        disabled: true,
-    };
-
-    const pricingTiers = [...dynamicPricingTiers, enterpriseTier];
 
     const filteredCountries = countries.filter(c =>
         c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
@@ -1404,6 +1450,21 @@ export function BillingContent() {
                     </DialogHeader>
 
                     <div className="space-y-10">
+                        {/* Selected Info */}
+                        {/* <div className="max-w-md mx-auto w-full grid grid-cols-1 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                    Selected Payment Card
+                                </label>
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={selectedPmForSubscription ? `${selectedPmForSubscription.card.brand.toUpperCase()} ending in ${selectedPmForSubscription.card.last4}` : ""}
+                                    className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none"
+                                />
+                            </div>
+                        </div> */}
+
                         {/* Pricing Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
                             {pricingTiers.map((tier) => {
@@ -1442,7 +1503,7 @@ export function BillingContent() {
                                                     isSelected ? "text-black dark:text-white" : "text-gray-500",
                                                 ].join(" ")} />
                                             </div>
-                                            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tier.name}</h3>
+                                            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
                                         </div>
 
                                         <div className="mb-2">
@@ -1582,7 +1643,33 @@ export function BillingContent() {
                             </div>
                         ) : (
                             <>
-                                {/* Previous Operation Section */}
+                                {/* Selected Info */}
+                                {/* <div className="max-w-md mx-auto w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                            Current Plan
+                                        </label>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={orgData?.current_plan || "No Active Plan"}
+                                            className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                            Selected Payment Card
+                                        </label>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={selectedPmForSubscription ? `${selectedPmForSubscription.card.brand.toUpperCase()} ending in ${selectedPmForSubscription.card.last4}` : ""}
+                                            className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none"
+                                        />
+                                    </div>
+                                </div> */}
+
+                                {/* PRICING_PLANS Section */}
 
                                 {/* Pricing Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
@@ -1622,7 +1709,7 @@ export function BillingContent() {
                                                             isSelected ? "text-black dark:text-white" : "text-gray-500",
                                                         ].join(" ")} />
                                                     </div>
-                                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tier.name}</h3>
+                                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
                                                 </div>
 
                                                 <div className="mb-2">
