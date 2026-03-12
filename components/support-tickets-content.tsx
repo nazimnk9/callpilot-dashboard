@@ -4,13 +4,45 @@ import {
     ChevronLeft,
     Clock,
     Send,
-    Loader2
+    Loader2,
+    Download,
+    FileText,
+    Image as ImageIcon,
+    File
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation';
 import { profileService } from '@/services/profile-service';
+import { toast } from "sonner";
+
+interface Attachment {
+    id: number;
+    uid: string;
+    created_at: string;
+    updated_at: string;
+    file: string;
+}
+
+interface TicketDetails {
+    id: number;
+    attachments: Attachment[];
+    uid: string;
+    created_at: string;
+    updated_at: string;
+    subject: string;
+    category: string;
+    message: string;
+    status: string;
+    organization: number;
+}
 
 const getStatusDetails = (status: string) => {
     switch (status?.toUpperCase()) {
@@ -55,6 +87,10 @@ export function SupportTicketsContent() {
     const router = useRouter();
     const [tickets, setTickets] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedTicket, setSelectedTicket] = useState<TicketDetails | null>(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [isDetailsLoading, setIsDetailsLoading] = useState(false);
+    const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchTickets = async () => {
@@ -70,6 +106,50 @@ export function SupportTicketsContent() {
 
         fetchTickets();
     }, []);
+
+    const handleTicketClick = async (uid: string) => {
+        setIsDetailsLoading(true);
+        setIsDetailsModalOpen(true);
+        try {
+            const response = await profileService.getTicketDetails(uid);
+            setSelectedTicket(response.data);
+        } catch (error) {
+            console.error("Error fetching ticket details:", error);
+            toast.error("Failed to fetch ticket details");
+            setIsDetailsModalOpen(false);
+        } finally {
+            setIsDetailsLoading(false);
+        }
+    };
+
+    const handleDownload = async (attachment: Attachment) => {
+        setIsDownloading(attachment.uid);
+        try {
+            const response = await profileService.downloadAttachment(attachment.uid);
+
+            // Extract filename from URL or use a default
+            const url = attachment.file;
+            const filename = url.substring(url.lastIndexOf('/') + 1) || `attachment-${attachment.id}`;
+
+            // Create a temporary link and trigger download
+            const blob = new Blob([response.data]);
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+
+            toast.success("Download started");
+        } catch (error) {
+            console.error("Error downloading attachment:", error);
+            toast.error("Failed to download attachment");
+        } finally {
+            setIsDownloading(null);
+        }
+    };
 
     return (
         <div className="flex-1 overflow-y-auto bg-[#F9FAFB] dark:bg-gray-950">
@@ -108,7 +188,11 @@ export function SupportTicketsContent() {
                                 tickets.map((ticket) => {
                                     const { label, color, dot } = getStatusDetails(ticket.status);
                                     return (
-                                        <Card key={ticket.id} className="p-6 border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow dark:bg-gray-900/50">
+                                        <Card
+                                            key={ticket.id}
+                                            className="p-6 border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow dark:bg-gray-900/50 cursor-pointer"
+                                            onClick={() => handleTicketClick(ticket.uid)}
+                                        >
                                             <div className="flex items-start justify-between gap-4 mb-4">
                                                 <div className="flex flex-wrap items-center gap-3">
                                                     <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">TKT-{ticket.id}</span>
@@ -174,6 +258,111 @@ export function SupportTicketsContent() {
                     </div>
                 </div>
             </div>
+
+            {/* Ticket Details Modal */}
+            <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+                <DialogContent className="max-w-[600px] p-0 overflow-hidden border-none bg-white dark:bg-gray-950 rounded-3xl sm:rounded-3xl">
+                    <DialogHeader className="px-8 pt-8 pb-4">
+                        <DialogTitle className="flex items-center justify-between">
+                            <span className="text-xl font-bold text-gray-900 dark:text-white">Ticket Details</span>
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {isDetailsLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-950">
+                            <Loader2 size={32} className="animate-spin mb-4 text-blue-500" />
+                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Loading details...</p>
+                        </div>
+                    ) : selectedTicket && (
+                        <div className="px-8 pb-8 space-y-6 max-h-[70vh] overflow-y-auto">
+                            <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">TKT-{selectedTicket.id}</span>
+                                    <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{selectedTicket.subject}</h2>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Badge className={`px-2.5 py-1 rounded-full text-[11px] font-bold border-none ${getStatusDetails(selectedTicket.status).color}`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full mr-2 ${getStatusDetails(selectedTicket.status).dot}`} />
+                                        {getStatusDetails(selectedTicket.status).label}
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-1.5">
+                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <FileText size={12} />
+                                        Category
+                                    </span>
+                                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                                        {selectedTicket.category.replace(/_/g, ' ')}
+                                    </p>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <Clock size={12} />
+                                        Submitted On
+                                    </span>
+                                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                                        {formatDate(selectedTicket.created_at)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Message</span>
+                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                        {selectedTicket.message}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {selectedTicket.attachments && selectedTicket.attachments.length > 0 && (
+                                <div className="space-y-4 pt-2">
+                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Attachments ({selectedTicket.attachments.length})</span>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {selectedTicket.attachments.map((attachment) => {
+                                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.file);
+                                            return (
+                                                <div key={attachment.id} className="flex items-center justify-between p-3.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl hover:border-blue-100 dark:hover:border-blue-900/30 transition-colors group">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-500 transition-colors">
+                                                            {isImage ? <ImageIcon size={18} /> : <File size={18} />}
+                                                        </div>
+                                                        <div className="max-w-[180px] sm:max-w-[280px]">
+                                                            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                                                                {attachment.file.substring(attachment.file.lastIndexOf('/') + 1)}
+                                                            </p>
+                                                            <p className="text-[11px] text-gray-400 font-medium">Added on {formatDate(attachment.created_at)}</p>
+                                                        </div>
+                                                    </div>
+                                                    <Button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDownload(attachment);
+                                                        }}
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        disabled={isDownloading === attachment.uid}
+                                                        className="h-9 w-9 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shrink-0"
+                                                    >
+                                                        {isDownloading === attachment.uid ? (
+                                                            <Loader2 size={16} className="animate-spin" />
+                                                        ) : (
+                                                            <Download size={16} />
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

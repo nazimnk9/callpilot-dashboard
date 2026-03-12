@@ -60,5 +60,15 @@ export const profileService = {
 
     async deleteSupportMedia(uid: string) {
         return api.delete(`/organizations/support_ticket/media/${uid}`);
+    },
+
+    async getTicketDetails(uid: string) {
+        return api.get(`/organizations/support_ticket/${uid}`);
+    },
+
+    async downloadAttachment(uid: string) {
+        return api.get(`/organizations/support_ticket/media/${uid}/download`, {
+            responseType: 'blob'
+        });
     }
 };

@@ -30,6 +30,7 @@ import {
   Shuffle,
   User,
   CreditCard,
+  MessageSquare,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { UserProfilePanel } from './user-profile-panel';
@@ -43,7 +44,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   // Check if current route is a settings page to initialize the view
-  const isSettingsPage = pathname === '/dashboard/profile' || pathname === '/dashboard/organization' || pathname === '/dashboard/billing';
+  const isSettingsPage = pathname === '/dashboard/profile' || pathname === '/dashboard/organization' || pathname === '/dashboard/billing' || pathname === '/dashboard/help/support-tickets';
 
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [isSettingsView, setIsSettingsView] = useState(isSettingsPage);
@@ -74,6 +75,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { label: 'Organization', isHeader: true },
     { icon: FileText, label: 'Company Details', href: '/dashboard/organization', isBold: true },
     { icon: CreditCard, label: 'Billing', href: '/dashboard/billing', isBold: true },
+    { label: 'Support Ticket', isHeader: true },
+    { icon: MessageSquare, label: 'Support Ticket', href: '/dashboard/help/support-tickets', isBold: true },
   ];
 
   const currentMenuItems = isSettingsView ? settingsMenuItems : menuItems;
