@@ -31,7 +31,7 @@ const STATIC_PRICING_PLANS = [
         name: "Starter",
         price: "$400 / month + VAT",
         minutes: "350 AI Voice Minutes",
-        description: "Ideal for organisations beginning to automate phone conversations using AI. Designed for small businesses starting AI voice calls.",
+        description: "Designed for small businesses starting AI voice calls.",
         features: [
             "Paid monthly in advance",
             "Dedicated onboarding & customer support",
@@ -77,7 +77,7 @@ const STATIC_PRICING_PLANS = [
         name: "Enterprise",
         price: "Custom Pricing",
         minutes: "",
-        description: "Tailored AI voice solutions for large organisations & advanced automation to Tailored AI calling & automation.",
+        description: "Custom AI automation plans designed for large-scale deployment.",
         features: [
             "Paid monthly in advance",
             "Custom AI minute packages",
