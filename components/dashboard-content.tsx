@@ -26,6 +26,72 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+const STATIC_PRICING_PLANS = [
+    {
+        name: "Starter",
+        price: "$400 / month + VAT",
+        minutes: "350 AI Voice Minutes",
+        description: "Designed for small businesses starting AI voice calls.",
+        features: [
+            "Paid monthly in advance",
+            "Dedicated onboarding & customer support",
+            "$400 one-off setup fee",
+            "Setup fee returned as free minutes after 12 months",
+            "Additional minutes: $1.15 per minute"
+        ],
+        icon: Rocket,
+        popular: false
+    },
+    {
+        name: "Growing",
+        price: "$1,000 / month + VAT",
+        minutes: "900 AI Voice Minutes",
+        description: "Designed for businesses scaling AI voice calls across teams.",
+        features: [
+            "Paid monthly in advance",
+            "Dedicated onboarding & customer support",
+            "$400 one-off setup fee",
+            "Setup fee returned as free minutes after 12 months",
+            "Additional minutes: $1.15 per minute"
+        ],
+        icon: Zap,
+        popular: false
+    },
+    {
+        name: "Pro",
+        price: "$1,500 / month + VAT",
+        minutes: "1,400 AI Voice Minutes",
+        description: "Built for organisations running high-volume automated AI calls.",
+        features: [
+            "Paid monthly in advance",
+            "Priority onboarding & support",
+            "$400 one-off setup fee",
+            "Setup fee returned as free minutes after 12 months",
+            "Additional minutes: $1.15 per minute"
+        ],
+        icon: Zap,
+        popular: true,
+        displayName: "Pro"
+    },
+    {
+        name: "Enterprise",
+        price: "Custom Pricing",
+        minutes: "",
+        description: "Custom AI automation plans designed for large-scale deployment.",
+        features: [
+            "Paid monthly in advance",
+            "Custom AI minute packages",
+            "Priority technical support",
+            "Volume discounts available",
+            "International calling packages",
+            "Custom API integrations"
+        ],
+        icon: Building2,
+        popular: false,
+        disabled: true
+    }
+];
+
 export function DashboardContent() {
     const router = useRouter();
     const [orgData, setOrgData] = useState<any>(null);
@@ -343,6 +409,247 @@ export function DashboardContent() {
         }
     };
 
+    // const handleCreateSubscription = async () => {
+    //     if (!selectedPlan || !selectedPmForSubscription) {
+    //         toast.error("Please select a plan and a payment method");
+    //         return;
+    //     }
+
+    //     setIsSubscriptionSubmitting(true);
+    //     setErrorDetail(null);
+    //     try {
+    //         const token = cookieUtils.get("access");
+    //         const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}`
+    //             },
+    //             body: JSON.stringify({
+    //                 plan: selectedPlan,
+    //                 payment_method_id: selectedPmForSubscription.id
+    //             })
+    //         });
+
+    //         if (response.ok) {
+    //             toast.success("Subscription plan created successfully");
+    //             setIsSubscriptionModalOpen(false);
+    //             fetchOrgData();
+    //             fetchCurrentSubscription();
+    //         } else {
+    //             const errData = await response.json();
+    //             if (errData.plan && Array.isArray(errData.plan)) {
+    //                 setErrorDetail(errData.plan[0]);
+    //             } else if (errData.detail) {
+    //                 setErrorDetail(errData.detail);
+    //             } else {
+    //                 setErrorDetail("Failed to create subscription plan");
+    //             }
+    //         }
+    //     } catch (err) {
+    //         console.error("Subscription error:", err);
+    //         setErrorDetail("An error occurred during subscription creation");
+    //     } finally {
+    //         setIsSubscriptionSubmitting(false);
+    //     }
+    // };
+
+    // const handleCancelPlan = async () => {
+    //     setIsCancellingPlan(true);
+    //     try {
+    //         const token = cookieUtils.get("access");
+    //         const response = await fetch(`${BASE_URL}/payment/subscriptions/cancel`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Authorization': `Bearer ${token}`
+    //             }
+    //         });
+
+    //         if (response.ok) {
+    //             toast.success("Subscription plan cancelled successfully");
+    //             setIsCancelPlanModalOpen(false);
+    //             fetchOrgData();
+    //         } else {
+    //             const errData = await response.json();
+    //             setErrorDetail(errData.detail || "Failed to cancel subscription plan");
+    //         }
+    //     } catch (err) {
+    //         console.error("Cancellation error:", err);
+    //         setErrorDetail("An error occurred during subscription cancellation");
+    //     } finally {
+    //         setIsCancellingPlan(false);
+    //     }
+    // };
+
+    // const handleUpdateSubscription = async () => {
+    //     if (!selectedPlan || !selectedPmForSubscription) {
+    //         toast.error("Please select a plan and a payment method");
+    //         return;
+    //     }
+
+    //     if (selectedPlan.toLowerCase() === (currentSubscription?.plan ? String(currentSubscription.plan).toLowerCase() : "") ||
+    //         selectedPlan.toLowerCase() === (orgData?.current_plan ? String(orgData.current_plan).toLowerCase() : "")) {
+    //         setErrorDetail("You are already on this plan. Please select a different plan to update.");
+    //         return;
+    //     }
+
+    //     setIsUpdateSubmitting(true);
+    //     setErrorDetail(null);
+    //     try {
+    //         const token = cookieUtils.get("access");
+    //         const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Authorization': `Bearer ${token}`,
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify({
+    //                 plan: selectedPlan,
+    //                 payment_method_id: selectedPmForSubscription.id
+    //             })
+    //         });
+
+    //         if (response.ok) {
+    //             toast.success("Subscription plan updated successfully");
+    //             setIsUpdateSubscriptionModalOpen(false);
+    //             fetchOrgData();
+    //             fetchCurrentSubscription();
+    //         } else {
+    //             const errData = await response.json();
+    //             if (errData.plan && Array.isArray(errData.plan)) {
+    //                 setErrorDetail(errData.plan[0]);
+    //             } else if (errData.detail) {
+    //                 setErrorDetail(errData.detail);
+    //             } else {
+    //                 setErrorDetail("Failed to update subscription plan");
+    //             }
+    //         }
+    //     } catch (err) {
+    //         console.error("Update error:", err);
+    //         setErrorDetail("An error occurred during subscription update");
+    //     } finally {
+    //         setIsUpdateSubmitting(false);
+    //     }
+    // };
+
+    const handleDeletePaymentMethod = async () => {
+        if (!selectedPmForDelete) return;
+        setIsDeleting(true);
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/payment/payment-methods/${selectedPmForDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                toast.success("Payment method deleted successfully");
+                setIsDeleteOpen(false);
+                fetchPaymentMethods();
+                if (selectedPmForTopUp?.id === selectedPmForDelete.id) {
+                    setSelectedPmForTopUp(null);
+                }
+            } else {
+                toast.error("Failed to delete payment method");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("An error occurred while deleting payment method");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const dynamicPricingTiers = fetchedPlans.map((plan: any) => ({
+        name: plan.name,
+        price: `$${parseFloat(plan.price).toFixed(0)}`,
+        unit: "/mo",
+        icon: plan.name === "Starter" ? Rocket : (plan.name === "Pro" ? Zap : Zap), // Default to Zap for others
+        description: plan.description || (plan.name === "Starter" ? "Perfect for getting started with AI voice calls." : ""),
+        minimumMinutes: `Includes ${plan.limit} minutes`,
+        features: plan.des_list || [],
+        cta: `Select ${plan.name}`,
+        popular: plan.name === "Pro", // Matches the "Medium" (Growing) popular status
+        disabled: false,
+    }));
+
+    const enterpriseTier = {
+        name: "Enterprise",
+        price: "Custom",
+        unit: "",
+        icon: Building2,
+        description: "Tailored solutions for large-scale operations.",
+        minimumMinutes: "Custom minutes available",
+        features: ["Unlimited Minutes", "Custom AI Models", "Dedicated Manager", "24/7 Phone Support"],
+        cta: "Contact Sales",
+        popular: false,
+        disabled: true,
+    };
+
+    // const pricingTiers = [...dynamicPricingTiers, enterpriseTier];
+
+    const filteredCountries = countries.filter(c =>
+        c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
+        c.country_code.toLowerCase().includes(countrySearch.toLowerCase())
+    );
+
+    const cards = [
+        {
+            title: 'Current Plan',
+            value: orgData?.current_plan || 'No Active Plan',
+            icon: Rocket,
+            iconColor: 'text-blue-600 dark:text-blue-400',
+            bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+        },
+        {
+            title: 'Minutes Remaining',
+            value: orgData?.wallet_minutes ? `${orgData.wallet_minutes} Minutes` : '0 Minutes',
+            icon: Zap,
+            iconColor: 'text-purple-600 dark:text-purple-400',
+            bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+        },
+    ];
+    const cardss = [
+        {
+            title: 'Last System check: 10 seconds ago',
+            value: 'AI Call Status',
+            icon: (props: any) => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
+            iconColor: 'text-blue-600 dark:text-blue-400',
+            bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+        },
+        {
+            title: 'System Health',
+            value: (
+                <div className="flex gap-6 mt-2">
+                    <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Voice API</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Call Trigger</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Queue</span>
+                    </div>
+                </div>
+            ) as any,
+            icon: (props: any) => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
+            iconColor: 'text-purple-600 dark:text-purple-400',
+            bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+        },
+    ];
+
+    const pricingTiers = STATIC_PRICING_PLANS.map(plan => ({
+        ...plan,
+        price: plan.price.split(' ')[0],
+        unit: plan.price.includes('/') ? ` / ${plan.price.split(' / ')[1]}` : "",
+        minimumMinutes: plan.minutes,
+        cta: plan.name === "Enterprise" ? "Contact Sales" : `Select ${plan.name}`,
+    }));
+
     const handleCreateSubscription = async () => {
         if (!selectedPlan || !selectedPmForSubscription) {
             toast.error("Please select a plan and a payment method");
@@ -465,116 +772,6 @@ export function DashboardContent() {
             setIsUpdateSubmitting(false);
         }
     };
-
-    const handleDeletePaymentMethod = async () => {
-        if (!selectedPmForDelete) return;
-        setIsDeleting(true);
-        try {
-            const token = cookieUtils.get("access");
-            const response = await fetch(`${BASE_URL}/payment/payment-methods/${selectedPmForDelete.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (response.ok) {
-                toast.success("Payment method deleted successfully");
-                setIsDeleteOpen(false);
-                fetchPaymentMethods();
-                if (selectedPmForTopUp?.id === selectedPmForDelete.id) {
-                    setSelectedPmForTopUp(null);
-                }
-            } else {
-                toast.error("Failed to delete payment method");
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error("An error occurred while deleting payment method");
-        } finally {
-            setIsDeleting(false);
-        }
-    };
-
-    const dynamicPricingTiers = fetchedPlans.map((plan: any) => ({
-        name: plan.name,
-        price: `$${parseFloat(plan.price).toFixed(0)}`,
-        unit: "/mo",
-        icon: plan.name === "Starter" ? Rocket : (plan.name === "Pro" ? Zap : Zap), // Default to Zap for others
-        description: plan.description || (plan.name === "Starter" ? "Perfect for getting started with AI voice calls." : ""),
-        minimumMinutes: `Includes ${plan.limit} minutes`,
-        features: plan.des_list || [],
-        cta: `Select ${plan.name}`,
-        popular: plan.name === "Pro", // Matches the "Medium" (Growing) popular status
-        disabled: false,
-    }));
-
-    const enterpriseTier = {
-        name: "Enterprise",
-        price: "Custom",
-        unit: "",
-        icon: Building2,
-        description: "Tailored solutions for large-scale operations.",
-        minimumMinutes: "Custom minutes available",
-        features: ["Unlimited Minutes", "Custom AI Models", "Dedicated Manager", "24/7 Phone Support"],
-        cta: "Contact Sales",
-        popular: false,
-        disabled: true,
-    };
-
-    const pricingTiers = [...dynamicPricingTiers, enterpriseTier];
-
-    const filteredCountries = countries.filter(c =>
-        c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-        c.country_code.toLowerCase().includes(countrySearch.toLowerCase())
-    );
-
-    const cards = [
-        {
-            title: 'Current Plan',
-            value: orgData?.current_plan || 'No Active Plan',
-            icon: Rocket,
-            iconColor: 'text-blue-600 dark:text-blue-400',
-            bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-        },
-        {
-            title: 'Minutes Remaining',
-            value: orgData?.wallet_minutes ? `${orgData.wallet_minutes} Minutes` : '0 Minutes',
-            icon: Zap,
-            iconColor: 'text-purple-600 dark:text-purple-400',
-            bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-        },
-    ];
-    const cardss = [
-        {
-            title: 'Last System check: 10 seconds ago',
-            value: 'AI Call Status',
-            icon: (props: any) => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
-            iconColor: 'text-blue-600 dark:text-blue-400',
-            bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-        },
-        {
-            title: 'System Health',
-            value: (
-                <div className="flex gap-6 mt-2">
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Voice API</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Call Trigger</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Queue</span>
-                    </div>
-                </div>
-            ) as any,
-            icon: (props: any) => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
-            iconColor: 'text-purple-600 dark:text-purple-400',
-            bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-        },
-    ];
 
     return (
         <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
@@ -1236,7 +1433,7 @@ export function DashboardContent() {
                                                         isSelected ? "text-black dark:text-white" : "text-gray-500",
                                                     ].join(" ")} />
                                                 </div>
-                                                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tier.name}</h3>
+                                                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
                                             </div>
 
                                             <div className="mb-2">
@@ -1293,7 +1490,7 @@ export function DashboardContent() {
                                         </div>
 
                                         {isPmSelectorForSubOpen && (
-                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-[70] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                                                 <div className="max-h-[200px] overflow-y-auto">
                                                     {paymentMethods.map((pm) => (
                                                         <div
@@ -1413,7 +1610,7 @@ export function DashboardContent() {
                                                                 isSelected ? "text-black dark:text-white" : "text-gray-500",
                                                             ].join(" ")} />
                                                         </div>
-                                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tier.name}</h3>
+                                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
                                                     </div>
 
                                                     <div className="mb-2">
@@ -1469,7 +1666,7 @@ export function DashboardContent() {
                                                 </div>
 
                                                 {isPmSelectorForSubOpen && (
-                                                    <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-[70] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                    <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                                                         <div className="max-h-[200px] overflow-y-auto">
                                                             {paymentMethods.map((pm) => (
                                                                 <div
@@ -1541,11 +1738,11 @@ export function DashboardContent() {
                 <Dialog open={isCancelPlanModalOpen} onOpenChange={setIsCancelPlanModalOpen}>
                     <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
                         <DialogHeader className="p-0 space-y-2 text-left">
-                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
-                                Cancel subscription?
+                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100 text-center">
+                                Cancel plan confirmation
                             </DialogTitle>
-                            <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                                Are you sure you want to cancel your current subscription? You will lose access to plan-specific features at the end of your billing cycle.
+                            <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium text-center pt-2">
+                                Are you sure you want to cancel your current subscription plan?
                             </p>
                         </DialogHeader>
 
@@ -1560,7 +1757,7 @@ export function DashboardContent() {
                             <Button
                                 onClick={handleCancelPlan}
                                 disabled={isCancellingPlan}
-                                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                                className="w-full sm:w-auto bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
                             >
                                 {isCancellingPlan && <Loader2 className="w-4 h-4 animate-spin" />}
                                 Continue
