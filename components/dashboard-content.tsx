@@ -76,7 +76,7 @@ const STATIC_PRICING_PLANS = [
     {
         name: "Enterprise",
         price: "Custom Pricing",
-        minutes: "",
+        minutes: "Custom AI Call Minutes",
         description: "Custom AI automation plans designed for large-scale deployment.",
         features: [
             "Paid monthly in advance",
@@ -576,11 +576,11 @@ export function DashboardContent() {
 
     const enterpriseTier = {
         name: "Enterprise",
-        price: "Custom",
+        price: "Custom Pricing",
         unit: "",
         icon: Building2,
         description: "Tailored solutions for large-scale operations.",
-        minimumMinutes: "Custom minutes available",
+        minimumMinutes: "Custom AI Call Minutes",
         features: ["Unlimited Minutes", "Custom AI Models", "Dedicated Manager", "24/7 Phone Support"],
         cta: "Contact Sales",
         popular: false,
