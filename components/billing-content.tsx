@@ -76,7 +76,7 @@ const STATIC_PRICING_PLANS = [
     {
         name: "Enterprise",
         price: "Custom Pricing",
-        minutes: "",
+        minutes: "Custom AI Call Minutes",
         description: "Custom AI automation plans designed for large-scale deployment.",
         features: [
             "Paid monthly in advance",
