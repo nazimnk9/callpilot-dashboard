@@ -109,6 +109,7 @@ export function DashboardContent() {
     const cardNumberContainerRef = useRef<HTMLDivElement>(null);
     const cardExpiryContainerRef = useRef<HTMLDivElement>(null);
     const cardCvcContainerRef = useRef<HTMLDivElement>(null);
+    const paymentSectionRef = useRef<HTMLDivElement>(null);
 
     const [countries, setCountries] = useState<{ country: string, country_code: string }[]>(countriesData);
     const [selectedCountry, setSelectedCountry] = useState<{ country: string, country_code: string } | null>(null);
@@ -776,8 +777,53 @@ export function DashboardContent() {
     return (
         <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto space-y-8">
+                {/* Complete Your Account Setup */}
                 <div>
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Account & Usage</h1>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Complete Your Account Setup</h1>
+
+                    <div className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8">
+                        {/* soft gradient glow */}
+                        <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
+                            <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
+                        </div>
+
+                        {/* subtle dot pattern */}
+                        <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
+                            <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
+                        </div>
+
+                        <div className="relative space-y-6">
+                            {[
+                                { label: 'Verify Details of your Business Profile', key: 'is_given_company_details', path: '/dashboard/organization' },
+                                { label: 'Purchase a Phone number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
+                                { label: 'Get a Subscription Plan', key: 'is_purchased_anything', path: '/dashboard/billing' }
+                            ].map((option, idx) => {
+                                const isCompleted = orgData?.[option.key] === true;
+                                return (
+                                    <div
+                                        key={idx}
+                                        className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
+                                        onClick={() => !isCompleted && router.push(option.path)}
+                                    >
+                                        {isCompleted ? (
+                                            <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                <Check className="h-4 w-4 text-white stroke-[3px]" />
+                                            </div>
+                                        ) : (
+                                            <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
+                                        )}
+                                        <span className={`text-[17px] font-medium text-gray-800 dark:text-gray-200 transition-all duration-200 ${!isCompleted ? 'group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400' : ''}`}>
+                                            {option.label}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Account & Usage</h1>
                     {/* <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
                 </div>
 
@@ -1021,7 +1067,7 @@ export function DashboardContent() {
                                                             {orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"}
                                                         </button>
 
-                                                        {orgData?.current_plan && (
+                                                        {/* {orgData?.current_plan && (
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -1031,7 +1077,7 @@ export function DashboardContent() {
                                                             >
                                                                 Cancel Subscription
                                                             </button>
-                                                        )}
+                                                        )} */}
                                                     </div>
                                                 )}
                                             </div>
@@ -1407,7 +1453,12 @@ export function DashboardContent() {
                                             key={tier.name}
                                             onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
                                             onMouseLeave={() => setHoveredTier(null)}
-                                            onClick={() => !tier.disabled && setSelectedPlan(tier.name)}
+                                            onClick={() => {
+                                                if (!tier.disabled) {
+                                                    setSelectedPlan(tier.name);
+                                                    paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                                }
+                                            }}
                                             className={[
                                                 "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
                                                 tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
@@ -1458,7 +1509,7 @@ export function DashboardContent() {
                             </div>
 
                             {/* Payment Method Selector */}
-                            <div className="max-w-md mx-auto w-full space-y-4">
+                            <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
                                 <div className="space-y-2">
                                     <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                         Payment method
@@ -1584,7 +1635,12 @@ export function DashboardContent() {
                                                     key={tier.name}
                                                     onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
                                                     onMouseLeave={() => setHoveredTier(null)}
-                                                    onClick={() => !tier.disabled && setSelectedPlan(tier.name)}
+                                                    onClick={() => {
+                                                        if (!tier.disabled) {
+                                                            setSelectedPlan(tier.name);
+                                                            paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                                        }
+                                                    }}
                                                     className={[
                                                         "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
                                                         tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
@@ -1634,7 +1690,7 @@ export function DashboardContent() {
                                         })}
                                     </div>
 
-                                    <div className="max-w-md mx-auto w-full space-y-4">
+                                    <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
                                         <div className="space-y-2">
                                             <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                                 Payment method

@@ -236,7 +236,7 @@ export function OrganizationContent() {
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6 md:p-8 dark:bg-gray-900 dark:border-gray-800">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-bold dark:text-gray-100">Edit Invoice Details</DialogTitle>
+                        <DialogTitle className="text-xl font-bold dark:text-gray-100">Edit Verify Details</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-6 pt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -401,7 +401,7 @@ export function OrganizationContent() {
             <div className="max-w-4xl mx-auto space-y-12">
                 {/* Page Title */}
                 <div className="flex items-center justify-between">
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Invoice Details</h1>
+                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Verify Details</h1>
                     <Button
                         onClick={handleEdit}
                         variant="outline"

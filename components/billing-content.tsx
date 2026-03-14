@@ -105,6 +105,7 @@ export function BillingContent() {
     const cardNumberContainerRef = useRef<HTMLDivElement>(null);
     const cardExpiryContainerRef = useRef<HTMLDivElement>(null);
     const cardCvcContainerRef = useRef<HTMLDivElement>(null);
+    const paymentSectionRef = useRef<HTMLDivElement>(null);
 
     const [countries, setCountries] = useState<{ country: string, country_code: string }[]>(countriesData);
     const [selectedCountry, setSelectedCountry] = useState<{ country: string, country_code: string } | null>(null);
@@ -1477,7 +1478,12 @@ export function BillingContent() {
                                         key={tier.name}
                                         onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
                                         onMouseLeave={() => setHoveredTier(null)}
-                                        onClick={() => !tier.disabled && setSelectedPlan(tier.name)}
+                                        onClick={() => {
+                                            if (!tier.disabled) {
+                                                setSelectedPlan(tier.name);
+                                                paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                            }
+                                        }}
                                         className={[
                                             "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
                                             tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
@@ -1528,7 +1534,7 @@ export function BillingContent() {
                         </div>
 
                         {/* Payment Method Selector (Styled like Top-up modal) */}
-                        <div className="max-w-md mx-auto w-full space-y-4">
+                        <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
                             <div className="space-y-2">
                                 <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                     Payment method
@@ -1683,7 +1689,12 @@ export function BillingContent() {
                                                 key={tier.name}
                                                 onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
                                                 onMouseLeave={() => setHoveredTier(null)}
-                                                onClick={() => !tier.disabled && setSelectedPlan(tier.name)}
+                                                onClick={() => {
+                                                    if (!tier.disabled) {
+                                                        setSelectedPlan(tier.name);
+                                                        paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                                    }
+                                                }}
                                                 className={[
                                                     "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
                                                     tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
@@ -1734,7 +1745,7 @@ export function BillingContent() {
                                 </div>
 
                                 {/* Payment Method Selector (Styled like Top-up modal) */}
-                                <div className="max-w-md mx-auto w-full space-y-4">
+                                <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
                                     <div className="space-y-2">
                                         <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                                             Payment method
