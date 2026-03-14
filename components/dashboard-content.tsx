@@ -794,9 +794,12 @@ export function DashboardContent() {
 
                         <div className="relative space-y-6">
                             {[
-                                { label: 'Verify Details of your Business Profile', key: 'is_given_company_details', path: '/dashboard/organization' },
-                                { label: 'Purchase a Phone number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
-                                { label: 'Get a Subscription Plan', key: 'is_purchased_anything', path: '/dashboard/billing' }
+                                { label: 'Account created', key: 'is_given_company_details', path: '' },
+                                { label: 'Business details', key: 'is_given_company_details', path: '' },
+                                { label: 'Purchase a Phone number', key: '', path: '/dashboard/phone-numbers' },
+                                { label: 'One time Development Fee', key: '', path: '' },
+                                { label: 'Choose Plan', key: '', path: '' },
+                                { label: 'AI Call Builder', key: '', path: '' }
                             ].map((option, idx) => {
                                 const isCompleted = orgData?.[option.key] === true;
                                 return (
