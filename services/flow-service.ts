@@ -51,6 +51,10 @@ export const flowService = {
         return api.post("/interview/call/config/primary_questions", { question });
     },
 
+    async deletePrimaryQuestion(uid: string) {
+        return api.delete(`/interview/call/config/primary_questions/${uid}`);
+    },
+
     async getCallConfig() {
         return api.get("/interview/call/config/");
     },

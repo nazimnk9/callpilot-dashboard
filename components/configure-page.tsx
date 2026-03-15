@@ -115,6 +115,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [endCallNegative, setEndCallNegative] = useState("false")
     const [restaurantName, setRestaurantName] = useState("")
     const [assistantName, setAssistantName] = useState("")
+    const [timezone, setTimezone] = useState("Africa/Abidjan")
+    const [addingQuestionIdx, setAddingQuestionIdx] = useState<number | null>(null)
+    const [addedQuestions, setAddedQuestions] = useState<number[]>([])
+    const [additionalQuestions, setAdditionalQuestions] = useState<string[]>(["", "", ""])
+    const [additionalQuestionUids, setAdditionalQuestionUids] = useState<(string | null)[]>([null, null, null])
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [deletingIdx, setDeletingIdx] = useState<number | null>(null)
 
     // Status Assignments
     const [jobAdStatus, setJobAdStatus] = useState("Current")
@@ -206,14 +213,22 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             setPhoneNumberUid(configData.phone?.uid || "")
                             setVoiceId(configData.voice_id || "")
                             setMyFlowUid(configData.my_flow?.uid || "")
-                            // setEndCallNegative(configData.end_call_if_primary_answer_negative ? "true" : "false")
+                            setTimezone(configData.timezone || "")
 
-                            // setJobAdStatus(configData.jobad_status_for_calling || "Current")
-                            // setApplicationStatus(String(configData.application_status_for_calling || ""))
-                            // setCallingTime(String(configData.calling_time_after_status_update || "15"))
-                            // setUnsuccessfulStatus(String(configData.status_for_unsuccessful_call || ""))
-                            // setSuccessfulStatus(String(configData.status_for_successful_call || ""))
-                            // setPlacedStatus(String(configData.status_when_call_is_placed || ""))
+                            // Sync additional questions
+                            if (configData.primary_questions && Array.isArray(configData.primary_questions)) {
+                                const mappedQuestions = ["", "", ""]
+                                const mappedUids = [null, null, null] as (string | null)[]
+                                const mappedAddedIdx: number[] = []
+                                configData.primary_questions.slice(0, 3).forEach((q: any, idx: number) => {
+                                    mappedQuestions[idx] = q.question || ""
+                                    mappedUids[idx] = q.uid || null
+                                    mappedAddedIdx.push(idx)
+                                })
+                                setAdditionalQuestions(mappedQuestions)
+                                setAdditionalQuestionUids(mappedUids)
+                                setAddedQuestions(mappedAddedIdx)
+                            }
 
                             // Load flattened timeline fields
                             const loadedTimeline = INITIAL_TIMELINE.map(dayInfo => {
@@ -282,10 +297,110 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         }
     }
 
-    const handleTimelineChange = (index: number, field: keyof TimelineDay, value: any) => {
+    const handleTimelineChange = (index: number, field: string, value: any) => {
         const newTimeline = [...timeline]
         newTimeline[index] = { ...newTimeline[index], [field]: value }
         setTimeline(newTimeline)
+    }
+
+    const handleAddAdditionalQuestion = async (question: string, index: number) => {
+        if (!question || !question.trim()) {
+            setResultTitle("Error")
+            setResultMessage("Please enter a question before adding.")
+            setShowResultDialog(true)
+            return
+        }
+
+        setAddingQuestionIdx(index)
+        try {
+            const response = await flowService.savePrimaryQuestion(question)
+            if (response.data && response.data.uid) {
+                const questionId = response.data.uid
+
+                // Save to state
+                setAddedQuestions(prev => [...prev, index])
+                setAdditionalQuestionUids(prev => {
+                    const newUids = [...prev]
+                    newUids[index] = questionId
+                    return newUids
+                })
+
+                // Save to localStorage
+                const storedIds = JSON.parse(localStorage.getItem("added_question_ids") || "[]")
+                if (!storedIds.includes(questionId)) {
+                    storedIds.push(questionId)
+                    localStorage.setItem("added_question_ids", JSON.stringify(storedIds))
+                }
+
+                setResultMessage(`Question "${question}" added successfully!`)
+                setResultTitle("Success")
+                setShowResultDialog(true)
+            }
+        } catch (error: any) {
+            console.error("Error adding question:", error)
+            setResultTitle("Error")
+            setResultMessage(error.response?.data?.message || "Failed to add question. Please try again.")
+            setShowResultDialog(true)
+        } finally {
+            setAddingQuestionIdx(null)
+        }
+    }
+
+    const handleDeleteAdditionalQuestion = async () => {
+        if (deletingIdx === null) return
+        const uid = additionalQuestionUids[deletingIdx]
+
+        // If it's a previously saved question or a newly added one that got a UID
+        if (!uid) {
+            // Local only delete (shouldn't really happen if handleDeleteButton filters correctly, but safe)
+            setAddedQuestions(prev => prev.filter(i => i !== deletingIdx))
+            setAdditionalQuestions(prev => {
+                const newQ = [...prev]
+                newQ[deletingIdx] = ""
+                return newQ
+            })
+            setShowDeleteConfirm(false)
+            setDeletingIdx(null)
+            return
+        }
+
+        try {
+            setIsSaving(true)
+            await flowService.deletePrimaryQuestion(uid)
+
+            // Remove from storage
+            const storedIds = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("added_question_ids") || "[]") : []
+            const newStoredIds = storedIds.filter((id: string) => id !== uid)
+            if (typeof window !== 'undefined') {
+                localStorage.setItem("added_question_ids", JSON.stringify(newStoredIds))
+            }
+
+            // Reset state
+            setAddedQuestions(prev => prev.filter(i => i !== deletingIdx))
+            setAdditionalQuestions(prev => {
+                const newQ = [...prev]
+                newQ[deletingIdx] = ""
+                return newQ
+            })
+            setAdditionalQuestionUids(prev => {
+                const newU = [...prev]
+                newU[deletingIdx] = null
+                return newU
+            })
+
+            setResultTitle("Success")
+            setResultMessage("Question deleted successfully.")
+            setShowResultDialog(true)
+        } catch (error: any) {
+            console.error("Error deleting question:", error)
+            setResultTitle("Error")
+            setResultMessage(error.response?.data?.detail || error.response?.data?.message || "Failed to delete question.")
+            setShowResultDialog(true)
+        } finally {
+            setIsSaving(false)
+            setShowDeleteConfirm(false)
+            setDeletingIdx(null)
+        }
     }
 
     const parseTime = (timeStr: string) => {
@@ -350,9 +465,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         try {
             setIsSaving(true)
 
+            const activeQuestionUids = additionalQuestionUids.filter((uid): uid is string => uid !== null)
+
             const payload: any = {
                 platform_uid: platformUid,
                 phone_uid: phoneNumberUid,
+                voice_id: voiceId,
+                timezone: timezone,
+                primary_question_inputs: activeQuestionUids
             }
 
             // Add flattened timeline fields in 24h format
@@ -368,6 +488,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             } else {
                 await flowService.createCallConfig(payload)
             }
+
+            // Cleanup local storage and state upon success
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem("added_question_ids")
+            }
+            setAddedQuestions([])
+            setAdditionalQuestions(["", "", ""])
 
             setResultTitle("Success")
             setResultMessage(isUpdateMode ? "Configuration updated successfully!" : "Configuration saved successfully!")
@@ -387,6 +514,22 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     setPhoneNumberUid(configData.phone?.uid || "")
                     setVoiceId(configData.voice_id || "")
                     setMyFlowUid(configData.my_flow?.uid || "")
+                    setTimezone(configData.timezone || "")
+
+                    // Sync additional questions
+                    if (configData.primary_questions && Array.isArray(configData.primary_questions)) {
+                        const mappedQuestions = ["", "", ""]
+                        const mappedUids = [null, null, null] as (string | null)[]
+                        const mappedAddedIdx: number[] = []
+                        configData.primary_questions.slice(0, 3).forEach((q: any, idx: number) => {
+                            mappedQuestions[idx] = q.question || ""
+                            mappedUids[idx] = q.uid || null
+                            mappedAddedIdx.push(idx)
+                        })
+                        setAdditionalQuestions(mappedQuestions)
+                        setAdditionalQuestionUids(mappedUids)
+                        setAddedQuestions(mappedAddedIdx)
+                    }
 
                     // Load flattened timeline fields
                     const loadedTimeline = INITIAL_TIMELINE.map(dayInfo => {
@@ -502,14 +645,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     {searchParams.get("code") === "AICALL191" ? (
                         <>
                             {/* Left Column */}
-                            <div className="space-y-8">
-                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                            <div className="space-y-6">
+                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
                                             <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select phone number" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -529,10 +672,11 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
                                             <Input
+                                                disabled={isUpdateMode && !isEditing}
                                                 value={voiceId}
                                                 onChange={(e) => setVoiceId(e.target.value)}
                                                 placeholder="Enter Voice ID"
-                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                                className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             />
                                         </div>
                                     </div>
@@ -540,26 +684,28 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             </div>
 
                             {/* Right Column */}
-                            <div className="space-y-8">
-                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                            <div className="space-y-6">
+                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Assistant Settings</h2>
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Restaurant Name</Label>
                                             <Input
+                                                disabled={isUpdateMode && !isEditing}
                                                 value={restaurantName}
                                                 onChange={(e) => setRestaurantName(e.target.value)}
                                                 placeholder="Enter Restaurant Name"
-                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                                className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             />
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Assistant Name</Label>
                                             <Input
+                                                disabled={isUpdateMode && !isEditing}
                                                 value={assistantName}
                                                 onChange={(e) => setAssistantName(e.target.value)}
                                                 placeholder="Enter Assistant Name"
-                                                className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                                className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             />
                                         </div>
                                     </div>
@@ -569,14 +715,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     ) : (
                         <>
                             {/* Left Column */}
-                            <div className="space-y-8 flex flex-col h-full">
-                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
+                            <div className="space-y-6 flex flex-col h-full">
+                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform</Label>
                                             <Select disabled={isUpdateMode && !isEditing} value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select Platform" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -591,7 +737,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
                                             <Select disabled={isUpdateMode && !isEditing} value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select phone number" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -606,6 +752,16 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             <p className="text-xs text-gray-400 dark:text-gray-500">
                                                 Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
                                             </p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
+                                            <Input
+                                                disabled={isUpdateMode && !isEditing}
+                                                value={voiceId}
+                                                onChange={(e) => setVoiceId(e.target.value)}
+                                                placeholder="Enter Voice ID"
+                                                className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            />
                                         </div>
                                     </div>
                                 </Card>
@@ -624,16 +780,16 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         value={q.value}
                                                         onChange={(e) => handleQuestionChange(index, e.target.value)}
                                                         placeholder="Type a question"
-                                                        className={`h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${q.isSaved ? "border-green-500 bg-green-50/20 dark:bg-green-500/10 dark:border-green-600" : ""}`}
+                                                        className={`h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${q.isSaved ? "border-green-500 bg-green-50/20 dark:bg-green-500/10 dark:border-green-600" : ""}`}
                                                         disabled={q.isSaved}
                                                     />
                                                     <div className="flex gap-2 shrink-0">
                                                         {!q.isSaved ? (
-                                                            <Button size="sm" variant="outline" onClick={() => handleSaveQuestion(index)} className="h-12 px-5 border-2 rounded-xl font-bold cursor-pointer dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700" >Save</Button>
+                                                            <Button size="sm" variant="outline" onClick={() => handleSaveQuestion(index)} className="h-10 px-5 border-2 rounded-xl font-bold cursor-pointer dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700" >Save</Button>
                                                         ) : (
-                                                            <div className="h-12 w-12 flex items-center justify-center text-green-500 dark:text-green-400" title="Saved"><CheckCircle2 className="h-6 w-6" /></div>
+                                                            <div className="h-10 w-12 flex items-center justify-center text-green-500 dark:text-green-400" title="Saved"><CheckCircle2 className="h-6 w-6" /></div>
                                                         )}
-                                                        <Button size="icon" variant="ghost" onClick={() => handleDeleteQuestion(index)} className="h-12 w-12 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl cursor-pointer"><Trash2 className="h-5 w-5" /></Button>
+                                                        <Button size="icon" variant="ghost" onClick={() => handleDeleteQuestion(index)} className="h-10 w-12 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl cursor-pointer"><Trash2 className="h-5 w-5" /></Button>
                                                     </div>
                                                 </div>
                                                 {!q.value && !q.isSaved && suggestedQuestions.length > 0 && (
@@ -648,17 +804,17 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         )}
                     </div>
                                         ))}
-                                        <Button onClick={handleAddQuestion} variant="outline" className="h-12 px-6 border-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 transition-all">
+                                        <Button onClick={handleAddQuestion} variant="outline" className="h-10 px-6 border-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 transition-all">
                                             <Plus className="h-4 w-4 mr-2" /> Add More Question
                                         </Button>
                                     </div>
                                 </Card> */}
                             </div>
-                                                            
+
 
                             {/* Right Column */}
-                            <div className="space-y-8 flex flex-col h-full">
-                                <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
+                            <div className="space-y-6 flex flex-col h-full">
+                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
                                     <div className="flex items-center justify-between gap-2 mb-6">
                                         <div className="flex items-center gap-2">
                                             <Clock className="h-6 w-6 text-gray-900 dark:text-gray-100" />
@@ -671,6 +827,33 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             </div>
                                         )}
                                     </div>
+
+                                    <div className="mb-6 space-y-2">
+                                        <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
+                                        <Select disabled={isUpdateMode && !isEditing} value={timezone} onValueChange={setTimezone}>
+                                            <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectValue placeholder="Select Time Zone" />
+                                            </SelectTrigger>
+                                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                {[
+                                                    "Africa/Abidjan",
+                                                    "Africa/Accra",
+                                                    "Africa/Addis_Ababa",
+                                                    "Africa/Algiers",
+                                                    "America/Anchorage",
+                                                    "America/New_York",
+                                                    "Asia/Dhaka",
+                                                    "Asia/Dubai",
+                                                    "Asia/Kolkata",
+                                                    "Europe/London",
+                                                    "Pacific/Auckland"
+                                                ].map(tz => (
+                                                    <SelectItem key={tz} value={tz} className="dark:text-gray-100">{tz}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-12 gap-4 pb-2 border-b border-gray-100 dark:border-gray-700">
                                             <div className="col-span-3 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Day</div>
@@ -690,7 +873,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         value={item.startTime}
                                                         onValueChange={(val) => handleTimelineChange(index, "startTime", val)}
                                                     >
-                                                        <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
+                                                        <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
                                                             <SelectValue placeholder="Start Time" />
                                                         </SelectTrigger>
                                                         <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -708,7 +891,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         value={item.endTime}
                                                         onValueChange={(val) => handleTimelineChange(index, "endTime", val)}
                                                     >
-                                                        <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
+                                                        <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
                                                             <SelectValue placeholder="End Time" />
                                                         </SelectTrigger>
                                                         <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -739,7 +922,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Job Ad Status for Calling</Label>
                                             <Select value={jobAdStatus} onValueChange={handleSelectChange(setJobAdStatus)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -753,7 +936,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Application Status for Calling</Label>
                                             <Select value={applicationStatus} onValueChange={handleSelectChange(setApplicationStatus)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -766,7 +949,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Calling Time After Status Update</Label>
                                             <Select value={callingTime} onValueChange={handleSelectChange(setCallingTime)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select time" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -779,7 +962,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status When Call is Placed</Label>
                                             <Select value={placedStatus} onValueChange={handleSelectChange(setPlacedStatus)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -792,7 +975,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status for Successful Call</Label>
                                             <Select value={successfulStatus} onValueChange={handleSelectChange(setSuccessfulStatus)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -805,7 +988,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status for Unsuccessful Call</Label>
                                             <Select value={unsuccessfulStatus} onValueChange={handleSelectChange(setUnsuccessfulStatus)}>
-                                                <SelectTrigger className="h-12 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -817,18 +1000,100 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     </div>
                                 </Card> */}
                             </div>
-                            <Card className="lg:col-span-2 p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
-                                                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                                                                    Please create the following 4 statuses in your ATS/CRM under the Job Application's Status creation section (if they are not already present):
-                                                                </p>
-                                                                <ul className="mt-4 space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside">
-                                                                    <li>Applied</li>
-                                                                    <li>AI Call - No Reply</li>
-                                                                    <li>AI Call - Link Sent</li>
-                                                                    <li>Unsuccessful</li>
-                                                                </ul>
-                                                            </Card>
+                            <Card className="lg:col-span-2 p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                <div className="flex flex-col md:flex-col justify-between gap-6">
+                                    <h2 className="text-xl font-bold text-[#1e293b] dark:text-gray-100 whitespace-nowrap">AI Call Flow</h2>
+                                    <div className="flex flex-wrap items-center gap-y-4 gap-x-2 text-sm font-semibold text-[#334155] dark:text-gray-300">
+                                        <span>Intro</span>
+                                        <span className="text-gray-400">→</span>
+                                        <span>Right to Work</span>
+                                        <span className="text-gray-400">→</span>
+                                        <span>Job Requirements</span>
+                                        <span className="text-gray-400">→</span>
+                                        <span>Experience</span>
+                                        <span className="text-gray-400">→</span>
+                                        <span>Qualifications</span>
+                                        <span className="text-gray-400">→</span>
+                                        <span>Shift/Days/Time/Duration</span>
+                                        <span className="text-gray-400">→</span>
+                                        <span>Travel/Commute</span>
+                                        <span className="text-gray-400">→</span>
+                                        <span>Ending</span>
+                                        {/* <span className="text-gray-400">→</span>
+                                        <Link href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Text Link</Link> */}
+                                    </div>
+                                </div>
+                            </Card>
+
+                            <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">AI Call Additional Questions <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Optional)</span></h2>
+                                    <div className="space-y-3">
+                                        {[
+                                            "When are you available to start?",
+                                            "Are you available to work weekends?",
+                                            "Are you willing to travel if required?"
+                                        ].map((defaultQuestion, idx) => (
+                                            <div key={idx} className="flex gap-3">
+                                                <Input
+                                                    disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx || addedQuestions.includes(idx)}
+                                                    value={additionalQuestions[idx]}
+                                                    onChange={(e) => {
+                                                        const newQuestions = [...additionalQuestions]
+                                                        newQuestions[idx] = e.target.value
+                                                        setAdditionalQuestions(newQuestions)
+                                                    }}
+                                                    placeholder={defaultQuestion}
+                                                    className={`flex-1 px-4 h-8 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-[#334155] dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${addedQuestions.includes(idx) ? "border-green-500 bg-green-50/20 dark:bg-green-500/10" : ""}`}
+                                                />
+                                                <Button
+                                                    onClick={() => {
+                                                        setDeletingIdx(idx)
+                                                        setShowDeleteConfirm(true)
+                                                    }}
+                                                    disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx}
+                                                    className="h-8 px-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Delete Question"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    onClick={() => handleAddAdditionalQuestion(additionalQuestions[idx], idx)}
+                                                    disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx || addedQuestions.includes(idx)}
+                                                    className="h-8 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                                >
+                                                    {addingQuestionIdx === idx ? "Adding..." : addedQuestions.includes(idx) ? "Added" : "Add"}
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+
+                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-xl font-bold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">Job Description Requirement</h2>
+                                    <div className="space-y-4">
+                                        <p className="text-[#475569] dark:text-gray-400 font-medium">Advert must include a section titled:</p>
+                                        <p className="text-lg font-bold text-[#1e293b] dark:text-gray-100 -mt-4">Job Requirements</p>
+                                        <div className="space-y-2">
+                                            <p className="text-[#475569] dark:text-gray-400 font-medium">Each requirement must start with:</p>
+                                            <p className="text-lg font-bold text-[#1e293b] dark:text-gray-100">* Must have</p>
+                                        </div>
+                                    </div>
+                                </Card>
+                            </div>
+
+                            <Card className="lg:col-span-2 p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                                    Please create the following 4 statuses in your ATS/CRM under the Job Application's Status creation section (if they are not already present):
+                                </p>
+                                <ul className="mt-4 space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside">
+                                    <li>Applied</li>
+                                    <li>AI Call - No Reply</li>
+                                    <li>AI Call - Link Sent</li>
+                                    <li>Unsuccessful</li>
+                                </ul>
+                            </Card>
                         </>
 
                     )}
@@ -841,7 +1106,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             size="lg"
                             onClick={handleSaveConfiguration}
                             disabled={isSaving}
-                            className="h-14 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                            className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
                         >
                             {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
                         </Button>
@@ -852,7 +1117,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     size="lg"
                                     onClick={handleSaveConfiguration}
                                     disabled={isSaving}
-                                    className="h-14 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                    className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
                                 >
                                     {isSaving ? "Activating..." : "Active Now"}
                                 </Button>
@@ -862,7 +1127,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <Button
                                             size="lg"
                                             onClick={() => setIsEditing(true)}
-                                            className="h-14 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                            className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
                                         >
                                             Edit Configure
                                         </Button>
@@ -871,7 +1136,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             size="lg"
                                             onClick={handleSaveConfiguration}
                                             disabled={isSaving}
-                                            className="h-14 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                            className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
                                         >
                                             {isSaving ? "Updating..." : "Update Configure"}
                                         </Button>
@@ -880,7 +1145,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         size="lg"
                                         variant="outline"
                                         onClick={() => setShowReleaseDialog(true)}
-                                        className="h-14 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                        className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
                                     >
                                         Release Flow
                                     </Button>
@@ -933,6 +1198,28 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         >
                             Release Flow
                         </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            {/* Question Delete Confirmation */}
+            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <AlertDialogContent className="dark:bg-gray-800 dark:border-gray-700">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-gray-900 dark:text-gray-100">Delete Question?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-500 dark:text-gray-400">
+                            Are you sure you want to delete this specific question? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)} className="dark:text-gray-300 dark:hover:bg-gray-700">
+                            Cancel
+                        </Button>
+                        <AlertDialogAction
+                            onClick={handleDeleteAdditionalQuestion}
+                            className="bg-red-600 hover:bg-red-700 text-white border-none"
+                        >
+                            Delete
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

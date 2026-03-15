@@ -16,8 +16,10 @@ import {
 import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
 import countriesData from "@/lib/countries.json";
 import { toast } from "sonner";
+import { paymentService } from "@/services/payment-service";
 import {
     AlertDialog,
+
     AlertDialogAction,
     AlertDialogContent,
     AlertDialogDescription,
@@ -151,6 +153,8 @@ export function DashboardContent() {
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectedPmForDelete, setSelectedPmForDelete] = useState<any>(null);
+    const [isContactSalesSubmitting, setIsContactSalesSubmitting] = useState(false);
+
 
     const fetchOrgData = async () => {
         try {
@@ -773,6 +777,25 @@ export function DashboardContent() {
             setIsUpdateSubmitting(false);
         }
     };
+
+    const handleContactSales = async () => {
+        setIsContactSalesSubmitting(true);
+        setErrorDetail(null);
+        try {
+            const response = await paymentService.requestCustomSubscription();
+            if (response.status === 200 || response.status === 201) {
+                setSuccessDetail(response.data.detail || "Your request for a custom subscription has been sent. Our team will contact you soon.");
+            } else {
+                setErrorDetail(response.data.detail || "Failed to send request. Please try again later.");
+            }
+        } catch (err: any) {
+            console.error("Contact sales error:", err);
+            setErrorDetail(err.response?.data?.detail || "An error occurred while sending the request. Please try again later.");
+        } finally {
+            setIsContactSalesSubmitting(false);
+        }
+    };
+
 
     return (
         <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
@@ -1464,10 +1487,11 @@ export function DashboardContent() {
                                             }}
                                             className={[
                                                 "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
-                                                tier.disabled ? "opacity-50 cursor-not-allowed grayscale" : "",
+                                                tier.disabled ? (tier.name === "Enterprise" ? "opacity-80 grayscale-[0.3]" : "opacity-50 cursor-not-allowed grayscale") : "",
                                                 isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
                                                 !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
                                             ].join(" ")}
+
                                         >
                                             {tier.popular && !isSelected && (
                                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -1506,7 +1530,22 @@ export function DashboardContent() {
                                                     </li>
                                                 ))}
                                             </ul>
+
+                                            {tier.name === "Enterprise" && (
+                                                <Button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleContactSales();
+                                                    }}
+                                                    disabled={isContactSalesSubmitting}
+                                                    className="w-full bg-[#1a1c1e] hover:bg-black text-white py-3 rounded-xl font-bold transition-all dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2"
+                                                >
+                                                    {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                    {tier.cta}
+                                                </Button>
+                                            )}
                                         </div>
+
                                     );
                                 })}
                             </div>
