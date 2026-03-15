@@ -817,10 +817,10 @@ export function DashboardContent() {
 
                         <div className="relative space-y-6">
                             {[
-                                { label: 'Account created', key: 'is_given_company_details', path: '' },
-                                { label: 'Business details', key: 'is_given_company_details', path: '' },
-                                { label: 'Purchase a Phone number', key: '', path: '/dashboard/phone-numbers' },
-                                { label: 'One time Development Fee', key: '', path: '' },
+                                { label: 'Account Created', key: 'is_given_company_details', path: '' },
+                                { label: 'Add Business Details', key: 'is_given_company_details', path: '' },
+                                { label: 'Buy AI Number', key: '', path: '/dashboard/phone-numbers' },
+                                { label: 'Pay Setup Fee (refunded after 12 months)', key: '', path: '' },
                                 { label: 'Choose Plan', key: '', path: '' },
                                 { label: 'AI Call Builder', key: '', path: '' }
                             ].map((option, idx) => {

@@ -30,7 +30,7 @@ const helpSections = [
         icon: Link2,
         faqs: [
             { q: "How do I connect my ATS to Callpilot?", a: "Navigate to Settings → Integrations, select your ATS provider from the list, and follow the OAuth authentication flow. Most connections are established in under 2 minutes." },
-            { q: "Which ATS platforms are supported?", a: "We currently support Greenhouse, Lever, Workday, BambooHR, iCIMS, JazzHR, and Bullhorn. More integrations are added quarterly." },
+            { q: "Which ATS platforms are supported?", a: "CallPilot integrates with all major ATS and CRM platforms through our flexible API. If your system supports API access, integration can be configured quickly." },
             { q: "My ATS sync is failing. What should I do?", a: "First, check that your API credentials are still valid. Go to Settings → Integrations → your ATS and click 'Re-authenticate'. If the issue persists, check that the required scopes/permissions are enabled on your ATS side." },
             { q: "How often does data sync between my ATS and Callpilot?", a: "Data syncs automatically every 15 minutes. You can also trigger a manual sync from the Integrations page by clicking the refresh icon." },
         ],
@@ -40,7 +40,7 @@ const helpSections = [
         icon: Phone,
         faqs: [
             { q: "How do I get an AI phone number?", a: "Go to Phone Numbers → Add Number. Choose your preferred area code and country, then click 'Provision'. Your new AI number will be active within seconds." },
-            { q: "Can I port my existing phone number?", a: "Yes! Contact our support team with your current carrier details and we'll handle the porting process, which typically takes 5–10 business days." },
+            { q: "Can I port my existing phone number?", a: "Yes. Existing AI phone numbers can usually be ported to CallPilot. Contact support to begin the transfer process." },
             { q: "How many AI phone numbers can I have?", a: "This depends on your plan. Starter plans include 2 numbers, Pro plans include 10, and Enterprise plans offer unlimited numbers." },
             { q: "What happens when someone calls my AI number?", a: "The AI agent answers using your configured greeting and script. It can qualify leads, schedule meetings, answer FAQs, and transfer to a human agent when needed." },
         ],
