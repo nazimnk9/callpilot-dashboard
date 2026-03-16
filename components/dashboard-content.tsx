@@ -822,7 +822,7 @@ export function DashboardContent() {
                                 { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
                                 { label: 'Pay Setup Fee (refunded after 12 months)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
                                 { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
-                                { label: 'AI Call Builder', key: '', path: '' }
+                                { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/ai-call-flow-options' }
                             ].map((option, idx) => {
                                 const isCompleted = orgData?.[option.key] === true || option.key === 'account_created';
                                 return (
