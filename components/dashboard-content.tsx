@@ -615,11 +615,27 @@ export function DashboardContent() {
             bgColor: 'bg-purple-50 dark:bg-purple-900/20',
         },
     ];
+    const getTimeAgo = (dateString: string) => {
+        if (!dateString) return "";
+        const now = new Date();
+        const past = new Date(dateString);
+        const diffInMs = now.getTime() - past.getTime();
+        const diffInSecs = Math.floor(diffInMs / 1000);
+        const diffInMins = Math.floor(diffInSecs / 60);
+        const diffInHours = Math.floor(diffInMins / 60);
+        const diffInDays = Math.floor(diffInHours / 24);
+
+        if (diffInSecs < 60) return `${diffInSecs} seconds ago`;
+        if (diffInMins < 60) return `${diffInMins} minutes ago`;
+        if (diffInHours < 24) return `${diffInHours} hours ago`;
+        return `${diffInDays} days ago`;
+    };
+
     const cardss = [
         {
-            title: 'Last System check: 10 seconds ago',
+            title: orgData?.last_system_checked ? `Last System check: ${getTimeAgo(orgData.last_system_checked)}` : 'Last System check',
             value: 'AI Call Status',
-            icon: (props: any) => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
+            icon: (props: any) => <div className={`h-5 w-5 rounded-full ${orgData?.is_call_active ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />,
             iconColor: 'text-blue-600 dark:text-blue-400',
             bgColor: 'bg-blue-50 dark:bg-blue-900/20',
         },
@@ -628,20 +644,20 @@ export function DashboardContent() {
             value: (
                 <div className="flex gap-6 mt-2">
                     <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <div className={`h-2 w-2 rounded-full ${orgData?.is_voice_api_working ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
                         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Voice API</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    {/* <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 rounded-full ${orgData?.is_any_flow_connected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
                         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Call Trigger</span>
-                    </div>
+                    </div> */}
                     <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <div className={`h-2 w-2 rounded-full ${orgData?.is_queue_working ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
                         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Queue</span>
                     </div>
                 </div>
             ) as any,
-            icon: (props: any) => <div className="h-5 w-5 rounded-full bg-green-500 animate-pulse" />,
+            icon: (props: any) => <div className={`h-5 w-5 rounded-full ${orgData?.is_voice_api_working && orgData?.is_queue_working ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />,
             iconColor: 'text-purple-600 dark:text-purple-400',
             bgColor: 'bg-purple-50 dark:bg-purple-900/20',
         },

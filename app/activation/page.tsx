@@ -37,7 +37,7 @@ export default function ActivationPage() {
         country: "",
         reg_number: "",
         vat_number: "",
-        billing_contact: "",
+        state: "",
         billing_contact_name: "",
         billing_email_address: ""
     });
@@ -58,7 +58,7 @@ export default function ActivationPage() {
     const [countrySearch, setCountrySearch] = useState("");
     const [isCountryOpen, setIsCountryOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const [countries] = useState<{ country: string, country_code: string }[]>(countriesData);
+    const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -133,7 +133,7 @@ export default function ActivationPage() {
                 country: data.country || "",
                 reg_number: data.reg_number || "",
                 vat_number: data.vat_number || "",
-                billing_contact: data.billing_contact || "",
+                state: data.state || "",
                 billing_contact_name: data.billing_contact_name || "",
                 billing_email_address: data.billing_email_address || ""
             };
@@ -161,7 +161,7 @@ export default function ActivationPage() {
         if (org.country !== initialOrg.country) payload.country = org.country;
         if (org.reg_number !== initialOrg.reg_number) payload.reg_number = org.reg_number;
         if (org.vat_number !== initialOrg.vat_number) payload.vat_number = org.vat_number;
-        if (org.billing_contact !== initialOrg.billing_contact) payload.billing_contact = org.billing_contact;
+        if (org.state !== initialOrg.state) payload.state = org.state;
         if (org.billing_contact_name !== initialOrg.billing_contact_name) payload.billing_contact_name = org.billing_contact_name;
         if (org.billing_email_address !== initialOrg.billing_email_address) payload.billing_email_address = org.billing_email_address;
 
@@ -182,7 +182,7 @@ export default function ActivationPage() {
                 country: response.data.country || org.country,
                 reg_number: response.data.reg_number || org.reg_number,
                 vat_number: response.data.vat_number || org.vat_number,
-                billing_contact: response.data.billing_contact || org.billing_contact,
+                state: response.data.state || org.state,
                 billing_contact_name: response.data.billing_contact_name || org.billing_contact_name,
                 billing_email_address: response.data.billing_email_address || org.billing_email_address
             };
@@ -230,7 +230,8 @@ export default function ActivationPage() {
 
     const filteredCountries = countries.filter(c =>
         c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-        c.country_code.toLowerCase().includes(countrySearch.toLowerCase())
+        c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
+        c.phone_code.includes(countrySearch)
     );
 
     return (
@@ -354,6 +355,14 @@ export default function ActivationPage() {
                                 />
                             </div>
                             <div className="space-y-2">
+                                <Label htmlFor="state" className="text-sm font-semibold">State</Label>
+                                <Input
+                                    id="state"
+                                    value={org.state}
+                                    onChange={(e) => setOrg({ ...org, state: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
                                 <Label htmlFor="post_code" className="text-sm font-semibold">Post Code</Label>
                                 <Input
                                     id="post_code"
@@ -361,6 +370,7 @@ export default function ActivationPage() {
                                     onChange={(e) => setOrg({ ...org, post_code: e.target.value })}
                                 />
                             </div>
+
 
                             <div className="space-y-2">
                                 <Label className="text-sm font-semibold">Country</Label>
@@ -402,7 +412,13 @@ export default function ActivationPage() {
                                                             }}
                                                             className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
                                                         >
-                                                            <span>{c.country}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{c.country_code}</span>
+                                                                {c.phone_code && (
+                                                                    <span className="text-gray-400 dark:text-gray-500 font-normal text-xs ml-auto">+{c.phone_code}</span>
+                                                                )}
+                                                                <span>{c.country}</span>
+                                                            </div>
                                                             {org.country === c.country && (
                                                                 <Check size={14} className="text-primary" />
                                                             )}
@@ -433,14 +449,6 @@ export default function ActivationPage() {
                                     id="vat_number"
                                     value={org.vat_number}
                                     onChange={(e) => setOrg({ ...org, vat_number: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="billing_contact" className="text-sm font-semibold">Billing Contact</Label>
-                                <Input
-                                    id="billing_contact"
-                                    value={org.billing_contact}
-                                    onChange={(e) => setOrg({ ...org, billing_contact: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
