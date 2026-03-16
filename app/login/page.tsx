@@ -17,6 +17,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { authService, cookieUtils } from "@/services/auth-service";
+import { profileService } from "@/services/profile-service";
 
 export default function SignInPage() {
     const router = useRouter();
@@ -55,7 +56,12 @@ export default function SignInPage() {
             const verifyRes = await authService.verifyToken(accessToken);
 
             if (verifyRes.ok) {
-                router.push("/dashboard");
+                const statusRes = await profileService.getPlatformStatus();
+                if (statusRes.data.is_given_company_details) {
+                    router.push("/dashboard");
+                } else {
+                    router.push("/activation");
+                }
                 return;
             }
 
@@ -67,7 +73,7 @@ export default function SignInPage() {
                     const refreshData = await refreshRes.json();
                     cookieUtils.set("access", refreshData.access, 7);
                     cookieUtils.set("refresh", refreshData.refresh, 7);
-                    router.push("/dashboard");
+                    router.push("/activation");
                 } else {
                     setStep("login");
                     cookieUtils.set("access", "", -1);
@@ -98,7 +104,13 @@ export default function SignInPage() {
                     // Directly login if OTP is not required
                     cookieUtils.set("access", data.access, 7);
                     cookieUtils.set("refresh", data.refresh, 7);
-                    router.push("/dashboard");
+
+                    const statusRes = await profileService.getPlatformStatus();
+                    if (statusRes.data.is_given_company_details) {
+                        router.push("/dashboard");
+                    } else {
+                        router.push("/activation");
+                    }
                 }
             } else {
                 let errorMsg = "Something went wrong. Please try again.";

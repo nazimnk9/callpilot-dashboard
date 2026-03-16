@@ -19,5 +19,10 @@ api.interceptors.request.use((config) => {
 export const paymentService = {
     async requestCustomSubscription() {
         return api.post("/payment/custom_subscription/request");
+    },
+    async activatePlatform(paymentMethodId: string) {
+        return api.post("/payment/initial", {
+            payment_method_id: paymentMethodId
+        });
     }
 };

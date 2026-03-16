@@ -817,14 +817,14 @@ export function DashboardContent() {
 
                         <div className="relative space-y-6">
                             {[
-                                { label: 'Account Created', key: 'is_given_company_details', path: '' },
-                                { label: 'Add Business Details', key: 'is_given_company_details', path: '' },
-                                { label: 'Buy AI Number', key: '', path: '/dashboard/phone-numbers' },
-                                { label: 'Pay Setup Fee (refunded after 12 months)', key: '', path: '' },
-                                { label: 'Choose Plan', key: '', path: '' },
+                                { label: 'Account Created', key: 'account_created', path: '' },
+                                { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
+                                { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
+                                { label: 'Pay Setup Fee (refunded after 12 months)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
+                                { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
                                 { label: 'AI Call Builder', key: '', path: '' }
                             ].map((option, idx) => {
-                                const isCompleted = orgData?.[option.key] === true;
+                                const isCompleted = orgData?.[option.key] === true || option.key === 'account_created';
                                 return (
                                     <div
                                         key={idx}

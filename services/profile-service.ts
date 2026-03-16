@@ -70,5 +70,9 @@ export const profileService = {
         return api.get(`/organizations/support_ticket/media/${uid}/download`, {
             responseType: 'blob'
         });
+    },
+
+    async getPlatformStatus() {
+        return api.get("/organizations/platform-status");
     }
 };

@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/sidebar"
 import { Topbar } from "@/components/topbar"
 import { ProfileContent } from "@/components/profile-content"
 import { authService, cookieUtils } from "@/services/auth-service"
+import { profileService } from "@/services/profile-service";
 
 export default function ProfilePage() {
     const router = useRouter()
@@ -24,7 +25,13 @@ export default function ProfilePage() {
             }
 
             const verifyRes = await authService.verifyToken(accessToken)
-            if (!verifyRes.ok) {
+            if (verifyRes.ok) {
+                const statusRes = await profileService.getPlatformStatus();
+                if (!statusRes.data.is_given_company_details) {
+                    router.push("/activation");
+                    return;
+                }
+            } else {
                 const refreshRes = await authService.refreshToken(refreshToken)
                 if (!refreshRes.ok) {
                     router.push("/login")
@@ -33,6 +40,12 @@ export default function ProfilePage() {
                 const data = await refreshRes.json();
                 cookieUtils.set('access', data.access, 7);
                 cookieUtils.set('refresh', data.refresh, 7);
+
+                const statusRes = await profileService.getPlatformStatus();
+                if (!statusRes.data.is_given_company_details) {
+                    router.push("/activation");
+                    return;
+                }
             }
             setIsLoading(false)
         }

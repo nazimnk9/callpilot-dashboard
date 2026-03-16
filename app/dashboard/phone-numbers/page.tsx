@@ -6,6 +6,7 @@ import { Topbar } from '@/components/topbar';
 import { Sidebar } from '@/components/sidebar';
 import { PhoneNumbersContent } from '@/components/phone-numbers-content';
 import { authService, cookieUtils } from '@/services/auth-service';
+import { profileService } from '@/services/profile-service';
 
 export default function PhoneNumbersPage() {
     const router = useRouter();
@@ -26,6 +27,11 @@ export default function PhoneNumbersPage() {
             try {
                 const verifyRes = await authService.verifyToken(accessToken);
                 if (verifyRes.ok) {
+                    const statusRes = await profileService.getPlatformStatus();
+                    if (!statusRes.data.is_given_company_details) {
+                        router.push('/activation');
+                        return;
+                    }
                     setIsAuthenticated(true);
                 } else {
                     // Try refresh
@@ -34,6 +40,12 @@ export default function PhoneNumbersPage() {
                         const data = await refreshRes.json();
                         cookieUtils.set('access', data.access, 7);
                         cookieUtils.set('refresh', data.refresh, 7);
+
+                        const statusRes = await profileService.getPlatformStatus();
+                        if (!statusRes.data.is_given_company_details) {
+                            router.push('/activation');
+                            return;
+                        }
                         setIsAuthenticated(true);
                     } else {
                         router.push('/login');
