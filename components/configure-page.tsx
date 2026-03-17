@@ -115,7 +115,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [endCallNegative, setEndCallNegative] = useState("false")
     const [restaurantName, setRestaurantName] = useState("")
     const [assistantName, setAssistantName] = useState("")
-    const [timezone, setTimezone] = useState("Africa/Abidjan")
+    const [timezone, setTimezone] = useState("Europe/London")
     const [addingQuestionIdx, setAddingQuestionIdx] = useState<number | null>(null)
     const [addedQuestions, setAddedQuestions] = useState<number[]>([])
     const [additionalQuestions, setAdditionalQuestions] = useState<string[]>(["", "", ""])
@@ -763,6 +763,31 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             />
                                         </div>
+                                        <div className="mb-6 space-y-2">
+                                        <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
+                                        <Select disabled={isUpdateMode && !isEditing} value={timezone} onValueChange={setTimezone}>
+                                            <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectValue placeholder="Select Time Zone" />
+                                            </SelectTrigger>
+                                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                {[
+                                                    "Africa/Abidjan",
+                                                    "Africa/Accra",
+                                                    "Africa/Addis_Ababa",
+                                                    "Africa/Algiers",
+                                                    "America/Anchorage",
+                                                    "America/New_York",
+                                                    "Asia/Dhaka",
+                                                    "Asia/Dubai",
+                                                    "Asia/Kolkata",
+                                                    "Europe/London",
+                                                    "Pacific/Auckland"
+                                                ].map(tz => (
+                                                    <SelectItem key={tz} value={tz} className="dark:text-gray-100">{tz}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                     </div>
                                 </Card>
 
@@ -826,32 +851,6 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 <span className="text-xs font-bold uppercase tracking-wider">Running</span>
                                             </div>
                                         )}
-                                    </div>
-
-                                    <div className="mb-6 space-y-2">
-                                        <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
-                                        <Select disabled={isUpdateMode && !isEditing} value={timezone} onValueChange={setTimezone}>
-                                            <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                <SelectValue placeholder="Select Time Zone" />
-                                            </SelectTrigger>
-                                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                {[
-                                                    "Africa/Abidjan",
-                                                    "Africa/Accra",
-                                                    "Africa/Addis_Ababa",
-                                                    "Africa/Algiers",
-                                                    "America/Anchorage",
-                                                    "America/New_York",
-                                                    "Asia/Dhaka",
-                                                    "Asia/Dubai",
-                                                    "Asia/Kolkata",
-                                                    "Europe/London",
-                                                    "Pacific/Auckland"
-                                                ].map(tz => (
-                                                    <SelectItem key={tz} value={tz} className="dark:text-gray-100">{tz}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
                                     </div>
 
                                     <div className="space-y-4">

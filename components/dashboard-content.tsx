@@ -836,7 +836,7 @@ export function DashboardContent() {
                                 { label: 'Account Created', key: 'account_created', path: '' },
                                 { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
                                 { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
-                                { label: 'Pay Setup Fee (refunded after 12 months)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
+                                { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
                                 { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
                                 { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/ai-call-flow-options' }
                             ].map((option, idx) => {

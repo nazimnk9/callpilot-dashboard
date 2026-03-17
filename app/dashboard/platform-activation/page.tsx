@@ -65,7 +65,7 @@ export default function PlatformActivationPage() {
     const [isCountryOpen, setIsCountryOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+   useEffect(() => {
         const checkAuth = async () => {
             const accessToken = cookieUtils.get('access');
             const refreshToken = cookieUtils.get('refresh');
@@ -79,14 +79,8 @@ export default function PlatformActivationPage() {
                 const verifyRes = await authService.verifyToken(accessToken);
                 if (verifyRes.ok) {
                     const statusRes = await profileService.getPlatformStatus();
-                    // is_given_company_details is false -> show activation page
                     if (!statusRes.data.is_given_company_details) {
                         router.push('/activation');
-                        return;
-                    }
-                    // is_given_company_details is true -> do not access this page, redirect to dashboard
-                    if (statusRes.data.is_given_company_details) {
-                        router.push('/dashboard');
                         return;
                     }
                     setIsAuthenticated(true);
@@ -99,14 +93,8 @@ export default function PlatformActivationPage() {
                         cookieUtils.set('refresh', data.refresh, 7);
 
                         const statusRes = await profileService.getPlatformStatus();
-                        // is_given_company_details is false -> show activation page
                         if (!statusRes.data.is_given_company_details) {
                             router.push('/activation');
-                            return;
-                        }
-                        // is_given_company_details is true -> do not access this page, redirect to dashboard
-                        if (statusRes.data.is_given_company_details) {
-                            router.push('/dashboard');
                             return;
                         }
                         setIsAuthenticated(true);
@@ -121,7 +109,6 @@ export default function PlatformActivationPage() {
 
         checkAuth();
     }, [router]);
-
     useEffect(() => {
         // Check if viewport is tablet or larger (768px+)
         const checkViewport = () => {
@@ -137,6 +124,8 @@ export default function PlatformActivationPage() {
         window.addEventListener('resize', checkViewport);
         return () => window.removeEventListener('resize', checkViewport);
     }, []);
+
+    const [isPlatformActivated, setIsPlatformActivated] = useState<boolean | null>(null);
 
     const fetchPaymentMethods = async () => {
         try {
@@ -165,6 +154,30 @@ export default function PlatformActivationPage() {
 
     useEffect(() => {
         if (isAuthenticated) {
+            const fetchOrgStatus = async () => {
+                try {
+                    const token = cookieUtils.get("access");
+                    const response = await fetch(`${BASE_URL}/organizations/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.is_platform_activated) {
+                            router.push('/dashboard');
+                        } else {
+                            setIsPlatformActivated(false);
+                        }
+                    } else {
+                        setIsPlatformActivated(false);
+                    }
+                } catch (err) {
+                    setIsPlatformActivated(false);
+                }
+            };
+
+            fetchOrgStatus();
             fetchPaymentMethods();
             const initStripe = async () => {
                 const stripeInstance = await loadStripe('pk_test_51T28pm7kECw44sgCk3RxtMKst01YwUY02L1R93SaiJVPHloYcnWAar0NytN5TcduerTeWbS1yRa0hJehyB7N2JSC00WWO8y9aa');
@@ -172,7 +185,7 @@ export default function PlatformActivationPage() {
             };
             initStripe();
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, router]);
 
     useEffect(() => {
         if (isAddPaymentOpen && stripe && !cardNumberRef.current) {
@@ -296,7 +309,7 @@ export default function PlatformActivationPage() {
         }
     };
 
-    if (isAuthenticated === null) {
+    if (isAuthenticated === null || isPlatformActivated === null) {
         return (
             <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100" />
