@@ -337,9 +337,10 @@ export default function PlatformActivationPage() {
                     <div className="max-w-2xl mx-auto">
                         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm space-y-8">
                             <div className="space-y-2">
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Activation Platform</h1>
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Platform Activation</h1>
                                 <p className="text-gray-500 dark:text-gray-400 text-[15px]">
-                                    To fully activate your platform and start making calls, a one-off setup fee is required. This fee will be returned as free minutes after 12 months.
+                                    To enable your AI Call and start engaging applicants, a one-off setup fee is required.
+                                    This fee is credited back as free calling minutes after 12 months.
                                 </p>
                             </div>
 
@@ -352,7 +353,7 @@ export default function PlatformActivationPage() {
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                        Payment method
+                                        Payment Method
                                     </label>
                                     <div className="relative">
                                         <div
@@ -431,7 +432,7 @@ export default function PlatformActivationPage() {
                                 className="w-full bg-black hover:bg-black/90 text-white rounded-xl py-6 text-lg font-bold"
                             >
                                 {isLoading && <Loader2 className="w-5 h-5 animate-spin mr-2" />}
-                                Activate Platform
+                                Activate AI Call
                             </Button>
                         </div>
                     </div>

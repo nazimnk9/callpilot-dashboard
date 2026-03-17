@@ -111,7 +111,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     // Form Field States
     const [phoneNumberUid, setPhoneNumberUid] = useState("")
     const [platformUid, setPlatformUid] = useState("")
-    const [voiceId, setVoiceId] = useState("")
+    const [voiceId, setVoiceId] = useState("jRAAK67SEFE9m7ci5DhD")
     const [endCallNegative, setEndCallNegative] = useState("false")
     const [restaurantName, setRestaurantName] = useState("")
     const [assistantName, setAssistantName] = useState("")
@@ -678,6 +678,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 placeholder="Enter Voice ID"
                                                 className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             />
+                                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                <a href="https://elevenlabs.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Choose Another One</a>
+                                            </p>
                                         </div>
                                     </div>
                                 </Card>
@@ -762,32 +765,35 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 placeholder="Enter Voice ID"
                                                 className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                             />
+                                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                <a href="https://elevenlabs.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Choose Another One</a>
+                                            </p>
                                         </div>
                                         <div className="mb-6 space-y-2">
-                                        <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
-                                        <Select disabled={isUpdateMode && !isEditing} value={timezone} onValueChange={setTimezone}>
-                                            <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                <SelectValue placeholder="Select Time Zone" />
-                                            </SelectTrigger>
-                                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                {[
-                                                    "Africa/Abidjan",
-                                                    "Africa/Accra",
-                                                    "Africa/Addis_Ababa",
-                                                    "Africa/Algiers",
-                                                    "America/Anchorage",
-                                                    "America/New_York",
-                                                    "Asia/Dhaka",
-                                                    "Asia/Dubai",
-                                                    "Asia/Kolkata",
-                                                    "Europe/London",
-                                                    "Pacific/Auckland"
-                                                ].map(tz => (
-                                                    <SelectItem key={tz} value={tz} className="dark:text-gray-100">{tz}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
+                                            <Select disabled={isUpdateMode && !isEditing} value={timezone} onValueChange={setTimezone}>
+                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select Time Zone" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    {[
+                                                        "Africa/Abidjan",
+                                                        "Africa/Accra",
+                                                        "Africa/Addis_Ababa",
+                                                        "Africa/Algiers",
+                                                        "America/Anchorage",
+                                                        "America/New_York",
+                                                        "Asia/Dhaka",
+                                                        "Asia/Dubai",
+                                                        "Asia/Kolkata",
+                                                        "Europe/London",
+                                                        "Pacific/Auckland"
+                                                    ].map(tz => (
+                                                        <SelectItem key={tz} value={tz} className="dark:text-gray-100">{tz}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 </Card>
 
@@ -854,7 +860,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="grid grid-cols-12 gap-4 pb-2 border-b border-gray-100 dark:border-gray-700">
+                                        <div className="grid grid-cols-12 gap-2 pb-1 border-b border-gray-100 dark:border-gray-700">
                                             <div className="col-span-3 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Day</div>
                                             <div className="col-span-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Start Time</div>
                                             <div className="col-span-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">End Time</div>
@@ -862,7 +868,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
 
                                         {timeline.map((item, index) => (
-                                            <div key={item.day} className="grid grid-cols-12 gap-4 items-center">
+                                            <div key={item.day} className="grid grid-cols-12 gap-2 items-center">
                                                 <div className="col-span-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                                                     {item.day}
                                                 </div>
@@ -1118,7 +1124,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     disabled={isSaving}
                                     className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
                                 >
-                                    {isSaving ? "Activating..." : "Active Now"}
+                                    {isSaving ? "Activating..." : "Activate AI Call"}
                                 </Button>
                             ) : (
                                 <>
