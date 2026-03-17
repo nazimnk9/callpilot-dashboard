@@ -778,7 +778,7 @@ export function BillingContent() {
                                         <span className="text-[12px] font-bold uppercase tracking-wider">Current Plan</span>
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                                             {orgData?.current_plan || "No Active Plan"}
                                         </h3>
                                         {/* {orgData?.current_plan && (
@@ -809,7 +809,7 @@ export function BillingContent() {
                                         <div className="space-y-1">
                                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Remaining</p>
                                             <div className="flex items-baseline gap-2">
-                                                <span className="text-4xl font-black text-gray-900 dark:text-gray-100 tabular-nums leading-none">
+                                                <span className="text-4xl font-black text-gray-900 dark:text-gray-100 tabular-nums leading-none font-bold">
                                                     {orgData?.wallet_minutes?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
                                                 </span>
                                                 <span className="text-lg font-bold text-gray-400">minutes</span>
@@ -1033,9 +1033,9 @@ export function BillingContent() {
                             <div className="flex items-start gap-4">
                                 <Info className="w-5 h-5 text-gray-400 mt-1 shrink-0" />
                                 <div className="space-y-1">
-                                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Need help with billing?</p>
+                                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Need help with billing?</p>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                                        If you have questions about your plan or charges, please visit our <button className="text-gray-900 dark:text-gray-100 font-bold hover:underline decoration-2 underline-offset-4">Help Center</button> or <button className="text-gray-900 dark:text-gray-100 font-bold hover:underline decoration-2 underline-offset-4">Contact Support</button>.
+                                        If you have questions about your plan or charges, please visit our <a href="/dashboard/help" className="text-gray-900 dark:text-gray-100 font-bold hover:underline decoration-2 underline-offset-4">Help Center</a> or <a href="/dashboard/help/support-tickets" className="text-gray-900 dark:text-gray-100 font-bold hover:underline decoration-2 underline-offset-4">Contact Support</a>.
                                     </p>
                                 </div>
                             </div>
