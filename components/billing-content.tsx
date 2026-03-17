@@ -1044,7 +1044,7 @@ export function BillingContent() {
                 ) :
                     activeTab === "Billing history" ? (
                         <div className="space-y-3 pt-2">
-                            <p className="text-[15px] text-gray-500 dark:text-gray-400">
+                            <p className="text-[15px] text-gray-500 dark:text-gray-400 pb-2">
                                 Showing invoices within the past 12 months
                             </p>
                             <div className="overflow-x-auto">
