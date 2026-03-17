@@ -220,7 +220,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
             <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground mb-2">
-                        Report - {featureName}
+                        {featureName}
                     </h1>
                     <p className="text-muted-foreground">
                         {isDiner ? `View reservation records for the ${featureName}.` : `View automation interview records for the ${featureName}.`}
