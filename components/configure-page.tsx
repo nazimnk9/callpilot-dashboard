@@ -635,12 +635,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             />
 
             <div className="max-w-7xl mx-auto">
-                <div className="mb-8">
+                <div className="mb-5">
                     <div className="flex items-center gap-6 mb-2">
                         <button onClick={() => router.back()} className="h-8 w-8 -ml-2 cursor-pointer rounded-full transition-all duration-300 hover:scale-125 text-gray-900 dark:text-gray-100">
                             <ArrowLeft className="h-8 w-8" />
                         </button>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Configure – {featureName || "Loading..."}</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Configure – {featureName || "Loading..."}</h1>
                     </div>
                 </div>
 
