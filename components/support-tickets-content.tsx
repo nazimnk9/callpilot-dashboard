@@ -155,13 +155,13 @@ export function SupportTicketsContent() {
         <div className="flex-1 overflow-y-auto bg-[#F9FAFB] dark:bg-gray-950">
             <div className="max-w-[1100px] mx-auto py-10 px-4 sm:px-6 lg:px-8">
                 {/* Back Link */}
-                <button
+                {/* <button
                     onClick={() => router.push('/dashboard/help')}
                     className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors mb-6 text-sm font-medium group"
                 >
                     <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
                     Back to Help Center
-                </button>
+                </button> */}
 
                 {/* Header */}
                 <div className="flex items-start gap-4 mb-12">
@@ -169,7 +169,7 @@ export function SupportTicketsContent() {
                         <MessageSquare size={24} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Support Tickets</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Support Tickets</h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-1">View your ticket history or submit a new request</p>
                     </div>
                 </div>
@@ -177,7 +177,7 @@ export function SupportTicketsContent() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                     {/* Ticket History */}
                     <div className="lg:col-span-2 space-y-6">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Ticket History</h2>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Ticket History</h2>
                         <div className="space-y-4">
                             {isLoading ? (
                                 <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -238,12 +238,12 @@ export function SupportTicketsContent() {
 
                     {/* Sidebar Action */}
                     <div className="lg:col-span-1 space-y-6">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Need More Help?</h2>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Need More Help?</h2>
                         <Card className="bg-[#EBF2FF] dark:bg-blue-900/10 border-[#D6E6FF] dark:border-blue-800/30 p-8 min-w-[500px] text-center flex flex-col items-center">
                             <div className="w-14 h-14 rounded-full bg-blue-100/50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 border border-blue-200/50 dark:border-blue-700/30">
                                 <Send size={24} className="ml-0.5" />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">Write a New Ticket</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Write a New Ticket</h3>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
                                 Describe your issue and our support team will get back to you within 24 hours.
                             </p>
