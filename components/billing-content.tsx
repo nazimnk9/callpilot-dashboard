@@ -768,7 +768,7 @@ export function BillingContent() {
 
                 {/* Tab Content */}
                 {activeTab === "Overview" ? (
-                    <div className="space-y-8 pt-2">
+                    <div className="space-y-4 pt-2">
                         {/* Current Plan Card */}
                         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
