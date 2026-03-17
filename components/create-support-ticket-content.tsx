@@ -257,7 +257,7 @@ export function CreateSupportTicketContent() {
                         <MessageSquare size={24} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Ticket</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Create New Ticket</h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-1">Tell us about your issue and we'll help you out</p>
                     </div>
                 </div>
@@ -265,7 +265,7 @@ export function CreateSupportTicketContent() {
                 <Card className="p-8 border-gray-100 dark:border-gray-800 shadow-sm dark:bg-gray-900/50 rounded-2xl">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Subject */}
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                             <Label htmlFor="subject">Subject</Label>
                             <Input
                                 id="subject"
@@ -278,7 +278,7 @@ export function CreateSupportTicketContent() {
                         </div>
 
                         {/* Category */}
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                             <Label htmlFor="category">Category</Label>
                             <Select
                                 value={formData.category}
@@ -299,7 +299,7 @@ export function CreateSupportTicketContent() {
                         </div>
 
                         {/* Message */}
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                             <Label htmlFor="message">Message</Label>
                             <Textarea
                                 id="message"
@@ -312,7 +312,7 @@ export function CreateSupportTicketContent() {
                         </div>
 
                         {/* File Attachment */}
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             <Label>File Attachment (Optional)</Label>
 
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -354,7 +354,7 @@ export function CreateSupportTicketContent() {
                                     <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
                                         <FilePlus size={20} />
                                     </div>
-                                    <p className="text-[11px] font-bold text-gray-400 group-hover:text-blue-500 transition-colors uppercase tracking-wider">Add More</p>
+                                    <p className="text-[11px] font-bold text-gray-400 group-hover:text-blue-500 transition-colors uppercase tracking-wider">Attach</p>
                                 </div>
                             </div>
 
