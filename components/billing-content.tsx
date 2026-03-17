@@ -1043,7 +1043,7 @@ export function BillingContent() {
                     </div>
                 ) :
                     activeTab === "Billing history" ? (
-                        <div className="space-y-6 pt-10">
+                        <div className="space-y-3 pt-2">
                             <p className="text-[15px] text-gray-500 dark:text-gray-400">
                                 Showing invoices within the past 12 months
                             </p>
