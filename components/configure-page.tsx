@@ -657,7 +657,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             {/* Left Column */}
                             <div className="space-y-6">
                                 <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
@@ -730,7 +730,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             {/* Left Column */}
                             <div className="space-y-6 flex flex-col h-full">
                                 <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform</Label>
@@ -859,7 +859,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     <div className="flex items-center justify-between gap-2 mb-6">
                                         <div className="flex items-center gap-2">
                                             <Clock className="h-6 w-6 text-gray-900 dark:text-gray-100" />
-                                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Call Active Timeline</h2>
+                                            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Call Active Timeline</h2>
                                         </div>
                                         {isUpdateMode && !isEditing && (
                                             <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full border border-green-100 dark:border-green-800/50">
@@ -1017,7 +1017,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             </div>
                             <Card className="lg:col-span-2 p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                 <div className="flex flex-col md:flex-col justify-between gap-6">
-                                    <h2 className="text-xl font-bold text-[#1e293b] dark:text-gray-100 whitespace-nowrap">AI Call Flow</h2>
+                                    <h2 className="text-xl font-semibold text-[#1e293b] dark:text-gray-100 whitespace-nowrap">AI Call Flow</h2>
                                     <div className="flex flex-wrap items-center gap-y-4 gap-x-2 text-sm font-semibold text-[#334155] dark:text-gray-300">
                                         <span>Intro</span>
                                         <span className="text-gray-400">→</span>
@@ -1042,7 +1042,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                             <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                    <h2 className="text-xl font-bold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">AI Call Additional Questions <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Optional)</span></h2>
+                                    <h2 className="text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">AI Call Additional Questions <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Optional)</span></h2>
                                     <div className="space-y-3">
                                         {[
                                             "When are you available to start?",
@@ -1085,20 +1085,20 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 </Card>
 
                                 <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                    <h2 className="text-xl font-bold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">Job Description Requirement</h2>
+                                    <h2 className="text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">Job Description Requirement</h2>
                                     <div className="space-y-4">
                                         <p className="text-[#475569] dark:text-gray-400 font-medium">Advert must include a section titled:</p>
-                                        <p className="text-lg font-bold text-[#1e293b] dark:text-gray-100 -mt-4">Job Requirements</p>
+                                        <p className="text-lg font-semibold text-[#1e293b] dark:text-gray-100 -mt-4">Job Requirements</p>
                                         <div className="space-y-2">
                                             <p className="text-[#475569] dark:text-gray-400 font-medium">Each requirement must start with:</p>
-                                            <p className="text-lg font-bold text-[#1e293b] dark:text-gray-100">* Must have</p>
+                                            <p className="text-lg font-semibold text-[#1e293b] dark:text-gray-100">* Must have</p>
                                         </div>
                                     </div>
                                 </Card>
                             </div>
 
                             <Card className="lg:col-span-2 p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                                     Please create the following 4 statuses in your ATS/CRM under the Job Application's Status creation section (if they are not already present):
                                 </p>
