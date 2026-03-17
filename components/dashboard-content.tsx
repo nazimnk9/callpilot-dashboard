@@ -848,7 +848,7 @@ export function DashboardContent() {
                             <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
                         </div>
 
-                        <div className="relative space-y-6">
+                        <div className="relative space-y-2">
                             {[
                                 { label: 'Account Created', key: 'account_created', path: '' },
                                 { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
