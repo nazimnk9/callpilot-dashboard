@@ -157,6 +157,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [resultTitle, setResultTitle] = useState("")
     const [isEditing, setIsEditing] = useState(false)
     const [myFlowUid, setMyFlowUid] = useState("")
+    const [redirectToActivation, setRedirectToActivation] = useState(false)
     const [showReleaseDialog, setShowReleaseDialog] = useState(false)
 
     useEffect(() => {
@@ -454,7 +455,11 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             } catch (err: any) {
                 console.error("Error saving diner configuration:", err)
                 setResultTitle("Error")
-                setResultMessage(err.response?.data?.message || err.message || "Failed to save configuration")
+                const errorMsg = err.response?.data?.message || err.response?.data?.detail || err.message || "Failed to save configuration"
+                if (errorMsg.includes("Details: You didn't pay the development fee.")) {
+                    setRedirectToActivation(true)
+                }
+                setResultMessage(errorMsg)
                 setShowResultDialog(true)
             } finally {
                 setIsSaving(false)
@@ -573,6 +578,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 errorMessage = err.message
             }
 
+            if (errorMessage.includes("Details: You didn't pay the development fee.")) {
+                setRedirectToActivation(true)
+            }
             setResultMessage(errorMessage)
             setShowResultDialog(true)
         } finally {
@@ -614,6 +622,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         setShowResultDialog(false)
         if (resultTitle === "Success" && resultMessage === "Flow released successfully!") {
             router.push("/dashboard/phone-call-flows")
+        } else if (redirectToActivation) {
+            router.push("/dashboard/platform-activation")
         }
         // otherwise stay on page for other successes
     }

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, ChevronDown, Search, CreditCard, ChevronUp, Loader2, Check, ChevronsUpDown, AlertCircle, Info } from "lucide-react"
 import { phoneService } from "@/services/phone-service"
+import { getCountryCode } from "@/app/actions";
+import countriesData from "@/lib/countries.json";
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import { ToastNotification } from "@/components/auth/toast-notification"
 import { CreateBundleModal } from "./create-bundle-modal"
@@ -84,6 +86,7 @@ export function PhoneNumberBuyForm() {
     const [postalCode, setPostalCode] = useState("");
     const [stateRegion, setStateRegion] = useState("");
     const [isDefault, setIsDefault] = useState(true);
+    const [billingCountry, setBillingCountry] = useState("");
     const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
     // Country selection
@@ -91,6 +94,9 @@ export function PhoneNumberBuyForm() {
     const [selectedCountry, setSelectedCountry] = useState("")
     const [countrySearch, setCountrySearch] = useState("")
     const [showCountriesDropdown, setShowCountriesDropdown] = useState(false)
+    const [modalCountrySearch, setModalCountrySearch] = useState("")
+    const [isCountryOpen, setIsCountryOpen] = useState(false)
+    const dropdownRef = useRef<HTMLDivElement>(null)
 
     // Phone number selection (kept in state but removed from form as per request)
     const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([])
@@ -133,6 +139,19 @@ export function PhoneNumberBuyForm() {
             fetchCountries()
             fetchBundles()
             fetchPaymentMethods()
+
+            // Fetch user's country automatically
+            const fetchUserCountry = async () => {
+                try {
+                    const countryCode = await getCountryCode();
+                    if (countryCode && !billingCountry) {
+                        setBillingCountry(countryCode);
+                    }
+                } catch (error) {
+                    console.error("Error fetching country:", error);
+                }
+            };
+            fetchUserCountry();
         }
     }, [])
 
@@ -217,7 +236,7 @@ export function PhoneNumberBuyForm() {
                         city: city,
                         postal_code: postalCode,
                         state: stateRegion,
-                        country: selectedCountry || undefined // use selected country if available
+                        country: billingCountry || undefined // use billing country if available
                     }
                 }
             });
@@ -291,6 +310,12 @@ export function PhoneNumberBuyForm() {
             c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
             c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
             (c.phone_code && c.phone_code.includes(countrySearch))
+    )
+
+    const filteredModalCountries = countriesData.filter(
+        (c) =>
+            c.country.toLowerCase().includes(modalCountrySearch.toLowerCase()) ||
+            c.country_code.toLowerCase().includes(modalCountrySearch.toLowerCase())
     )
 
     const handleCreateBundleNext = () => {
@@ -574,7 +599,7 @@ export function PhoneNumberBuyForm() {
                                     disabled={isLoading || !selectedPmForTopUp || !selectedCountry}
                                     className="cursor-pointer bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
                                 >
-                                    {isLoading ? "Processing..." : "Submit Purchase"}
+                                    {isLoading ? "Processing..." : "Buy AI Number"}
                                 </Button>
                             </div>
                         </form>
@@ -648,6 +673,56 @@ export function PhoneNumberBuyForm() {
                                 Billing address
                             </label>
                             <div className="space-y-3">
+                                <div className="relative">
+                                    <div
+                                        onClick={() => setIsCountryOpen(!isCountryOpen)}
+                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                    >
+                                        <span className={billingCountry ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}>
+                                            {billingCountry ? (countriesData.find((c: any) => c.country_code === billingCountry)?.country || billingCountry) : "Country"}
+                                        </span>
+                                        <ChevronsUpDown size={16} className="text-gray-400" />
+                                    </div>
+
+                                    {isCountryOpen && (
+                                        <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                                    <input
+                                                        autoFocus
+                                                        type="text"
+                                                        placeholder="Search country..."
+                                                        value={modalCountrySearch}
+                                                        onChange={(e) => setModalCountrySearch(e.target.value)}
+                                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="max-h-[280px] overflow-y-auto">
+                                                {filteredModalCountries.length > 0 ? (
+                                                    filteredModalCountries.map((c: any) => (
+                                                        <div
+                                                            key={c.country_code}
+                                                            onClick={() => {
+                                                                setBillingCountry(c.country_code);
+                                                                setIsCountryOpen(false);
+                                                                setModalCountrySearch("");
+                                                            }}
+                                                            className="px-6 py-3 text-[15px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                        >
+                                                            {c.country}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400 text-sm italic">
+                                                        No countries found
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <input
                                     type="text"
                                     value={addressLine1}

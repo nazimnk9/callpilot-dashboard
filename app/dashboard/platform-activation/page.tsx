@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { paymentService } from "@/services/payment-service";
 import countriesData from "@/lib/countries.json";
+import { getCountryCode } from "@/app/actions";
 import { toast } from "sonner";
 
 export default function PlatformActivationPage() {
@@ -65,7 +66,7 @@ export default function PlatformActivationPage() {
     const [isCountryOpen, setIsCountryOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-   useEffect(() => {
+    useEffect(() => {
         const checkAuth = async () => {
             const accessToken = cookieUtils.get('access');
             const refreshToken = cookieUtils.get('refresh');
@@ -184,6 +185,22 @@ export default function PlatformActivationPage() {
                 setStripe(stripeInstance);
             };
             initStripe();
+
+            // Fetch user's country automatically
+            const fetchUserCountry = async () => {
+                try {
+                    const countryCode = await getCountryCode();
+                    if (countryCode) {
+                        const country = countriesData.find(c => c.country_code === countryCode);
+                        if (country && !selectedCountry) {
+                            setSelectedCountry(country);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching country:", error);
+                }
+            };
+            fetchUserCountry();
         }
     }, [isAuthenticated, router]);
 
@@ -482,31 +499,50 @@ export default function PlatformActivationPage() {
                                         onClick={() => setIsCountryOpen(!isCountryOpen)}
                                         className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium flex items-center justify-between cursor-pointer"
                                     >
-                                        <span className={selectedCountry ? "text-gray-900" : "text-gray-400"}>
+                                        <span className={selectedCountry ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}>
                                             {selectedCountry ? selectedCountry.country : "Country"}
                                         </span>
                                         <ChevronsUpDown size={16} />
                                     </div>
                                     {isCountryOpen && (
-                                        <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-[60] max-h-[200px] overflow-y-auto">
-                                            {countriesData.map((c) => (
-                                                <div
-                                                    key={c.country_code}
-                                                    onClick={() => {
-                                                        setSelectedCountry(c);
-                                                        setIsCountryOpen(false);
-                                                    }}
-                                                    className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 flex items-center justify-between cursor-pointer"
-                                                >
-                                                    <div className="flex items-center gap-2 w-full">
-                                                        <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{c.country_code}</span>
-                                                        {('phone_code' in c && c.phone_code) && (
-                                                            <span className="text-gray-400 dark:text-gray-500 font-normal text-xs ml-auto">+{c.phone_code as string}</span>
-                                                        )}
-                                                        <span>{c.country}</span>
-                                                    </div>
+                                        <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-[60] max-h-[280px] overflow-hidden flex flex-col">
+                                            <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                                    <input
+                                                        autoFocus
+                                                        type="text"
+                                                        placeholder="Search country..."
+                                                        value={countrySearch}
+                                                        onChange={(e) => setCountrySearch(e.target.value)}
+                                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow"
+                                                    />
                                                 </div>
-                                            ))}
+                                            </div>
+                                            <div className="overflow-y-auto max-h-[200px]">
+                                                {(countriesData as any[]).filter(c =>
+                                                    c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
+                                                    c.country_code.toLowerCase().includes(countrySearch.toLowerCase())
+                                                ).map((c) => (
+                                                    <div
+                                                        key={c.country_code}
+                                                        onClick={() => {
+                                                            setSelectedCountry(c);
+                                                            setIsCountryOpen(false);
+                                                            setCountrySearch("");
+                                                        }}
+                                                        className="px-6 py-3 text-[15px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors flex items-center justify-between"
+                                                    >
+                                                        <div className="flex items-center gap-2 w-full">
+                                                            <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{c.country_code}</span>
+                                                            {c.phone_code && (
+                                                                <span className="text-gray-400 dark:text-gray-500 font-normal text-xs ml-auto">+{c.phone_code}</span>
+                                                            )}
+                                                            <span>{c.country}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </div>

@@ -17,6 +17,7 @@ import { phoneService } from "@/services/phone-service";
 import countriesData from "@/lib/countries.json";
 import { toast } from "sonner";
 import { paymentService } from "@/services/payment-service";
+import { getCountryCode } from "@/app/actions";
 
 import {
     AlertDialog,
@@ -263,6 +264,22 @@ export function BillingContent() {
         fetchTransactions();
         fetchCurrentSubscription();
         fetchPlans();
+
+        // Fetch user's country automatically
+        const fetchUserCountry = async () => {
+            try {
+                const countryCode = await getCountryCode();
+                if (countryCode) {
+                    const country = countriesData.find(c => c.country_code === countryCode);
+                    if (country && !selectedCountry) {
+                        setSelectedCountry(country);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching country:", error);
+            }
+        };
+        fetchUserCountry();
     }, []);
 
     // Sync selected plan with current subscription status

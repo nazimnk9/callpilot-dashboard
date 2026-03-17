@@ -149,7 +149,7 @@ export function PhoneCallFlowsContent() {
                             <Button
                                 className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none"
                             >
-                                {flow.code === "AICALL191" ? "Reservations" : "Interviews"}
+                                {flow.code === "AICALL191" ? "Reservations" : "Call History"}
                             </Button>
                         </Link>
                     </div>
