@@ -36,6 +36,7 @@ interface AddressModalProps {
 interface Country {
     country: string
     country_code: string
+    phone_code?: string
 }
 
 export function AddressModal({ open, onOpenChange, onBack, onNext, selectedCountryCode }: AddressModalProps) {
@@ -96,7 +97,8 @@ export function AddressModal({ open, onOpenChange, onBack, onNext, selectedCount
     const filteredCountries = countries.filter(
         (country) =>
             country.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-            country.country_code.toLowerCase().includes(countrySearch.toLowerCase()),
+            country.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
+            (country.phone_code && country.phone_code.includes(countrySearch))
     )
 
     const handleSelectCountry = (countryCode: string) => {
@@ -259,8 +261,13 @@ export function AddressModal({ open, onOpenChange, onBack, onNext, selectedCount
                                                         onClick={() => handleSelectCountry(country.country_code)}
                                                         className="cursor-pointer w-full px-4 py-3 text-left hover:bg-primary/10 text-foreground flex items-center justify-between border-b border-border/50"
                                                     >
-                                                        <span>{country.country}</span>
-                                                        <span className="text-xs font-semibold text-primary">{country.country_code}</span>
+                                                        <div className="flex items-center gap-2 w-full">
+                                                            <span className="text-muted-foreground font-normal text-xs">{country.country_code}</span>
+                                                            {country.phone_code && (
+                                                                <span className="text-muted-foreground font-normal text-xs ml-auto">+{country.phone_code}</span>
+                                                            )}
+                                                            <span className="ml-2">{country.country}</span>
+                                                        </div>
                                                     </button>
                                                 ))}
                                             </div>

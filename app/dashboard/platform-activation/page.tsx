@@ -60,7 +60,7 @@ export default function PlatformActivationPage() {
     const [postalCode, setPostalCode] = useState("");
     const [stateRegion, setStateRegion] = useState("");
     const [isDefault, setIsDefault] = useState(true);
-    const [selectedCountry, setSelectedCountry] = useState<{ country: string, country_code: string } | null>(null);
+    const [selectedCountry, setSelectedCountry] = useState<{ country: string, country_code: string, phone_code?: string } | null>(null);
     const [countrySearch, setCountrySearch] = useState("");
     const [isCountryOpen, setIsCountryOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -482,9 +482,15 @@ export default function PlatformActivationPage() {
                                                         setSelectedCountry(c);
                                                         setIsCountryOpen(false);
                                                     }}
-                                                    className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer"
+                                                    className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 flex items-center justify-between cursor-pointer"
                                                 >
-                                                    {c.country}
+                                                    <div className="flex items-center gap-2 w-full">
+                                                        <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{c.country_code}</span>
+                                                        {('phone_code' in c && c.phone_code) && (
+                                                            <span className="text-gray-400 dark:text-gray-500 font-normal text-xs ml-auto">+{c.phone_code as string}</span>
+                                                        )}
+                                                        <span>{c.country}</span>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

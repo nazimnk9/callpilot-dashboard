@@ -325,7 +325,7 @@ export default function ActivationPage() {
                 {/* Form Section */}
                 <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Edit Verify Details</h2>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verify Business Details</h2>
                     </div>
 
                     <div className="p-8 space-y-6">
@@ -355,7 +355,7 @@ export default function ActivationPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="state" className="text-sm font-semibold">State</Label>
+                                <Label htmlFor="state" className="text-sm font-semibold">State/Region</Label>
                                 <Input
                                     id="state"
                                     value={org.state}

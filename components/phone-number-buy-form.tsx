@@ -33,6 +33,7 @@ import { toast as sonnerToast } from "sonner";
 interface Country {
     country: string
     country_code: string
+    phone_code?: string
 }
 
 interface PhoneNumber {
@@ -288,7 +289,8 @@ export function PhoneNumberBuyForm() {
     const filteredCountries = countries.filter(
         (c) =>
             c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-            c.country_code.toLowerCase().includes(countrySearch.toLowerCase()),
+            c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
+            (c.phone_code && c.phone_code.includes(countrySearch))
     )
 
     const handleCreateBundleNext = () => {
@@ -454,8 +456,13 @@ export function PhoneNumberBuyForm() {
                                                         onClick={() => handleCountrySelect(country.country_code)}
                                                         className="cursor-pointer w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 last:border-b-0"
                                                     >
-                                                        <span>{country.country}</span>
-                                                        <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{country.country_code}</span>
+                                                        <div className="flex items-center gap-2 w-full">
+                                                            <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{country.country_code}</span>
+                                                            {country.phone_code && (
+                                                                <span className="text-gray-400 dark:text-gray-500 font-normal text-xs ml-auto">+{country.phone_code}</span>
+                                                            )}
+                                                            <span>{country.country}</span>
+                                                        </div>
                                                     </button>
                                                 ))}
                                             </div>

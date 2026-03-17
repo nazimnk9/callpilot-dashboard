@@ -72,7 +72,7 @@ export function OrganizationContent() {
     const [isCountryOpen, setIsCountryOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const [countries] = useState<{ country: string, country_code: string }[]>(countriesData);
+    const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
 
     useEffect(() => {
         fetchOrganization()
@@ -90,7 +90,8 @@ export function OrganizationContent() {
 
     const filteredCountries = countries.filter(c =>
         c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-        c.country_code.toLowerCase().includes(countrySearch.toLowerCase())
+        c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
+        (c.phone_code && c.phone_code.includes(countrySearch))
     );
 
     const fetchOrganization = async () => {
@@ -266,7 +267,7 @@ export function OrganizationContent() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="edit_state" className="text-sm font-semibold dark:text-gray-100">Billing Contact</Label>
+                                <Label htmlFor="edit_state" className="text-sm font-semibold dark:text-gray-100">State/Region</Label>
                                 <Input
                                     id="edit_state"
                                     value={editOrg.state}
@@ -323,7 +324,13 @@ export function OrganizationContent() {
                                                             }}
                                                             className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
                                                         >
-                                                            <span>{c.country}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{c.country_code}</span>
+                                                                {c.phone_code && (
+                                                                    <span className="text-gray-400 dark:text-gray-500 font-normal text-xs ml-auto">+{c.phone_code}</span>
+                                                                )}
+                                                                <span>{c.country}</span>
+                                                            </div>
                                                             {editOrg.country === c.country && (
                                                                 <Check size={14} className="text-primary" />
                                                             )}
