@@ -768,7 +768,7 @@ export function BillingContent() {
 
                 {/* Tab Content */}
                 {activeTab === "Overview" ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {/* Current Plan Card */}
                         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -805,7 +805,7 @@ export function BillingContent() {
                                         </div>
                                         <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">Usage</h4>
                                     </div>
-                                    <div className="space-y-4">
+                                    <div className="space-y-2">
                                         <div className="space-y-1">
                                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Remaining</p>
                                             <div className="flex items-baseline gap-2">
