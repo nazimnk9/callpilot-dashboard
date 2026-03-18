@@ -450,12 +450,12 @@ export function AICallFlowOptionsContent() {
                                     </div>
 
                                     {/* Compatible CRM */}
-                                    {/* <div className="p-6 md:p-10 lg:p-12 flex flex-col gap-6 border-t border-gray-100 dark:border-gray-800">
+                                    <div className="p-6 md:p-10 lg:p-12 flex flex-col gap-6 border-t border-gray-100 dark:border-gray-800">
                                         <div className="flex flex-col gap-1">
                                             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h1>
                                             <p className="text-sm text-gray-500">Integrate seamlessly with your favorite CRM platforms</p>
                                         </div>
-                                        {/* <div className="flex flex-wrap items-center gap-6">
+                                          <div className="flex flex-wrap items-center gap-6">
                                             <div className="w-16 h-16 sm:w-20 sm:h-20 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 flex items-center justify-center bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
                                                 <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
                                             </div>
@@ -463,7 +463,7 @@ export function AICallFlowOptionsContent() {
                                                 <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
                                             </div>
                                         </div> 
-                                    </div> */}
+                                    </div>
                                 </div>
                             </div>
 
