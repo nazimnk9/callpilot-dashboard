@@ -411,11 +411,11 @@ export function ProfileContent() {
                 </div>
 
                 {/* Form Content */}
-                <div className="max-w-md space-y-8 pt-4">
+                <div className="max-w-md space-y-3 pt-2">
                     {activeTab === "User" ? (
                         <>
                             {/* First Name Field */}
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                                 <Label htmlFor="first_name" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     First Name
                                 </Label>
@@ -430,7 +430,7 @@ export function ProfileContent() {
                             </div>
 
                             {/* Last Name Field */}
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                                 <Label htmlFor="last_name" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     Last Name
                                 </Label>
@@ -445,7 +445,7 @@ export function ProfileContent() {
                             </div>
 
                             {/* Email Field */}
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                                 <Label htmlFor="email" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     Email address
                                 </Label>
