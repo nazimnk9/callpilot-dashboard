@@ -374,12 +374,12 @@ export function AICallFlowOptionsContent() {
 
             {/* Flow Details Modal */}
             <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-                <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 rounded-2xl">
+                <DialogContent className="w-screen h-screen max-w-none m-0 p-0 overflow-hidden bg-white dark:bg-gray-950 border-none rounded-none">
                     {selectedFlow && (
-                        <div className="flex flex-col h-full">
-                            {/* Modal Header */}
-                            <div className="p-6 border-b border-gray-100 dark:border-gray-800">
-                                <div className="flex gap-6 items-start">
+                        <div className="flex flex-col h-screen w-screen">
+                            {/* Modal Header - Sticky */}
+                            <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                                <div className="flex flex-col sm:flex-row gap-6 md:gap-8 items-center sm:items-start text-center sm:text-left max-w-7xl mx-auto w-full">
                                     {/* Image left from Name */}
                                     <div className="w-24 h-32 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 dark:bg-gray-900">
                                         <img src={selectedFlow.picture} alt={selectedFlow.name} className="w-full h-full object-cover" />
@@ -396,15 +396,18 @@ export function AICallFlowOptionsContent() {
                                                 <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.flow_category.replace(/_/g, ' ')}</span>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2 mx-auto sm:mx-0 max-w-2xl">
                                             {selectedFlow.flow_summary}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Modal Body */}
-                            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 bg-gray-50/50 dark:bg-gray-950/50">
+                            {/* Scrollable Content Area */}
+                            <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950/50">
+                                <div className="max-w-7xl mx-auto w-full">
+                                    {/* Modal Body */}
+                                    <div className="p-6 md:p-10 lg:p-12 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
                                 {/* How It Works - Left side */}
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2 mb-2">
@@ -444,42 +447,47 @@ export function AICallFlowOptionsContent() {
                                         ))}
                                     </ul>
                                 </div>
+                                    </div>
+
+                                    {/* Compatible CRM */}
+                                    {/* <div className="p-6 md:p-10 lg:p-12 flex flex-col gap-6 border-t border-gray-100 dark:border-gray-800">
+                                        <div className="flex flex-col gap-1">
+                                            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h1>
+                                            <p className="text-sm text-gray-500">Integrate seamlessly with your favorite CRM platforms</p>
+                                        </div>
+                                        {/* <div className="flex flex-wrap items-center gap-6">
+                                            <div className="w-16 h-16 sm:w-20 sm:h-20 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 flex items-center justify-center bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
+                                                <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
+                                            </div>
+                                            <div className="w-16 h-16 sm:w-20 sm:h-20 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 flex items-center justify-center bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
+                                                <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
+                                            </div>
+                                        </div> 
+                                    </div> */}
+                                </div>
                             </div>
 
-                            {/* Modal Footer */}
-                            <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 flex flex-col sm:flex-row gap-3">
-                                <Button
-                                    onClick={handleConnectFlow}
-                                    disabled={isConnecting}
-                                    className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    {isConnecting ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                            Connecting...
-                                        </>
-                                    ) : (
-                                        "Add To Your Flows"
-                                    )}
-                                </Button>
-                                <Button variant="outline" className="flex-1 h-11 border-gray-200 dark:border-gray-800 font-semibold rounded-xl gap-2 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
-                                    <Bookmark className="w-4 h-4" />
-                                    Bookmark
-                                </Button>
-                            </div>
-                            <div className="p-4 flex flex-col gap-4 border-t border-gray-100 dark:border-gray-700">
-                                <div className="flex flex-col gap-1">
-                                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h1>
-                                </div>
-                                <div className="flex flex-col justify-center">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
-                                            <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
-                                        </div>
-                                        <div className="w-14 h-14 border border-gray-200 dark:border-gray-600 rounded-md p-2 flex items-center justify-center bg-white dark:bg-gray-700">
-                                            <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
-                                        </div>
-                                    </div>
+                            {/* Modal Footer - Sticky */}
+                            <div className="p-6 md:p-8 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 shrink-0">
+                                <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row gap-4">
+                                    <Button
+                                        onClick={handleConnectFlow}
+                                        disabled={isConnecting}
+                                        className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-2xl shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                    >
+                                        {isConnecting ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin mr-3" />
+                                                Connecting...
+                                            </>
+                                        ) : (
+                                            "Add To Your Flows"
+                                        )}
+                                    </Button>
+                                    <Button variant="outline" className="flex-1 h-14 border-gray-200 dark:border-gray-800 text-lg font-bold rounded-2xl gap-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
+                                        <Bookmark className="w-5 h-5" />
+                                        Bookmark
+                                    </Button>
                                 </div>
                             </div>
                         </div>
