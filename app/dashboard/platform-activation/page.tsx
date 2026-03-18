@@ -354,7 +354,7 @@ export default function PlatformActivationPage() {
                     <div className="max-w-2xl mx-auto">
                         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm space-y-8">
                             <div className="space-y-2">
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Platform Activation</h1>
+                                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Platform Activation</h1>
                                 <p className="text-gray-500 dark:text-gray-400 text-[15px]">
                                     To enable your AI Call and start engaging applicants, a one-off setup fee is required.
                                     This fee is credited back as free calling minutes after 12 months.
@@ -363,13 +363,13 @@ export default function PlatformActivationPage() {
 
                             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 flex items-center justify-between">
                                 <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">Setup Fee</span>
-                                <span className="text-3xl font-black text-gray-900 dark:text-gray-100">$400</span>
+                                <span className="text-3xl font-black text-gray-900 dark:text-gray-100 font-semibold">$400</span>
                             </div>
 
                             {/* Payment Method Selector */}
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                    <label className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                         Payment Method
                                     </label>
                                     <div className="relative">
@@ -435,7 +435,7 @@ export default function PlatformActivationPage() {
                                     <div className="flex justify-end pt-1">
                                         <button
                                             onClick={() => setIsAddPaymentOpen(true)}
-                                            className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                            className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
                                         >
                                             + Add payment method
                                         </button>
@@ -446,7 +446,7 @@ export default function PlatformActivationPage() {
                             <Button
                                 onClick={handleActivate}
                                 disabled={isLoading}
-                                className="w-full bg-black hover:bg-black/90 text-white rounded-xl py-6 text-lg font-bold"
+                                className="w-full bg-black hover:bg-black/90 text-white rounded-xl py-6 text-lg font-semibold"
                             >
                                 {isLoading && <Loader2 className="w-5 h-5 animate-spin mr-2" />}
                                 Activate AI Call
