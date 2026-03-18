@@ -28,7 +28,7 @@ import {
 const CustomToggle = ({ checked, onChange, label, description }: { checked: boolean, onChange: (val: boolean) => void, label: string, description: string }) => {
     return (
         <div className="space-y-2">
-            <Label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+            <Label className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                 {label}
             </Label>
             <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
@@ -37,7 +37,7 @@ const CustomToggle = ({ checked, onChange, label, description }: { checked: bool
                 className={`relative w-[70px] h-[28px] rounded-full transition-colors duration-200 flex items-center px-1.5 ${checked ? 'bg-[#56CCF2]' : 'bg-gray-300 dark:bg-gray-700'
                     }`}
             >
-                <span className={`text-[11px] font-bold text-white uppercase transition-opacity duration-200 ${checked ? 'opacity-100 ml-0.5' : 'opacity-0'}`}>
+                <span className={`text-[11px] font-semibold text-white uppercase transition-opacity duration-200 ${checked ? 'opacity-100 ml-0.5' : 'opacity-0'}`}>
                     ON
                 </span>
                 <div
@@ -282,12 +282,12 @@ export function ProfileContent() {
             <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
                 <DialogContent className="sm:max-w-[425px] dark:bg-gray-900 dark:border-gray-800">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-bold dark:text-gray-100">Change Password</DialogTitle>
+                        <DialogTitle className="text-xl font-semibold dark:text-gray-100">Change Password</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handlePasswordUpdate} className="space-y-6 pt-4">
                         {/* Current Password Field */}
                         <div className="space-y-2">
-                            <Label htmlFor="currentPassword" className="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+                            <Label htmlFor="currentPassword" className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
                                 Current Password
                             </Label>
                             <div className="relative">
@@ -311,7 +311,7 @@ export function ProfileContent() {
 
                         {/* New Password Field */}
                         <div className="space-y-2">
-                            <Label htmlFor="newPassword" className="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+                            <Label htmlFor="newPassword" className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
                                 New Password
                             </Label>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Enter your new password</p>
@@ -336,7 +336,7 @@ export function ProfileContent() {
 
                         {/* Confirm Password Field */}
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword" className="text-[14px] font-bold text-gray-900 dark:text-gray-100">
+                            <Label htmlFor="confirmPassword" className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
                                 Confirm Password
                             </Label>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Confirm your new password</p>
@@ -416,7 +416,7 @@ export function ProfileContent() {
                         <>
                             {/* First Name Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="first_name" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                <Label htmlFor="first_name" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     First Name
                                 </Label>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Your first name</p>
@@ -431,7 +431,7 @@ export function ProfileContent() {
 
                             {/* Last Name Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="last_name" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                <Label htmlFor="last_name" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     Last Name
                                 </Label>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Your last name</p>
@@ -446,7 +446,7 @@ export function ProfileContent() {
 
                             {/* Email Field */}
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                <Label htmlFor="email" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     Email address
                                 </Label>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">The email address associated with this account</p>
