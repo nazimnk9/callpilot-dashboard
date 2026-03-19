@@ -106,6 +106,9 @@ export function PhoneNumberBuyForm() {
     const [bundles, setBundles] = useState<Bundle[]>([])
     const [selectedBundle, setSelectedBundle] = useState("")
 
+    // Organization state
+    const [organization, setOrganization] = useState<any>(null);
+
     // Modals
     const [showCreateBundleModal, setShowCreateBundleModal] = useState(false)
     const [showEndUserModal, setShowEndUserModal] = useState(false)
@@ -151,7 +154,29 @@ export function PhoneNumberBuyForm() {
                     console.error("Error fetching country:", error);
                 }
             };
+
+            const fetchOrganization = async () => {
+                try {
+                    const token = cookieUtils.get("access");
+                    const response = await fetch(`${BASE_URL}/organizations/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setOrganization(data);
+                        if (data.country_iso_code === "US") {
+                            setSelectedCountry("US");
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error fetching organization:", err);
+                }
+            };
+
             fetchUserCountry();
+            fetchOrganization();
         }
     }, [])
 
@@ -362,7 +387,7 @@ export function PhoneNumberBuyForm() {
         try {
             setIsLoading(true)
             await phoneService.buyNumber({
-                country_code: selectedCountry,
+                //country_code: selectedCountry,
                 payment_method_id: selectedPmForTopUp.id
             });
 
@@ -443,166 +468,134 @@ export function PhoneNumberBuyForm() {
                     </CardHeader> */}
 
                     <CardContent className="pt-8 p-6">
-                        <form onSubmit={handleSubmitPurchase} className="space-y-6">
-                            {/* Country Selection */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Select Country *</label>
-                                <div className="relative" ref={countrySelectRef}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowCountriesDropdown(!showCountriesDropdown)}
-                                        className="cursor-pointer w-full px-4 py-3 border-2 border-gray-100 dark:border-gray-700 rounded-lg bg-background text-foreground text-left flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-500 transition-all"
-                                    >
-                                        <span>
-                                            {selectedCountry
-                                                ? `${selectedCountry} - ${countries.find((c) => c.country_code === selectedCountry)?.country}`
-                                                : "Select Country"}
-                                        </span>
-                                        <ChevronDown
-                                            className={`w-5 h-5 transition-transform ${showCountriesDropdown ? "rotate-180" : ""}`}
-                                        />
-                                    </button>
+                        {organization?.country_iso_code === "US" ? (
+                            <form onSubmit={handleSubmitPurchase} className="space-y-6">
+                                {/* Country Selection HIDDEN for US */}
 
-                                    {showCountriesDropdown && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-background border-2 border-gray-100 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden flex flex-col">
-                                            <div className="p-2 border-b border-gray-100 dark:border-gray-700">
-                                                <Input
-                                                    placeholder="Search countries..."
-                                                    value={countrySearch}
-                                                    onChange={(e) => setCountrySearch(e.target.value)}
-                                                    className="border border-gray-100 dark:border-gray-700"
-                                                />
-                                            </div>
-                                            <div className="overflow-y-auto">
-                                                {filteredCountries.map((country) => (
-                                                    <button
-                                                        key={country.country_code}
-                                                        type="button"
-                                                        onClick={() => handleCountrySelect(country.country_code)}
-                                                        className="cursor-pointer w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 last:border-b-0"
-                                                    >
-                                                        <div className="flex items-center gap-2 w-full">
-                                                            <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{country.country_code}</span>
-                                                            {country.phone_code && (
-                                                                <span className="text-gray-400 dark:text-gray-500 font-normal text-xs ml-auto">+{country.phone_code}</span>
-                                                            )}
-                                                            <span>{country.country}</span>
+                                {/* Payment Method Selector (Copy from billing-content.tsx) */}
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                                        Payment method *
+                                    </label>
+                                    <div className="relative" ref={pmSelectorRef}>
+                                        <div
+                                            onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
+                                            className="flex items-center justify-between px-4 py-3 border-2 border-gray-100 dark:border-gray-700 rounded-lg bg-background text-foreground text-left cursor-pointer group hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                    {selectedPmForTopUp?.card.brand === 'visa' ? (
+                                                        <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                    ) : (
+                                                        <div className="flex -space-x-1.5">
+                                                            <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                            <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
                                                         </div>
-                                                    </button>
-                                                ))}
+                                                    )}
+                                                </div>
+                                                <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                    {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                                <ChevronUp size={16} />
+                                                <ChevronDown size={16} />
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                                <p className="mt-2 text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">
-                                    If your business country is not listed, please{" "}
-                                    <button
-                                        type="button"
-                                        //onClick={() => router.push("/dashboard/support")}
-                                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium inline-block"
-                                    >
-                                        Send us a support ticket
-                                    </button>{" "}
-                                    and we'll help you add it.
-                                </p>
-                            </div>
 
-                            {/* Payment Method Selector (Copy from billing-content.tsx) */}
-                            <div className="space-y-3">
-                                <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                                    Payment method *
-                                </label>
-                                <div className="relative" ref={pmSelectorRef}>
-                                    <div
-                                        onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
-                                        className="flex items-center justify-between px-4 py-3 border-2 border-gray-100 dark:border-gray-700 rounded-lg bg-background text-foreground text-left cursor-pointer group hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
-                                                {selectedPmForTopUp?.card.brand === 'visa' ? (
-                                                    <span className="text-white font-bold italic text-[8px]">VISA</span>
-                                                ) : (
-                                                    <div className="flex -space-x-1.5">
-                                                        <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                        <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
-                                            <ChevronUp size={16} />
-                                            <ChevronDown size={16} />
-                                        </div>
-                                    </div>
-
-                                    {isPmSelectorOpen && (
-                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-background border-2 border-gray-100 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                            <div className="max-h-[240px] overflow-y-auto p-2">
-                                                {paymentMethods.map((pm) => (
-                                                    <div
-                                                        key={pm.id}
-                                                        onClick={() => {
-                                                            setSelectedPmForTopUp(pm);
-                                                            setIsPmSelectorOpen(false);
-                                                        }}
-                                                        className="px-4 py-3.5 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition-colors"
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
-                                                                {pm.card.brand === 'visa' ? (
-                                                                    <span className="text-white font-bold italic text-[6px]">VISA</span>
-                                                                ) : (
-                                                                    <div className="flex -space-x-1">
-                                                                        <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                        <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
-                                                                    </div>
-                                                                )}
+                                        {isPmSelectorOpen && (
+                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-background border-2 border-gray-100 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="max-h-[240px] overflow-y-auto p-2">
+                                                    {paymentMethods.map((pm) => (
+                                                        <div
+                                                            key={pm.id}
+                                                            onClick={() => {
+                                                                setSelectedPmForTopUp(pm);
+                                                                setIsPmSelectorOpen(false);
+                                                            }}
+                                                            className="px-4 py-3.5 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                    {pm.card.brand === 'visa' ? (
+                                                                        <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                    ) : (
+                                                                        <div className="flex -space-x-1">
+                                                                            <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                            <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
                                                             </div>
-                                                            <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                            {selectedPmForTopUp?.id === pm.id && (
+                                                                <Check size={16} className="text-gray-900 dark:text-gray-100" />
+                                                            )}
                                                         </div>
-                                                        {selectedPmForTopUp?.id === pm.id && (
-                                                            <Check size={16} className="text-gray-900 dark:text-gray-100" />
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
+                                    <div className="flex justify-start px-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAddPaymentOpen(true)}
+                                            className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2"
+                                        >
+                                            <span className="text-lg">+</span> Add payment method
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex justify-start px-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsAddPaymentOpen(true)}
-                                        className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2"
-                                    >
-                                        <span className="text-lg">+</span> Add payment method
-                                    </button>
-                                </div>
-                            </div>
 
-                            {/* Submit Button */}
-                            <div className="flex gap-4 pt-6 border-t border-gray-100 dark:border-gray-700">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="cursor-pointer border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold px-6 py-2 rounded-xl flex items-center gap-2 transition-all duration-200"
-                                    onClick={() => router.back()}
-                                >
-                                    <ArrowLeft className="w-4 h-4 mr-2" />
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={isLoading || !selectedPmForTopUp || !selectedCountry}
-                                    className="cursor-pointer bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
-                                >
-                                    {isLoading ? "Processing..." : "Buy AI Number"}
-                                </Button>
+                                {/* Submit Button */}
+                                <div className="flex gap-4 pt-6 border-t border-gray-100 dark:border-gray-700">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="cursor-pointer border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold px-6 py-2 rounded-xl flex items-center gap-2 transition-all duration-200"
+                                        onClick={() => router.back()}
+                                    >
+                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={isLoading || !selectedPmForTopUp || !selectedCountry}
+                                        className="cursor-pointer bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
+                                    >
+                                        {isLoading ? "Processing..." : "Buy AI Number"}
+                                    </Button>
+                                </div>
+                            </form>
+                        ) : organization && (
+                            <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 max-w-2xl">
+                                    Your Business address and Identification is being verified right now. Please stay with us, we will let you know once it is verified.
+                                </h2>
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        You can still check{" "}
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push("/dashboard/help")}
+                                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                        >
+                                            Help
+                                        </button>{" "}
+                                        section to find useful information about phone numbers. Also you can send{" "}
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push("/dashboard/support")}
+                                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                        >
+                                            Customer Support ticket
+                                        </button>{" "}
+                                        if you think it's necessary.
+                                    </p>
+                                </div>
                             </div>
-                        </form>
+                        )}
                     </CardContent>
                 </Card>
             </div>

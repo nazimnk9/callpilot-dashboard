@@ -22,12 +22,6 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
 import { toast } from "sonner"
@@ -69,9 +63,6 @@ export function AICallFlowOptionsContent() {
     const [titleSearch, setTitleSearch] = useState("")
     const [appliedSearch, setAppliedSearch] = useState("")
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false)
-    const [selectedFlow, setSelectedFlow] = useState<FlowResult | null>(null)
-    const [isConnecting, setIsConnecting] = useState(false)
 
     // Toggle states for sidebar filters
     const [isTitleNameExpanded, setIsTitleNameExpanded] = useState(true)
@@ -163,38 +154,10 @@ export function AICallFlowOptionsContent() {
     };
 
     const handleViewDetails = (flow: FlowResult) => {
-        setSelectedFlow(flow);
-        setIsDetailsOpen(true);
+        router.push(`/dashboard/ai-call-flow-options/${flow.uid}`);
     };
 
-    const handleConnectFlow = async () => {
-        if (!selectedFlow) return;
 
-        setIsConnecting(true);
-        try {
-            const token = cookieUtils.get("access");
-            const response = await fetch(`${BASE_URL}/flows/available-flow/${selectedFlow.uid}/connect`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                toast.success("Flow connected successfully!");
-                router.push("/dashboard/phone-call-flows/");
-            } else {
-                const errorData = await response.json();
-                toast.error(errorData.message || "Failed to connect flow");
-            }
-        } catch (error) {
-            console.error("Error connecting flow:", error);
-            toast.error("An error occurred while connecting the flow");
-        } finally {
-            setIsConnecting(false);
-        }
-    };
 
     // Filter out flows that are already connected
     const availableResults = results.filter(flow => !flow.is_connected);
@@ -372,128 +335,7 @@ export function AICallFlowOptionsContent() {
                 </div>
             </div>
 
-            {/* Flow Details Modal */}
-            <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-                <DialogContent className="w-screen h-screen max-w-none m-0 p-0 overflow-hidden bg-white dark:bg-gray-950 border-none rounded-none">
-                    {selectedFlow && (
-                        <div className="flex flex-col h-screen w-screen">
-                            {/* Modal Header - Sticky */}
-                            <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-800 shrink-0">
-                                <div className="flex flex-col sm:flex-row gap-6 md:gap-8 items-center sm:items-start text-center sm:text-left max-w-7xl mx-auto w-full">
-                                    {/* Image left from Name */}
-                                    <div className="w-24 h-32 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 dark:bg-gray-900">
-                                        <img src={selectedFlow.picture} alt={selectedFlow.name} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="space-y-2 flex-grow">
-                                        <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100 leading-tight">
-                                            {selectedFlow.name}
-                                        </DialogTitle>
-                                        <div className="flex flex-col gap-4">
-                                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium capitalize">
-                                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.call_direction}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium uppercase tracking-wider">
-                                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.flow_category.replace(/_/g, ' ')}</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2 mx-auto sm:mx-0 max-w-2xl">
-                                            {selectedFlow.flow_summary}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Scrollable Content Area */}
-                            <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950/50">
-                                <div className="max-w-7xl mx-auto w-full">
-                                    {/* Modal Body */}
-                                    <div className="p-6 md:p-6 lg:p-6 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
-                                {/* How It Works - Left side */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                            <Settings2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                        </div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">How It Works</h3>
-                                    </div>
-                                    <ul className="space-y-3">
-                                        {selectedFlow.how_works.map((step, index) => (
-                                            <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
-                                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-semibold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                                    {index + 1}
-                                                </span>
-                                                <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{step}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {/* Required Resources - Right side from How It Works */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                            <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-                                        </div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">Required Resources</h3>
-                                    </div>
-                                    <ul className="space-y-3">
-                                        {selectedFlow.required_resources.map((resource, index) => (
-                                            <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
-                                                <div className="mt-1 flex-shrink-0">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500/60 group-hover:bg-green-500 transition-colors" />
-                                                </div>
-                                                <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{resource}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                    </div>
-
-                                    {/* Compatible CRM */}
-                                    <div className="p-6 md:p-6 lg:p-6 flex flex-col gap-6 border-t border-gray-100 dark:border-gray-800">
-                                        <div className="flex flex-col gap-1">
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible ATS(s)</h3>
-                                            <p className="text-sm text-gray-500">Integrate seamlessly with your favorite ATS platforms</p>
-                                        </div>
-                                          <div className="flex flex-wrap items-center gap-6">
-                                            <div className="w-16 h-16 sm:w-20 sm:h-20 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 flex items-center justify-center bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
-                                                <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
-                                            </div>
-                                            <div className="w-16 h-16 sm:w-20 sm:h-20 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 flex items-center justify-center bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
-                                                <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
-                                            </div>
-                                        </div> 
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Modal Footer - Sticky */}
-                            <div className="p-6 md:p-8 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 shrink-0">
-                                <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row gap-4">
-                                    <Button
-                                        onClick={handleConnectFlow}
-                                        disabled={isConnecting}
-                                        className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-2xl shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
-                                    >
-                                        {isConnecting ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin mr-3" />
-                                                Connecting...
-                                            </>
-                                        ) : (
-                                            "Add To Your Flows"
-                                        )}
-                                    </Button>
-                                    <Button variant="outline" className="flex-1 h-14 border-gray-200 dark:border-gray-800 text-lg font-semibold rounded-2xl gap-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
-                                        <Bookmark className="w-5 h-5" />
-                                        Bookmark
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
         </main>
     )
 }
