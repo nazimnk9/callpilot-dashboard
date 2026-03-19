@@ -452,7 +452,7 @@ export function AICallFlowOptionsContent() {
                                     {/* Compatible CRM */}
                                     <div className="p-6 md:p-10 lg:p-12 flex flex-col gap-6 border-t border-gray-100 dark:border-gray-800">
                                         <div className="flex flex-col gap-1">
-                                            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h1>
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h3>
                                             <p className="text-sm text-gray-500">Integrate seamlessly with your favorite CRM platforms</p>
                                         </div>
                                           <div className="flex flex-wrap items-center gap-6">
@@ -484,7 +484,7 @@ export function AICallFlowOptionsContent() {
                                             "Add To Your Flows"
                                         )}
                                     </Button>
-                                    <Button variant="outline" className="flex-1 h-14 border-gray-200 dark:border-gray-800 text-lg font-bold rounded-2xl gap-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
+                                    <Button variant="outline" className="flex-1 h-14 border-gray-200 dark:border-gray-800 text-lg font-semibold rounded-2xl gap-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
                                         <Bookmark className="w-5 h-5" />
                                         Bookmark
                                     </Button>
