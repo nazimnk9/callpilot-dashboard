@@ -235,7 +235,7 @@ export function OrganizationContent() {
             <div className="max-w-4xl mx-auto space-y-12">
                 <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-semibold dark:text-gray-100">Verify Details</h1>
+                        <h1 className="text-xl font-semibold dark:text-gray-100">Business Details</h1>
                     </div>
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
