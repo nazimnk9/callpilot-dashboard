@@ -452,8 +452,8 @@ export function AICallFlowOptionsContent() {
                                     {/* Compatible CRM */}
                                     <div className="p-6 md:p-6 lg:p-6 flex flex-col gap-6 border-t border-gray-100 dark:border-gray-800">
                                         <div className="flex flex-col gap-1">
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h3>
-                                            <p className="text-sm text-gray-500">Integrate seamlessly with your favorite CRM platforms</p>
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible ATS(s)</h3>
+                                            <p className="text-sm text-gray-500">Integrate seamlessly with your favorite ATS platforms</p>
                                         </div>
                                           <div className="flex flex-wrap items-center gap-6">
                                             <div className="w-16 h-16 sm:w-20 sm:h-20 border border-gray-200 dark:border-gray-700 rounded-2xl p-3 flex items-center justify-center bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
