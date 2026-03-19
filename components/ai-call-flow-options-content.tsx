@@ -407,9 +407,9 @@ export function AICallFlowOptionsContent() {
                             <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950/50">
                                 <div className="max-w-7xl mx-auto w-full">
                                     {/* Modal Body */}
-                                    <div className="p-6 md:p-10 lg:p-12 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+                                    <div className="p-6 md:p-6 lg:p-6 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
                                 {/* How It Works - Left side */}
-                                <div className="space-y-4">
+                                <div className="space-y-2">
                                     <div className="flex items-center gap-2 mb-2">
                                         <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                                             <Settings2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -429,7 +429,7 @@ export function AICallFlowOptionsContent() {
                                 </div>
 
                                 {/* Required Resources - Right side from How It Works */}
-                                <div className="space-y-4">
+                                <div className="space-y-2">
                                     <div className="flex items-center gap-2 mb-2">
                                         <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
                                             <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -450,7 +450,7 @@ export function AICallFlowOptionsContent() {
                                     </div>
 
                                     {/* Compatible CRM */}
-                                    <div className="p-6 md:p-10 lg:p-12 flex flex-col gap-6 border-t border-gray-100 dark:border-gray-800">
+                                    <div className="p-6 md:p-6 lg:p-6 flex flex-col gap-6 border-t border-gray-100 dark:border-gray-800">
                                         <div className="flex flex-col gap-1">
                                             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Compatible CRM</h3>
                                             <p className="text-sm text-gray-500">Integrate seamlessly with your favorite CRM platforms</p>
@@ -473,7 +473,7 @@ export function AICallFlowOptionsContent() {
                                     <Button
                                         onClick={handleConnectFlow}
                                         disabled={isConnecting}
-                                        className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold rounded-2xl shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                        className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-2xl shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                     >
                                         {isConnecting ? (
                                             <>
