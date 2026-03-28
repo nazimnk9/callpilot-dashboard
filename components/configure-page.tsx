@@ -1128,6 +1128,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     ) : (
                         <>
                             {!isUpdateMode ? (
+                                <>
                                 <Button
                                     size="lg"
                                     onClick={handleSaveConfiguration}
@@ -1136,6 +1137,15 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 >
                                     {isSaving ? "Activating..." : "Activate AI Call"}
                                 </Button>
+                                <Button
+                                        size="lg"
+                                        variant="outline"
+                                        onClick={() => setShowReleaseDialog(true)}
+                                        className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                    >
+                                        Release Flow
+                                    </Button>
+                                </>
                             ) : (
                                 <>
                                     {!isEditing ? (

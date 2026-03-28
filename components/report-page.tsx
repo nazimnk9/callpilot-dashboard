@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { X, ArrowLeft } from "lucide-react"
+import { X, ArrowLeft, Phone, CheckCircle2, Users, Clock } from "lucide-react"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -213,9 +213,82 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
         }
     }
 
+    const statCards = [
+        {
+            title: "Total AI Calls",
+            value: "56",
+            icon: Phone,
+            iconColor: "text-blue-600 dark:text-blue-400",
+            bgColor: "bg-blue-50 dark:bg-blue-900/20",
+        },
+        {
+            title: "Screening Calls Completed",
+            value: "52",
+            icon: CheckCircle2,
+            iconColor: "text-green-600 dark:text-green-400",
+            bgColor: "bg-green-50 dark:bg-green-900/20",
+        },
+        {
+            title: "Green Applicants",
+            value: "35",
+            icon: Users,
+            iconColor: "text-purple-600 dark:text-purple-400",
+            bgColor: "bg-purple-50 dark:bg-purple-900/20",
+        },
+        {
+            title: "Consultant hours Saved",
+            value: "4.3 hours",
+            icon: Clock,
+            iconColor: "text-orange-600 dark:text-orange-400",
+            bgColor: "bg-orange-50 dark:bg-orange-900/20",
+        },
+    ]
+
     return (
         <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
             <LoaderOverlay isLoading={loading || isRecalling} message={isRecalling ? "Processing..." : "Loading records..."} />
+
+            {!isDiner && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {statCards.map((card, index) => (
+                        <div
+                            key={index}
+                            className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                        >
+                            {/* soft gradient glow */}
+                            <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
+                                <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
+                            </div>
+
+                            {/* subtle dot pattern */}
+                            <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
+                                <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
+                            </div>
+
+                            <div className="relative p-6">
+                                <div className="flex items-center gap-4">
+                                    {/* icon container */}
+                                    <div
+                                        className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
+                                    >
+                                        <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
+                                        <card.icon size={22} />
+                                    </div>
+
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                            {card.title}
+                                        </p>
+                                        <div className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
+                                            {card.value}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>

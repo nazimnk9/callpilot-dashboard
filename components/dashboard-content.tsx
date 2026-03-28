@@ -106,6 +106,7 @@ export function DashboardContent() {
     const [stripe, setStripe] = useState<Stripe | null>(null);
     const [elements, setElements] = useState<StripeElements | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSetupDropdownOpen, setIsSetupDropdownOpen] = useState(false);
     const cardNumberRef = useRef<any>(null);
     const cardExpiryRef = useRef<any>(null);
     const cardCvcRef = useRef<any>(null);
@@ -838,52 +839,104 @@ export function DashboardContent() {
         <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Complete Your Account Setup */}
-                <div>
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Complete Your Account Setup</h1>
+                {(() => {
+                    const setupSteps = [
+                        { label: 'Account Created', key: 'account_created', path: '' },
+                        { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
+                        { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
+                        { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
+                        { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
+                        { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/ai-call-flow-options' }
+                    ];
 
-                    <div className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8">
-                        {/* soft gradient glow */}
-                        <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
-                            <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
-                        </div>
+                    const completedCount = setupSteps.filter(step => orgData?.[step.key] === true || step.key === 'account_created').length;
+                    const isAllCompleted = completedCount === setupSteps.length;
 
-                        {/* subtle dot pattern */}
-                        <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
-                            <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
-                        </div>
+                    if (isAllCompleted) {
+                        return (
+                            <div className="relative">
+                                <div
+                                    onClick={() => setIsSetupDropdownOpen(!isSetupDropdownOpen)}
+                                    className="w-full flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 shadow-sm"
+                                >
+                                    <h1 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                        Complete Your Account Setup ({completedCount}/{setupSteps.length})
+                                    </h1>
+                                    <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isSetupDropdownOpen ? 'rotate-180' : ''}`} />
+                                </div>
 
-                        <div className="relative space-y-3">
-                            {[
-                                { label: 'Account Created', key: 'account_created', path: '' },
-                                { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
-                                { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
-                                { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
-                                { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
-                                { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/ai-call-flow-options' }
-                            ].map((option, idx) => {
-                                const isCompleted = orgData?.[option.key] === true || option.key === 'account_created';
-                                return (
-                                    <div
-                                        key={idx}
-                                        className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
-                                        onClick={() => !isCompleted && router.push(option.path)}
-                                    >
-                                        {isCompleted ? (
-                                            <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
-                                                <Check className="h-4 w-4 text-white stroke-[3px]" />
-                                            </div>
-                                        ) : (
-                                            <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
-                                        )}
-                                        <span className={`text-[17px] font-medium text-gray-800 dark:text-gray-200 transition-all duration-200 ${!isCompleted ? 'group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400' : ''}`}>
-                                            {option.label}
-                                        </span>
+                                {isSetupDropdownOpen && (
+                                    <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="p-6 md:p-8 space-y-3">
+                                            {setupSteps.map((option, idx) => {
+                                                const isCompleted = orgData?.[option.key] === true || option.key === 'account_created';
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
+                                                        onClick={() => !isCompleted && router.push(option.path)}
+                                                    >
+                                                        {isCompleted ? (
+                                                            <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                                <Check className="h-4 w-4 text-white stroke-[3px]" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
+                                                        )}
+                                                        <span className={`text-[17px] font-medium text-gray-800 dark:text-gray-200 transition-all duration-200 ${!isCompleted ? 'group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400' : ''}`}>
+                                                            {option.label}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                );
-                            })}
+                                )}
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div>
+                            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Complete Your Account Setup</h1>
+                            <div className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8">
+                                {/* soft gradient glow */}
+                                <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
+                                    <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
+                                </div>
+
+                                {/* subtle dot pattern */}
+                                <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
+                                    <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
+                                </div>
+
+                                <div className="relative space-y-3">
+                                    {setupSteps.map((option, idx) => {
+                                        const isCompleted = orgData?.[option.key] === true || option.key === 'account_created';
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
+                                                onClick={() => !isCompleted && router.push(option.path)}
+                                            >
+                                                {isCompleted ? (
+                                                    <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                        <Check className="h-4 w-4 text-white stroke-[3px]" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
+                                                )}
+                                                <span className={`text-[17px] font-medium text-gray-800 dark:text-gray-200 transition-all duration-200 ${!isCompleted ? 'group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400' : ''}`}>
+                                                    {option.label}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    );
+                })()}
 
                 <div>
                     <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Account & Usage</h1>
