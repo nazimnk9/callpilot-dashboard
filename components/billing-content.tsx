@@ -18,6 +18,7 @@ import countriesData from "@/lib/countries.json";
 import { toast } from "sonner";
 import { paymentService } from "@/services/payment-service";
 import { getCountryCode } from "@/app/actions";
+import { useRouter } from "next/navigation";
 
 import {
     AlertDialog,
@@ -96,6 +97,7 @@ const STATIC_PRICING_PLANS = [
 ];
 
 export function BillingContent() {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState("Overview")
     const [isTopUpOpen, setIsTopUpOpen] = useState(false)
     const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
@@ -481,7 +483,7 @@ export function BillingContent() {
                 fetchOrgData();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.detail || "Failed to top up wallet");
+                setErrorDetail(errData.details || errData.detail || "Failed to top up wallet");
             }
         } catch (err) {
             console.error("Top-up error:", err);
@@ -615,7 +617,9 @@ export function BillingContent() {
                 fetchCurrentSubscription();
             } else {
                 const errData = await response.json();
-                if (errData.plan && Array.isArray(errData.plan)) {
+                if (errData.details) {
+                    setErrorDetail(errData.details);
+                } else if (errData.plan && Array.isArray(errData.plan)) {
                     setErrorDetail(errData.plan[0]);
                 } else if (errData.detail) {
                     setErrorDetail(errData.detail);
@@ -712,7 +716,9 @@ export function BillingContent() {
                 fetchCurrentSubscription();
             } else {
                 const errData = await response.json();
-                if (errData.plan && Array.isArray(errData.plan)) {
+                if (errData.details) {
+                    setErrorDetail(errData.details);
+                } else if (errData.plan && Array.isArray(errData.plan)) {
                     setErrorDetail(errData.plan[0]);
                 } else if (errData.detail) {
                     setErrorDetail(errData.detail);
@@ -1415,7 +1421,12 @@ export function BillingContent() {
                     </AlertDialogHeader>
                     <AlertDialogFooter className="pt-4">
                         <AlertDialogAction
-                            onClick={() => setErrorDetail(null)}
+                            onClick={() => {
+                                if (errorDetail === "You didn't pay the development fee.") {
+                                    router.push('/dashboard/platform-activation');
+                                }
+                                setErrorDetail(null);
+                            }}
                             className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
                         >
                             Continue

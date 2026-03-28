@@ -365,7 +365,7 @@ export function DashboardContent() {
                 fetchOrgData();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.detail || "Failed to top up wallet");
+                setErrorDetail(errData.details || errData.detail || "Failed to top up wallet");
             }
         } catch (err) {
             console.error("Top-up error:", err);
@@ -717,7 +717,9 @@ export function DashboardContent() {
                 fetchCurrentSubscription();
             } else {
                 const errData = await response.json();
-                if (errData.plan && Array.isArray(errData.plan)) {
+                if (errData.details) {
+                    setErrorDetail(errData.details);
+                } else if (errData.plan && Array.isArray(errData.plan)) {
                     setErrorDetail(errData.plan[0]);
                 } else if (errData.detail) {
                     setErrorDetail(errData.detail);
@@ -795,7 +797,9 @@ export function DashboardContent() {
                 fetchCurrentSubscription();
             } else {
                 const errData = await response.json();
-                if (errData.plan && Array.isArray(errData.plan)) {
+                if (errData.details) {
+                    setErrorDetail(errData.details);
+                } else if (errData.plan && Array.isArray(errData.plan)) {
                     setErrorDetail(errData.plan[0]);
                 } else if (errData.detail) {
                     setErrorDetail(errData.detail);
@@ -1451,7 +1455,12 @@ export function DashboardContent() {
                         </AlertDialogHeader>
                         <AlertDialogFooter className="pt-4">
                             <AlertDialogAction
-                                onClick={() => setErrorDetail(null)}
+                                onClick={() => {
+                                    if (errorDetail === "You didn't pay the development fee.") {
+                                        router.push('/dashboard/platform-activation');
+                                    }
+                                    setErrorDetail(null);
+                                }}
                                 className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
                             >
                                 Continue
