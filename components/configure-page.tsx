@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { flowService } from "@/services/flow-service"
-import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock } from "lucide-react"
+import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock, Volume2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import {
@@ -21,6 +21,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 
 interface ConfigurePageProps {
@@ -159,6 +165,41 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [myFlowUid, setMyFlowUid] = useState("")
     const [redirectToActivation, setRedirectToActivation] = useState(false)
     const [showReleaseDialog, setShowReleaseDialog] = useState(false)
+    const [isVoicePreviewOpen, setIsVoicePreviewOpen] = useState(false)
+    const [selectedVoiceData, setSelectedVoiceData] = useState<any>({
+        "voice_id": "jRAAK67SEFE9m7ci5DhD",
+        "name": "Ollie - Natural & Relaxed",
+        "gender": "male",
+        "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/f0453fa76e4e4a1e973d87b70665a591/voices/jRAAK67SEFE9m7ci5DhD/jeiEjvprTdbY76JXCluu.mp3",
+        "is_default": true,
+    })
+    const isPersistedVoiceSet = useRef(false)
+
+    useEffect(() => {
+        const checkSelectedVoice = () => {
+            const storedVoice = localStorage.getItem("selected_voice")
+            if (storedVoice) {
+                try {
+                    const voice = JSON.parse(storedVoice)
+                    if (voice && voice.voice_id) {
+                        setVoiceId(voice.voice_id)
+                        setSelectedVoiceData(voice)
+                        isPersistedVoiceSet.current = true
+                        // Clear it immediately after using it once on render/reload
+                        localStorage.removeItem("selected_voice")
+                    }
+                } catch (e) {
+                    console.error("Error parsing stored voice:", e)
+                }
+            }
+        }
+
+        checkSelectedVoice()
+
+        // Also listen for focus events to catch the return from back navigation
+        window.addEventListener('focus', checkSelectedVoice)
+        return () => window.removeEventListener('focus', checkSelectedVoice)
+    }, [])
 
     useEffect(() => {
         const nameParam = searchParams.get("name")
@@ -192,8 +233,10 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         const dinerRes = await flowService.getDinerConfig()
                         const dinerData = dinerRes.data
                         if (dinerData) {
-                            setPhoneNumberUid(dinerData.phone?.uid || "")
-                            setVoiceId(dinerData.voice_id || "")
+                            if (!isPersistedVoiceSet.current) {
+                                setVoiceId(dinerData.voice_id || "")
+                                setSelectedVoiceData(dinerData.voice_data || null)
+                            }
                             setRestaurantName(dinerData.restaurant_name || "")
                             setAssistantName(dinerData.assistant_name || "")
                             setIsUpdateMode(true)
@@ -212,7 +255,10 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                             setPlatformUid(configData.platform?.uid || "")
                             setPhoneNumberUid(configData.phone?.uid || "")
-                            setVoiceId(configData.voice_id || "")
+                            if (!isPersistedVoiceSet.current) {
+                                setVoiceId(configData.voice_id || "")
+                                setSelectedVoiceData(configData.voice_data || null)
+                            }
                             setMyFlowUid(configData.my_flow?.uid || "")
                             setTimezone(configData.timezone || "")
 
@@ -440,7 +486,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     phone_uid: phoneNumberUid,
                     voice_id: voiceId,
                     restaurant_name: restaurantName,
-                    assistant_name: assistantName
+                    assistant_name: assistantName,
+                    voice_data: selectedVoiceData
                 }
 
                 if (isUpdateMode) {
@@ -477,7 +524,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 phone_uid: phoneNumberUid,
                 voice_id: voiceId,
                 timezone: timezone,
-                primary_question_inputs: activeQuestionUids
+                primary_question_inputs: activeQuestionUids,
+                voice_data: selectedVoiceData
             }
 
             // Add flattened timeline fields in 24h format
@@ -496,6 +544,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
             // Cleanup local storage and state upon success
             if (typeof window !== 'undefined') {
+                localStorage.removeItem("selected_voice")
                 localStorage.removeItem("added_question_ids")
             }
             setAddedQuestions([])
@@ -518,6 +567,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     setPlatformUid(configData.platform?.uid || "")
                     setPhoneNumberUid(configData.phone?.uid || "")
                     setVoiceId(configData.voice_id || "")
+                    setSelectedVoiceData(configData.voice_data || null)
                     setMyFlowUid(configData.my_flow?.uid || "")
                     setTimezone(configData.timezone || "")
 
@@ -644,12 +694,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     </div>
                 </div>
 
-                {error && (
+                {/* {error && (
                     <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 flex items-center gap-2 border border-red-100 dark:border-red-900/30">
                         <AlertCircle className="h-5 w-5" />
                         <span>{error}</span>
                     </div>
-                )}
+                )} */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {searchParams.get("code") === "AICALL191" ? (
@@ -680,17 +730,31 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
-                                            <Input
-                                                disabled={isUpdateMode && !isEditing}
-                                                value={voiceId}
-                                                onChange={(e) => setVoiceId(e.target.value)}
-                                                placeholder="Enter Voice ID"
-                                                className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                            />
-                                            <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                <a href="https://elevenlabs.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Choose Another One</a>
-                                            </p>
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    disabled={true}
+                                                    readOnly={true}
+                                                    value={selectedVoiceData ? selectedVoiceData.name : voiceId}
+                                                    placeholder="Enter Voice ID"
+                                                    className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 cursor-not-allowed"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    disabled={!selectedVoiceData}
+                                                    onClick={() => setIsVoicePreviewOpen(true)}
+                                                    className="h-8 w-8 rounded-xl border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all flex-shrink-0"
+                                                >
+                                                    <Volume2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            {(!isUpdateMode || !isEditing) && searchParams.get("code") !== "AICALL191" && (
+                                                <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                    <Link href="/dashboard/voices" className="text-blue-600 dark:text-blue-400 hover:underline">Choose Another One</Link>
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </Card>
@@ -704,7 +768,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Restaurant Name</Label>
                                             <Input
-                                                disabled={isUpdateMode && !isEditing}
+                                                disabled={searchParams.get("code") !== "AICALL191" && isUpdateMode && !isEditing}
                                                 value={restaurantName}
                                                 onChange={(e) => setRestaurantName(e.target.value)}
                                                 placeholder="Enter Restaurant Name"
@@ -714,7 +778,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Assistant Name</Label>
                                             <Input
-                                                disabled={isUpdateMode && !isEditing}
+                                                disabled={searchParams.get("code") !== "AICALL191" && isUpdateMode && !isEditing}
                                                 value={assistantName}
                                                 onChange={(e) => setAssistantName(e.target.value)}
                                                 placeholder="Enter Assistant Name"
@@ -767,17 +831,31 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             </p>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice ID (Optional)</Label>
-                                            <Input
-                                                disabled={isUpdateMode && !isEditing}
-                                                value={voiceId}
-                                                onChange={(e) => setVoiceId(e.target.value)}
-                                                placeholder="Enter Voice ID"
-                                                className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                            />
-                                            <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                <a href="https://elevenlabs.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Choose Another One</a>
-                                            </p>
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">ElevenLabs Voice</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    disabled={true}
+                                                    readOnly={true}
+                                                    value={selectedVoiceData ? selectedVoiceData.name : voiceId}
+                                                    placeholder="Enter Voice ID"
+                                                    className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 cursor-not-allowed"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    disabled={!selectedVoiceData}
+                                                    onClick={() => setIsVoicePreviewOpen(true)}
+                                                    className="h-8 w-8 rounded-xl border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all flex-shrink-0"
+                                                >
+                                                    <Volume2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            {(isUpdateMode || isEditing) && searchParams.get("code") !== "AICALL191" && (
+                                                <p className="text-xs text-gray-400 dark:text-gray-500">
+                                                    <Link href="/dashboard/voices" className="text-blue-600 dark:text-blue-400 hover:underline">Choose Another One</Link>
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="mb-6 space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
@@ -1129,15 +1207,15 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         <>
                             {!isUpdateMode ? (
                                 <>
-                                <Button
-                                    size="lg"
-                                    onClick={handleSaveConfiguration}
-                                    disabled={isSaving}
-                                    className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
-                                >
-                                    {isSaving ? "Activating..." : "Activate AI Call"}
-                                </Button>
-                                <Button
+                                    <Button
+                                        size="lg"
+                                        onClick={handleSaveConfiguration}
+                                        disabled={isSaving}
+                                        className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                    >
+                                        {isSaving ? "Activating..." : "Activate AI Call"}
+                                    </Button>
+                                    <Button
                                         size="lg"
                                         variant="outline"
                                         onClick={() => setShowReleaseDialog(true)}
@@ -1248,6 +1326,48 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={isVoicePreviewOpen} onOpenChange={setIsVoicePreviewOpen}>
+                <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            <Volume2 className="h-5 w-5 text-blue-500" />
+                            Voice Preview
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 pt-4">
+                        {selectedVoiceData ? (
+                            <>
+                                <div className="text-center">
+                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedVoiceData.name}</h4>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-widest">{selectedVoiceData.gender}</p>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                    <audio
+                                        controls
+                                        autoPlay
+                                        className="w-full"
+                                        key={selectedVoiceData.preview_url}
+                                    >
+                                        <source src={selectedVoiceData.preview_url} type="audio/mpeg" />
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                </div>
+                                <div className="flex justify-center">
+                                    <Button
+                                        onClick={() => setIsVoicePreviewOpen(false)}
+                                        className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-lg shadow-blue-500/20"
+                                    >
+                                        Close
+                                    </Button>
+                                </div>
+                            </>
+                        ) : (
+                            <p className="text-center text-gray-500 py-8">No voice selected to preview.</p>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
