@@ -34,7 +34,7 @@ export default function ActivationPage() {
         uid: "",
         business_name: "",
         reg_number: "",
-        country: "",
+        country: "United Kingdom",
         street_address: "",
         apt_or_suite: "",
         city: "",
@@ -148,7 +148,7 @@ export default function ActivationPage() {
                 uid: data.uid || "",
                 business_name: data.business_name || data.name || "",
                 reg_number: data.reg_number || "",
-                country: data.country || "",
+                country: data.country || "United Kingdom",
                 street_address: data.street_address || "",
                 apt_or_suite: data.apt_or_suite || "",
                 city: data.city || "",
@@ -452,25 +452,27 @@ export default function ActivationPage() {
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Information</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Please provide your basic business details.</p>
+                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Please provide your basic business details.</p> */}
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="business_name" className="text-sm font-semibold">Business Name</Label>
+                                        <Label htmlFor="business_name" className="text-sm font-semibold">Registered Business Name <span className="text-red-500">*</span></Label>
                                         <Input
                                             id="business_name"
                                             placeholder="Enter business name"
                                             value={org.business_name}
                                             onChange={(e) => setOrg({ ...org, business_name: e.target.value })}
+                                            required
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="reg_number" className="text-sm font-semibold">Business Registration Number</Label>
+                                        <Label htmlFor="reg_number" className="text-sm font-semibold">Business Registration Number <span className="text-red-500">*</span></Label>
                                         <Input
                                             id="reg_number"
                                             placeholder="Enter registration number"
                                             value={org.reg_number}
                                             onChange={(e) => setOrg({ ...org, reg_number: e.target.value })}
+                                            required
                                         />
                                     </div>
                                 </div>
@@ -488,25 +490,64 @@ export default function ActivationPage() {
                         {currentStep === 2 && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Address</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Where is your business located?</p>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Registered Business Address</h3>
+                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Where is your business located?</p> */}
                                 </div>
 
                                 {/* Preview Section from Step 1 */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Name</p>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registration Number</p>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-semibold">Business Country</Label>
+                                        <Label htmlFor="street_address" className="text-sm font-semibold">Street Address <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="street_address"
+                                            placeholder="Enter street address"
+                                            value={org.street_address}
+                                            onChange={(e) => setOrg({ ...org, street_address: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="city" className="text-sm font-semibold">Town / City <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="city"
+                                            placeholder="Enter city"
+                                            value={org.city}
+                                            onChange={(e) => setOrg({ ...org, city: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="province" className="text-sm font-semibold">State</Label>
+                                        <Input
+                                            id="province"
+                                            placeholder="Enter province"
+                                            value={org.province}
+                                            onChange={(e) => setOrg({ ...org, province: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="post_code" className="text-sm font-semibold">Postcode / ZIP {org.country === "United Kingdom" && <span className="text-red-500">*</span>}</Label>
+                                        <Input
+                                            id="post_code"
+                                            placeholder="Enter post code"
+                                            value={org.post_code}
+                                            onChange={(e) => setOrg({ ...org, post_code: e.target.value })}
+                                            required={org.country === "United Kingdom"}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-semibold">Country</Label>
                                         <div className="relative" ref={dropdownRef}>
                                             <div
                                                 onClick={() => setIsCountryOpen(!isCountryOpen)}
@@ -565,51 +606,12 @@ export default function ActivationPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="street_address" className="text-sm font-semibold">Street Address <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="street_address"
-                                            placeholder="Enter street address"
-                                            value={org.street_address}
-                                            onChange={(e) => setOrg({ ...org, street_address: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
                                         <Label htmlFor="apt_or_suite" className="text-sm font-semibold">APT/Suite</Label>
                                         <Input
                                             id="apt_or_suite"
                                             placeholder="Enter apartment or suite"
                                             value={org.apt_or_suite}
                                             onChange={(e) => setOrg({ ...org, apt_or_suite: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="city" className="text-sm font-semibold">City <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="city"
-                                            placeholder="Enter city"
-                                            value={org.city}
-                                            onChange={(e) => setOrg({ ...org, city: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="post_code" className="text-sm font-semibold">Post Office <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="post_code"
-                                            placeholder="Enter post code"
-                                            value={org.post_code}
-                                            onChange={(e) => setOrg({ ...org, post_code: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="province" className="text-sm font-semibold">Province</Label>
-                                        <Input
-                                            id="province"
-                                            placeholder="Enter province"
-                                            value={org.province}
-                                            onChange={(e) => setOrg({ ...org, province: e.target.value })}
                                         />
                                     </div>
                                 </div>
@@ -635,7 +637,7 @@ export default function ActivationPage() {
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Upload required documents for verification.</p>
+                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Upload required documents for verification.</p> */}
                                 </div>
 
                                 {/* Preview Section */}

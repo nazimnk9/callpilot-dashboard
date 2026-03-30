@@ -34,7 +34,7 @@ export function OrganizationContent() {
         uid: "",
         business_name: "",
         reg_number: "",
-        country: "",
+        country: "United Kingdom",
         street_address: "",
         apt_or_suite: "",
         city: "",
@@ -57,7 +57,7 @@ export function OrganizationContent() {
         uid: "",
         business_name: "",
         reg_number: "",
-        country: "",
+        country: "United Kingdom",
         street_address: "",
         apt_or_suite: "",
         city: "",
@@ -124,7 +124,7 @@ export function OrganizationContent() {
                 uid: data.uid || "",
                 business_name: data.business_name || data.name || "",
                 reg_number: data.reg_number || "",
-                country: data.country || "",
+                country: data.country || "United Kingdom",
                 street_address: data.street_address || "",
                 apt_or_suite: data.apt_or_suite || "",
                 city: data.city || "",
@@ -273,7 +273,7 @@ export function OrganizationContent() {
                         <div className="space-y-6">
                             <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Information</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Basic identification details for your business.</p>
+                                {/* <p className="text-sm text-gray-500 dark:text-gray-400">Basic identification details for your business.</p> */}
                             </div>
                             {editOrg.is_submitted_for_verification && (
                                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl flex items-center gap-3">
@@ -285,7 +285,7 @@ export function OrganizationContent() {
                             )}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="business_name" className="text-sm font-semibold dark:text-gray-100">Business Name</Label>
+                                    <Label htmlFor="business_name" className="text-sm font-semibold dark:text-gray-100">Registered Business Name <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="business_name"
                                         placeholder="Enter business name"
@@ -293,10 +293,11 @@ export function OrganizationContent() {
                                         onChange={(e) => setEditOrg({ ...editOrg, business_name: e.target.value })}
                                         className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                         disabled={editOrg.is_submitted_for_verification}
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="reg_number" className="text-sm font-semibold dark:text-gray-100">Business Registration Number</Label>
+                                    <Label htmlFor="reg_number" className="text-sm font-semibold dark:text-gray-100">Business Registration Number <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="reg_number"
                                         placeholder="Enter registration number"
@@ -304,6 +305,7 @@ export function OrganizationContent() {
                                         onChange={(e) => setEditOrg({ ...editOrg, reg_number: e.target.value })}
                                         className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                         disabled={editOrg.is_submitted_for_verification}
+                                        required
                                     />
                                 </div>
                             </div>
@@ -312,12 +314,59 @@ export function OrganizationContent() {
                         {/* Business Address Section */}
                         <div className="space-y-6">
                             <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Address</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Physical and legal location of your business.</p>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Registered Business Address</h3>
+                                {/* <p className="text-sm text-gray-500 dark:text-gray-400">Physical and legal location of your business.</p> */}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-semibold dark:text-gray-100">Business Country</Label>
+                                    <Label htmlFor="street_address" className="text-sm font-semibold dark:text-gray-100">Street Address <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="street_address"
+                                        placeholder="Enter street address"
+                                        value={editOrg.street_address}
+                                        onChange={(e) => setEditOrg({ ...editOrg, street_address: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="city" className="text-sm font-semibold dark:text-gray-100">Town / City <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="city"
+                                        placeholder="Enter city"
+                                        value={editOrg.city}
+                                        onChange={(e) => setEditOrg({ ...editOrg, city: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="province" className="text-sm font-semibold dark:text-gray-100">State</Label>
+                                    <Input
+                                        id="province"
+                                        placeholder="Enter province"
+                                        value={editOrg.province}
+                                        onChange={(e) => setEditOrg({ ...editOrg, province: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="post_code" className="text-sm font-semibold dark:text-gray-100">Postcode / ZIP {editOrg.country === "United Kingdom" && <span className="text-red-500">*</span>}</Label>
+                                    <Input
+                                        id="post_code"
+                                        placeholder="Enter post code"
+                                        value={editOrg.post_code}
+                                        onChange={(e) => setEditOrg({ ...editOrg, post_code: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                        required={editOrg.country === "United Kingdom"}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-semibold dark:text-gray-100">Country</Label>
                                     <div className="relative" ref={dropdownRef}>
                                         <div
                                             onClick={() => !editOrg.is_submitted_for_verification && setIsCountryOpen(!isCountryOpen)}
@@ -376,59 +425,12 @@ export function OrganizationContent() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="street_address" className="text-sm font-semibold dark:text-gray-100">Street Address <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="street_address"
-                                        placeholder="Enter street address"
-                                        value={editOrg.street_address}
-                                        onChange={(e) => setEditOrg({ ...editOrg, street_address: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
                                     <Label htmlFor="apt_or_suite" className="text-sm font-semibold dark:text-gray-100">APT/Suite</Label>
                                     <Input
                                         id="apt_or_suite"
                                         placeholder="Enter apartment or suite"
                                         value={editOrg.apt_or_suite}
                                         onChange={(e) => setEditOrg({ ...editOrg, apt_or_suite: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="city" className="text-sm font-semibold dark:text-gray-100">City <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="city"
-                                        placeholder="Enter city"
-                                        value={editOrg.city}
-                                        onChange={(e) => setEditOrg({ ...editOrg, city: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="post_code" className="text-sm font-semibold dark:text-gray-100">Post Office <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="post_code"
-                                        placeholder="Enter post code"
-                                        value={editOrg.post_code}
-                                        onChange={(e) => setEditOrg({ ...editOrg, post_code: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="province" className="text-sm font-semibold dark:text-gray-100">Province</Label>
-                                    <Input
-                                        id="province"
-                                        placeholder="Enter province"
-                                        value={editOrg.province}
-                                        onChange={(e) => setEditOrg({ ...editOrg, province: e.target.value })}
                                         className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                         disabled={editOrg.is_submitted_for_verification}
                                     />
@@ -440,7 +442,7 @@ export function OrganizationContent() {
                         <div className="space-y-6">
                             <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Compliance documents for account verification.</p>
+                                {/* <p className="text-sm text-gray-500 dark:text-gray-400">Compliance documents for account verification.</p> */}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
