@@ -44,7 +44,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   // Check if current route is a settings page to initialize the view
-  const isSettingsPage = pathname === '/dashboard/profile' || pathname === '/dashboard/organization' || pathname === '/dashboard/billing' || pathname === '/dashboard/help/support-tickets';
+  const isSettingsPage = pathname === '/dashboard/profile' || pathname === '/dashboard/organization' || pathname === '/dashboard/billing' || pathname === '/dashboard/help/support-tickets' || pathname === '/dashboard/users';
 
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [isSettingsView, setIsSettingsView] = useState(isSettingsPage);
@@ -75,6 +75,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { label: 'Organization', isHeader: true },
     { icon: FileText, label: 'Business Details', href: '/dashboard/organization', isBold: true },
     { icon: CreditCard, label: 'Billing', href: '/dashboard/billing', isBold: true },
+    { icon: Users, label: 'Users', href: '/dashboard/users', isBold: true },
     { label: 'Support Ticket', isHeader: true },
     { icon: MessageSquare, label: 'Support Ticket', href: '/dashboard/help/support-tickets', isBold: true },
   ];

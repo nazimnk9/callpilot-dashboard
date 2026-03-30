@@ -74,5 +74,17 @@ export const profileService = {
 
     async getPlatformStatus() {
         return api.get("/organizations/platform-status");
+    },
+
+    async getOrganizationUsers() {
+        return api.get("/organizations/users/");
+    },
+
+    async inviteUser(data: { role: string; email: string }) {
+        return api.post("/organizations/invite/", data);
+    },
+
+    async getSentInvitations() {
+        return api.get("/organizations/invite/");
     }
 };
