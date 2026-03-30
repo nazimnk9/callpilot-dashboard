@@ -376,7 +376,7 @@ export function OrganizationContent() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="street_address" className="text-sm font-semibold dark:text-gray-100">Street Address</Label>
+                                    <Label htmlFor="street_address" className="text-sm font-semibold dark:text-gray-100">Street Address <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="street_address"
                                         placeholder="Enter street address"
@@ -384,6 +384,7 @@ export function OrganizationContent() {
                                         onChange={(e) => setEditOrg({ ...editOrg, street_address: e.target.value })}
                                         className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                         disabled={editOrg.is_submitted_for_verification}
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -398,7 +399,7 @@ export function OrganizationContent() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="city" className="text-sm font-semibold dark:text-gray-100">City</Label>
+                                    <Label htmlFor="city" className="text-sm font-semibold dark:text-gray-100">City <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="city"
                                         placeholder="Enter city"
@@ -406,10 +407,11 @@ export function OrganizationContent() {
                                         onChange={(e) => setEditOrg({ ...editOrg, city: e.target.value })}
                                         className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                         disabled={editOrg.is_submitted_for_verification}
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="post_code" className="text-sm font-semibold dark:text-gray-100">Post Office</Label>
+                                    <Label htmlFor="post_code" className="text-sm font-semibold dark:text-gray-100">Post Office <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="post_code"
                                         placeholder="Enter post code"
@@ -417,6 +419,7 @@ export function OrganizationContent() {
                                         onChange={(e) => setEditOrg({ ...editOrg, post_code: e.target.value })}
                                         className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                         disabled={editOrg.is_submitted_for_verification}
+                                        required
                                     />
                                 </div>
                                 <div className="space-y-2">

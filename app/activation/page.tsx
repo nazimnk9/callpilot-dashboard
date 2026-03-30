@@ -522,12 +522,13 @@ export default function ActivationPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="street_address" className="text-sm font-semibold">Street Address</Label>
+                                        <Label htmlFor="street_address" className="text-sm font-semibold">Street Address <span className="text-red-500">*</span></Label>
                                         <Input
                                             id="street_address"
                                             placeholder="Enter street address"
                                             value={org.street_address}
                                             onChange={(e) => setOrg({ ...org, street_address: e.target.value })}
+                                            required
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -540,21 +541,23 @@ export default function ActivationPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="city" className="text-sm font-semibold">City</Label>
+                                        <Label htmlFor="city" className="text-sm font-semibold">City <span className="text-red-500">*</span></Label>
                                         <Input
                                             id="city"
                                             placeholder="Enter city"
                                             value={org.city}
                                             onChange={(e) => setOrg({ ...org, city: e.target.value })}
+                                            required
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="post_code" className="text-sm font-semibold">Post Office</Label>
+                                        <Label htmlFor="post_code" className="text-sm font-semibold">Post Office <span className="text-red-500">*</span></Label>
                                         <Input
                                             id="post_code"
                                             placeholder="Enter post code"
                                             value={org.post_code}
                                             onChange={(e) => setOrg({ ...org, post_code: e.target.value })}
+                                            required
                                         />
                                     </div>
                                     <div className="space-y-2">
