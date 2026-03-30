@@ -20,8 +20,9 @@ import { Sidebar } from "@/components/sidebar"
 import { Topbar } from "@/components/topbar"
 import { authService, cookieUtils } from "@/services/auth-service"
 import { profileService } from "@/services/profile-service"
-import { ArrowLeft, Volume2, Copy, Check, Play, Loader2, UserCheck } from "lucide-react"
+import { ArrowLeft, Volume2, Copy, Check, Play, Loader2, UserCheck, Filter } from "lucide-react"
 import { toast } from "sonner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Voice {
     voice_id: string
@@ -41,6 +42,7 @@ export default function VoicesPage() {
     const [isSelectConfirmOpen, setIsSelectConfirmOpen] = useState(false)
     const [voiceToSelect, setVoiceToSelect] = useState<Voice | null>(null)
     const [copiedId, setCopiedId] = useState<string | null>(null)
+    const [genderFilter, setGenderFilter] = useState<string>("all")
 
     // Dashboard Layout State
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -96,7 +98,7 @@ export default function VoicesPage() {
     useEffect(() => {
         const fetchVoices = async () => {
             try {
-                const response = await flowService.getVoices()
+                const response = await flowService.getVoices(genderFilter === "all" ? undefined : genderFilter)
                 setVoices(response.data)
             } catch (error) {
                 console.error("Error fetching voices:", error)
@@ -108,7 +110,7 @@ export default function VoicesPage() {
         if (!isLoading) {
             fetchVoices()
         }
-    }, [isLoading])
+    }, [isLoading, genderFilter])
 
     const handleCopy = (id: string) => {
         navigator.clipboard.writeText(id)
@@ -159,22 +161,40 @@ export default function VoicesPage() {
 
                 <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
                     <div className="max-w-7xl mx-auto">
-                        <div className="flex items-center gap-4 mb-8">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => router.back()}
-                                className="rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                            >
-                                <ArrowLeft className="h-6 w-6" />
-                            </Button>
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-                                    Choose ElevenLabs Voice
-                                </h1>
-                                <p className="text-gray-500 dark:text-gray-400">
-                                    Listen and select a voice for your AI assistant
-                                </p>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
+                            <div className="flex items-center gap-4">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => router.back()}
+                                    className="rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <ArrowLeft className="h-6 w-6" />
+                                </Button>
+                                <div>
+                                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                                        Choose ElevenLabs Voice
+                                    </h1>
+                                    <p className="text-gray-500 dark:text-gray-400">
+                                        Listen and select a voice for your AI assistant
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 bg-white dark:bg-gray-900 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm min-w-[200px]">
+                                <div className="pl-2">
+                                    <Filter className="h-4 w-4 text-gray-400" />
+                                </div>
+                                <Select value={genderFilter} onValueChange={setGenderFilter}>
+                                    <SelectTrigger className="border-none shadow-none focus:ring-0 bg-transparent h-9 text-sm font-medium">
+                                        <SelectValue placeholder="Filter by Gender" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
+                                        <SelectItem value="all" className="rounded-lg">All Genders</SelectItem>
+                                        <SelectItem value="male" className="rounded-lg">Male</SelectItem>
+                                        <SelectItem value="female" className="rounded-lg">Female</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
@@ -183,7 +203,7 @@ export default function VoicesPage() {
                                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
                                 {voices.map((voice) => (
                                     <Card
                                         key={voice.voice_id}

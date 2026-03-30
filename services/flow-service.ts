@@ -86,7 +86,9 @@ export const flowService = {
     async getDinerReports() {
         return api.get("/interview/bookings/reports");
     },
-    async getVoices() {
-        return api.get("/interview/voices/");
+    async getVoices(gender?: string) {
+        return api.get("/interview/voices/", {
+            params: gender ? { gender } : {}
+        });
     }
 };

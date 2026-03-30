@@ -856,7 +856,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                     <Volume2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
-                                            {(isUpdateMode || isEditing) && searchParams.get("code") !== "AICALL191" && (
+                                            {searchParams.get("code") !== "AICALL191" && (
                                                 <p className="text-xs text-gray-400 dark:text-gray-500">
                                                     <Link href="/dashboard/voices" className="text-blue-600 dark:text-blue-400 hover:underline">Choose Another One</Link>
                                                 </p>
