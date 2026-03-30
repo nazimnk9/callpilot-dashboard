@@ -207,6 +207,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         if (nameParam) {
             setFeatureName(nameParam)
         }
+        if (featureUid) {
+            setMyFlowUid(featureUid)
+        }
 
         const fetchData = async () => {
             try {
@@ -249,8 +252,10 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         const configRes = await flowService.getCallConfig()
                         const configList = configRes.data.results
 
-                        if (configList && configList.length > 0) {
-                            const configData = configList[0]
+                        // Find the config that matches the current flow UID
+                        const configData = configList.find((c: any) => c.my_flow?.uid === (featureUid || myFlowUid)) || configList[0]
+
+                        if (configData) {
                             setIsUpdateMode(true)
 
                             setPlatformUid(configData.platform?.uid || "")
@@ -259,7 +264,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 setVoiceId(configData.voice_id || "")
                                 setSelectedVoiceData(configData.voice_data || null)
                             }
-                            setMyFlowUid(configData.my_flow?.uid || "")
+                            setMyFlowUid(configData.my_flow?.uid || featureUid || "")
                             setTimezone(configData.timezone || "")
 
                             // Sync additional questions
@@ -1195,14 +1200,26 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 {/* Bottom Save Bar */}
                 <div className="mt-12 flex justify-center gap-4">
                     {searchParams.get("code") === "AICALL191" ? (
-                        <Button
-                            size="lg"
-                            onClick={handleSaveConfiguration}
-                            disabled={isSaving}
-                            className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
-                        >
-                            {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <Button
+                                size="lg"
+                                onClick={handleSaveConfiguration}
+                                disabled={isSaving}
+                                className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                            >
+                                {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
+                            </Button>
+                            {isUpdateMode && (
+                                <Button
+                                    size="lg"
+                                    variant="outline"
+                                    onClick={() => setShowReleaseDialog(true)}
+                                    className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                >
+                                    Release Flow
+                                </Button>
+                            )}
+                        </div>
                     ) : (
                         <>
                             {!isUpdateMode ? (
