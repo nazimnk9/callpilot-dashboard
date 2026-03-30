@@ -643,36 +643,36 @@ export default function ActivationPage() {
                                 {/* Preview Section */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Name</p>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registration Number</p>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Country</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
                                     </div>
                                     <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
                                         <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">City</p>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Post Office</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Province</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
                                     </div>
                                 </div>
 
