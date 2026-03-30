@@ -389,12 +389,12 @@ export function ProfileContent() {
                 {/* Tabs */}
                 <div className="flex items-center gap-6 border-b border-gray-100 dark:border-gray-800">
                     <button
-                        onClick={() => setActiveTab("User")}
-                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === "User" ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                        onClick={() => setActiveTab("Profile Details")}
+                        className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === "Profile Details" ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                             }`}
                     >
-                        User
-                        {activeTab === "User" && (
+                        Profile Details
+                        {activeTab === "Profile Details" && (
                             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900 dark:bg-gray-100" />
                         )}
                     </button>
@@ -412,14 +412,14 @@ export function ProfileContent() {
 
                 {/* Form Content */}
                 <div className="max-w-md space-y-3 pt-2">
-                    {activeTab === "User" ? (
+                    {activeTab === "Profile Details" ? (
                         <>
                             {/* First Name Field */}
                             <div className="space-y-1">
                                 <Label htmlFor="first_name" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     First Name
                                 </Label>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Your first name</p>
+                                {/* <p className="text-sm text-gray-500 dark:text-gray-400">Your first name</p> */}
                                 <Input
                                     id="first_name"
                                     value={profile.first_name}
@@ -434,7 +434,7 @@ export function ProfileContent() {
                                 <Label htmlFor="last_name" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     Last Name
                                 </Label>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Your last name</p>
+                                {/* <p className="text-sm text-gray-500 dark:text-gray-400">Your last name</p> */}
                                 <Input
                                     id="last_name"
                                     value={profile.last_name}
@@ -449,20 +449,23 @@ export function ProfileContent() {
                                 <Label htmlFor="email" className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                                     Email address
                                 </Label>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">The email address associated with this account</p>
-                                <Input
+                                <p className="text-sm text-gray-500 dark:text-gray-400">This email is used for login and cannot be changed</p>
+                                {/* <Input
                                     id="email"
                                     type="email"
                                     value={profile.email}
                                     disabled
                                     className="h-11 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent opacity-70"
-                                />
+                                /> */}
+                                <p className="text-[15px] font-medium text-gray-900 dark:text-gray-100 pt-2">
+                                    {profile.email}
+                                </p>
                             </div>
 
                             {/* OTP Toggle Field */}
                             <CustomToggle
-                                label="OTP required while Login"
-                                description="Enable/Disable OTP requirement during login process"
+                                label="Two-Factor Authentication (2FA)"
+                                description="Add an extra layer of security to your account during login"
                                 checked={profile.is_otp_required}
                                 onChange={(val) => setProfile({ ...profile, is_otp_required: val })}
                             />
@@ -474,7 +477,7 @@ export function ProfileContent() {
                                     disabled={isSaving}
                                     className="bg-[#1a1c1e] dark:bg-gray-100 hover:bg-[#2a2c2e] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold px-8 py-2.5 rounded-lg transition-all duration-200"
                                 >
-                                    Save
+                                    Save Changes
                                 </Button>
                             </div>
                         </>
