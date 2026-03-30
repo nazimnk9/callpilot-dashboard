@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { profileService } from "@/services/profile-service";
 import { LoaderOverlay } from "@/components/auth/loader-overlay";
-import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone } from "lucide-react";
+import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone, LogOut } from "lucide-react";
 import { authService, cookieUtils } from '@/services/auth-service';
 import countriesData from "@/lib/countries.json";
 import {
@@ -62,6 +62,7 @@ export default function ActivationPage() {
         description: [],
         variant: "default"
     });
+    const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
     const [countrySearch, setCountrySearch] = useState("");
     const [isCountryOpen, setIsCountryOpen] = useState(false);
@@ -289,6 +290,13 @@ export default function ActivationPage() {
         }
     };
 
+    const handleLogout = () => {
+        cookieUtils.set('access', '', -1);
+        cookieUtils.set('refresh', '', -1);
+        setIsLogoutDialogOpen(false);
+        router.push('/login');
+    };
+
     const filteredCountries = countries.filter(c =>
         c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
         c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
@@ -298,6 +306,32 @@ export default function ActivationPage() {
     return (
         <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col">
             <LoaderOverlay isLoading={isLoading || isSaving} />
+
+            <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="dark:text-gray-100">Are you sure you want to logout?</AlertDialogTitle>
+                        <AlertDialogDescription className="dark:text-gray-400">
+                            You will be redirected to the login page.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-2">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setIsLogoutDialogOpen(false)}
+                            className="dark:text-gray-400 dark:hover:bg-gray-800"
+                        >
+                            Cancel
+                        </Button>
+                        <AlertDialogAction
+                            onClick={handleLogout}
+                            className="bg-red-600 hover:bg-red-700 text-white border-none"
+                        >
+                            Logout
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AlertDialog open={alertConfig.open} onOpenChange={(open) => setAlertConfig(prev => ({ ...prev, open }))}>
                 <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
@@ -324,11 +358,20 @@ export default function ActivationPage() {
             </AlertDialog>
 
             {/* Header */}
-            <header className="h-16 border-b border-gray-100 dark:border-gray-800 flex items-center px-8 bg-white dark:bg-gray-950 sticky top-0 z-10">
+            <header className="h-16 border-b border-gray-100 dark:border-gray-800 flex items-center px-8 bg-white dark:bg-gray-950 sticky top-0 z-10 justify-between">
                 <div className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                     <span className="text-lg font-semibold">Dashboard</span>
                     <Lock size={18} className="text-gray-400" />
                 </div>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 gap-2 font-medium transition-colors"
+                    onClick={() => setIsLogoutDialogOpen(true)}
+                >
+                    <LogOut size={18} />
+                    <span>Logout</span>
+                </Button>
             </header>
 
             <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-12 space-y-12">
@@ -688,6 +731,17 @@ export default function ActivationPage() {
                             </div>
                         )}
                     </div>
+                </div>
+                <div className="flex justify-end text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    <p>
+                        Need help?{" "}
+                        <a
+                            href="mailto:contact@swiftwave.ai"
+                            className="text-primary hover:underline font-medium"
+                        >
+                            Send a mail to us.
+                        </a>
+                    </p>
                 </div>
             </main>
         </div>
