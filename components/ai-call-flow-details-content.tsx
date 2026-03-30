@@ -79,7 +79,7 @@ export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps
                         </h2>
                         <div className="flex flex-col gap-4">
                             <div className="flex items-center gap-2 text-sm text-gray-500 font-medium capitalize">
-                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{flow.call_direction}</span>
+                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{flow.call_direction} Call</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-gray-500 font-medium uppercase tracking-wider">
                                 <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{flow.flow_category.replace(/_/g, ' ')}</span>
