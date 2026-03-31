@@ -26,6 +26,15 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { paymentService } from "@/services/payment-service";
 import countriesData from "@/lib/countries.json";
 import { getCountryCode } from "@/app/actions";
@@ -64,6 +73,17 @@ export default function PlatformActivationPage() {
     const [countrySearch, setCountrySearch] = useState("");
     const [isCountryOpen, setIsCountryOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const [isCardComplete, setIsCardComplete] = useState(false);
+    const [errorDetail, _setErrorDetail] = useState<string | null>(null);
+    const setErrorDetail = (msg: string | null) => {
+        if (msg === "You didn't pay the development fee.") {
+            // Already on the activation page, just show the message or ignore if redirect is redundant
+            _setErrorDetail(msg);
+            return;
+        }
+        _setErrorDetail(msg);
+    };
 
 
     useEffect(() => {
@@ -175,6 +195,11 @@ export default function PlatformActivationPage() {
                 const number = els.create('cardNumber', { style });
                 const expiry = els.create('cardExpiry', { style });
                 const cvc = els.create('cardCvc', { style });
+
+                number.on('change', (event) => {
+                    setIsCardComplete(event.complete);
+                });
+
                 number.mount(cardNumberContainerRef.current);
                 expiry.mount(cardExpiryContainerRef.current);
                 cvc.mount(cardCvcContainerRef.current);
@@ -196,6 +221,25 @@ export default function PlatformActivationPage() {
 
     const handleAddPaymentMethod = async () => {
         if (!stripe || !elements || !cardNumberRef.current) return;
+
+        if (!isCardComplete) {
+            setErrorDetail("Please enter your card information");
+            return;
+        }
+
+        if (!cardholderName.trim()) {
+            setErrorDetail("Please enter the name on card");
+            return;
+        }
+        if (!selectedCountry) {
+            setErrorDetail("Please select a country");
+            return;
+        }
+        if (!addressLine1.trim()) {
+            setErrorDetail("Please enter the address line 1");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const { paymentMethod, error } = await stripe.createPaymentMethod({
@@ -215,7 +259,7 @@ export default function PlatformActivationPage() {
             });
 
             if (error) {
-                toast.error(error.message);
+                setErrorDetail(error.message || "Failed to create payment method");
                 setIsSubmitting(false);
                 return;
             }
@@ -424,7 +468,7 @@ export default function PlatformActivationPage() {
 
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Card information</label>
+                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Card information <span className="text-red-500">*</span></label>
                             <div className="border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 px-4 py-3 focus-within:ring-1 focus-within:ring-gray-300 dark:focus-within:ring-gray-700 transition-shadow">
                                 <div ref={cardNumberContainerRef} className="mb-3" />
                                 <div className="flex gap-4">
@@ -435,7 +479,7 @@ export default function PlatformActivationPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Name on card</label>
+                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Name on card <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 value={cardholderName}
@@ -454,7 +498,7 @@ export default function PlatformActivationPage() {
                                         className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium flex items-center justify-between cursor-pointer"
                                     >
                                         <span className={selectedCountry ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}>
-                                            {selectedCountry ? selectedCountry.country : "Country"}
+                                            {selectedCountry ? selectedCountry.country : "Country"} <span className="text-red-500">*</span>
                                         </span>
                                         <ChevronsUpDown size={16} />
                                     </div>
@@ -504,7 +548,7 @@ export default function PlatformActivationPage() {
                                     type="text"
                                     value={addressLine1}
                                     onChange={(e) => setAddressLine1(e.target.value)}
-                                    placeholder="Address line 1"
+                                    placeholder="Address line 1 *"
                                     className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px]"
                                 />
                                 <div className="grid grid-cols-2 gap-3">
@@ -536,6 +580,31 @@ export default function PlatformActivationPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+            <AlertDialog open={!!errorDetail} onOpenChange={() => setErrorDetail(null)}>
+                <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                    <AlertDialogHeader>
+                        <div className="flex justify-center items-center gap-3 mb-2">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+                                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <AlertDialogTitle className="text-lg font-bold text-red-600 dark:text-red-400">
+                                Error
+                            </AlertDialogTitle>
+                        </div>
+                        <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">
+                            {errorDetail}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="pt-4">
+                        <AlertDialogAction
+                            onClick={() => setErrorDetail(null)}
+                            className="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl py-2 font-bold"
+                        >
+                            Understood
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

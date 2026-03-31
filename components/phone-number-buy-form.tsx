@@ -85,6 +85,7 @@ export function PhoneNumberBuyForm() {
     const [stateRegion, setStateRegion] = useState("");
     const [isDefault, setIsDefault] = useState(true);
     const [billingCountry, setBillingCountry] = useState("");
+    const [isCardComplete, setIsCardComplete] = useState(false);
     const [errorDetail, _setErrorDetail] = useState<string | null>(null);
     const setErrorDetail = (msg: string | null) => {
         if (msg === "You didn't pay the development fee.") {
@@ -208,6 +209,10 @@ export function PhoneNumberBuyForm() {
                 const expiry = els.create('cardExpiry', { style });
                 const cvc = els.create('cardCvc', { style });
 
+                number.on('change', (event) => {
+                    setIsCardComplete(event.complete);
+                });
+
                 if (cardNumberContainerRef.current) number.mount(cardNumberContainerRef.current);
                 if (cardExpiryContainerRef.current) expiry.mount(cardExpiryContainerRef.current);
                 if (cardCvcContainerRef.current) cvc.mount(cardCvcContainerRef.current);
@@ -252,6 +257,24 @@ export function PhoneNumberBuyForm() {
 
     const handleAddPaymentMethod = async () => {
         if (!stripe || !elements || !cardNumberRef.current) return;
+
+        if (!isCardComplete) {
+            setErrorDetail("Please enter your card information");
+            return;
+        }
+
+        if (!cardholderName.trim()) {
+            setErrorDetail("Please enter the name on card");
+            return;
+        }
+        if (!billingCountry) {
+            setErrorDetail("Please select a country");
+            return;
+        }
+        if (!addressLine1.trim()) {
+            setErrorDetail("Please enter the address line 1");
+            return;
+        }
 
         setIsSubmitting(true);
         try {
@@ -627,7 +650,7 @@ export function PhoneNumberBuyForm() {
                         {/* Card Information */}
                         <div className="space-y-2">
                             <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                Card information
+                                Card information <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
                                 <div className="flex items-center flex-wrap sm:flex-nowrap border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 px-4 py-3 gap-3 focus-within:ring-1 focus-within:ring-gray-300 dark:focus-within:ring-gray-700 transition-shadow">
@@ -648,7 +671,7 @@ export function PhoneNumberBuyForm() {
                         {/* Name on Card */}
                         <div className="space-y-2">
                             <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                Name on card
+                                Name on card <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -671,7 +694,7 @@ export function PhoneNumberBuyForm() {
                                         className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
                                     >
                                         <span className={billingCountry ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}>
-                                            {billingCountry ? (countriesData.find((c: any) => c.country_code === billingCountry)?.country || billingCountry) : "Country"}
+                                            {billingCountry ? (countriesData.find((c: any) => c.country_code === billingCountry)?.country || billingCountry) : "Country"} <span className="text-red-500">*</span>
                                         </span>
                                         <ChevronsUpDown size={16} className="text-gray-400" />
                                     </div>
@@ -719,7 +742,7 @@ export function PhoneNumberBuyForm() {
                                     type="text"
                                     value={addressLine1}
                                     onChange={(e) => setAddressLine1(e.target.value)}
-                                    placeholder="Address line 1"
+                                    placeholder="Address line 1 *"
                                     className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 />
                                 <input
