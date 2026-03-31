@@ -237,6 +237,16 @@ export default function ActivationPage() {
     };
 
     const handleNextStep3 = () => {
+        if (!org.business_registration_certificate || !org.proof_of_address) {
+            setAlertConfig({
+                open: true,
+                title: "Missing Documents",
+                description: ["You are required to provide the following documents to verify your business."],
+                variant: "destructive"
+            });
+            return;
+        }
+
         // Prepare file info for localStorage (since we can't store File objects directly easily)
         const fileInfo = {
             has_cert: !!org.business_registration_certificate,
@@ -777,7 +787,7 @@ export default function ActivationPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="cert" className="text-sm font-semibold">Business Registration Certificate</Label>
+                                        <Label htmlFor="cert" className="text-sm font-semibold">Business Registration Certificate <span className="text-red-500">*</span></Label>
                                         <div className="flex flex-col gap-2">
                                             <Input
                                                 id="cert"
@@ -785,6 +795,7 @@ export default function ActivationPage() {
                                                 accept="image/*,.pdf"
                                                 onChange={(e) => setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null })}
                                                 className="cursor-pointer"
+                                                required
                                             />
                                             {org.business_registration_certificate && (
                                                 <p className="text-xs text-green-500 flex items-center gap-1">
@@ -794,7 +805,7 @@ export default function ActivationPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="proof" className="text-sm font-semibold">Proof of Address</Label>
+                                        <Label htmlFor="proof" className="text-sm font-semibold">Proof of Address <span className="text-red-500">*</span></Label>
                                         <div className="flex flex-col gap-2">
                                             <Input
                                                 id="proof"
@@ -802,6 +813,7 @@ export default function ActivationPage() {
                                                 accept="image/*,.pdf"
                                                 onChange={(e) => setOrg({ ...org, proof_of_address: e.target.files?.[0] || null })}
                                                 className="cursor-pointer"
+                                                required
                                             />
                                             <p className="text-[10px] text-gray-500 italic">Utility Bill or Tax Notice Or Rent</p>
                                             {org.proof_of_address && (

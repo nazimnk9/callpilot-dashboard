@@ -166,6 +166,19 @@ export function OrganizationContent() {
     }
 
     const handleSave = async () => {
+        const hasBusinessCert = !!editOrg.business_registration_certificate || (!!editOrg.existing_certificate_url && editOrg.existing_certificate_url !== "");
+        const hasProofOfAddress = !!editOrg.proof_of_address || (!!editOrg.existing_proof_url && editOrg.existing_proof_url !== "");
+
+        if (!hasBusinessCert || !hasProofOfAddress) {
+            setAlertConfig({
+                open: true,
+                title: "Missing Documents",
+                description: ["You are required to provide the following documents to verify your business."],
+                variant: "destructive"
+            });
+            return;
+        }
+
         const formData = new FormData();
 
         const finalData = {
@@ -178,12 +191,14 @@ export function OrganizationContent() {
             post_code: editOrg.post_code,
             province: editOrg.province,
             country_iso_code: editOrg.country_iso_code,
-            name: editOrg.business_name // Mandatory match
+            name: editOrg.business_name, // Mandatory match
+            is_submitted_for_verification: "true" // Explicitly mark for verification
         };
 
         Object.keys(finalData).forEach(key => {
-            if (finalData[key as keyof typeof finalData] !== null && finalData[key as keyof typeof finalData] !== undefined) {
-                formData.append(key, finalData[key as keyof typeof finalData] as string);
+            const value = finalData[key as keyof typeof finalData];
+            if (value !== null && value !== undefined) {
+                formData.append(key, value as string);
             }
         });
 
@@ -450,7 +465,7 @@ export function OrganizationContent() {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="cert" className="text-sm font-semibold dark:text-gray-100">Business Registration Certificate</Label>
+                                    <Label htmlFor="cert" className="text-sm font-semibold dark:text-gray-100">Business Registration Certificate <span className="text-red-500">*</span></Label>
                                     <div className="flex flex-col gap-2">
                                         <Input
                                             id="cert"
@@ -459,6 +474,7 @@ export function OrganizationContent() {
                                             onChange={(e) => setEditOrg({ ...editOrg, business_registration_certificate: e.target.files?.[0] || null })}
                                             className="cursor-pointer dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                             disabled={editOrg.is_submitted_for_verification}
+                                            required={!editOrg.existing_certificate_url}
                                         />
                                         {editOrg.is_submitted_for_verification && editOrg.existing_certificate_url && (
                                             <a
@@ -478,7 +494,7 @@ export function OrganizationContent() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="proof" className="text-sm font-semibold dark:text-gray-100">Proof of Address</Label>
+                                    <Label htmlFor="proof" className="text-sm font-semibold dark:text-gray-100">Proof of Address <span className="text-red-500">*</span></Label>
                                     <div className="flex flex-col gap-2">
                                         <Input
                                             id="proof"
@@ -487,6 +503,7 @@ export function OrganizationContent() {
                                             onChange={(e) => setEditOrg({ ...editOrg, proof_of_address: e.target.files?.[0] || null })}
                                             className="cursor-pointer dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                             disabled={editOrg.is_submitted_for_verification}
+                                            required={!editOrg.existing_proof_url}
                                         />
                                         <p className="text-[10px] text-gray-500 italic">Utility Bill or Tax Notice Or Rent</p>
                                         {editOrg.is_submitted_for_verification && editOrg.existing_proof_url && (

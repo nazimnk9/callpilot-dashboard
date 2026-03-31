@@ -130,31 +130,6 @@ export default function PlatformActivationPage() {
         _setErrorDetail(msg);
     };
 
-
-    useEffect(() => {
-        // Check if viewport is tablet or larger (768px+)
-        const checkViewport = () => {
-            const isTabletUp = window.innerWidth >= 768;
-            setIsTabletOrLarger(isTabletUp);
-            // Always open sidebar on tablet and larger
-            if (isTabletUp) {
-                setIsSidebarOpen(true);
-            }
-        };
-
-        checkViewport();
-        window.addEventListener('resize', checkViewport);
-        return () => window.removeEventListener('resize', checkViewport);
-    }, []);
-
-    if (isAuthenticated === null) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white" />
-            </div>
-        );
-    }
-
     const [isPlatformActivated, setIsPlatformActivated] = useState<boolean | null>(null);
 
     const fetchPaymentMethods = async () => {
@@ -271,6 +246,33 @@ export default function PlatformActivationPage() {
             cardCvcRef.current = null;
         };
     }, [isAddPaymentOpen, stripe]);
+
+
+    useEffect(() => {
+        // Check if viewport is tablet or larger (768px+)
+        const checkViewport = () => {
+            const isTabletUp = window.innerWidth >= 768;
+            setIsTabletOrLarger(isTabletUp);
+            // Always open sidebar on tablet and larger
+            if (isTabletUp) {
+                setIsSidebarOpen(true);
+            }
+        };
+
+        checkViewport();
+        window.addEventListener('resize', checkViewport);
+        return () => window.removeEventListener('resize', checkViewport);
+    }, []);
+
+    if (isAuthenticated === null) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white" />
+            </div>
+        );
+    }
+
+
 
     const handleAddPaymentMethod = async () => {
         if (!stripe || !elements || !cardNumberRef.current) return;

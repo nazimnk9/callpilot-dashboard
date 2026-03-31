@@ -378,7 +378,7 @@ export function PhoneNumbersContent() {
     const handleSubmitPurchase = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!selectedPmForTopUp) return setErrorDetail("Please select a payment method")
-        if (!selectedCountry) return setErrorDetail("Please select a country")
+        // if (!selectedCountry) return setErrorDetail("Please select a country")
 
         try {
             setIsLoading(true)
@@ -591,7 +591,7 @@ export function PhoneNumbersContent() {
                                         <Button type="button" variant="outline" className="cursor-pointer border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold px-6 py-2 rounded-xl flex items-center gap-2 transition-all duration-200" onClick={() => setIsBuyModalOpen(false)}>
                                             <ArrowLeft className="w-4 h-4 mr-2" /> Cancel
                                         </Button>
-                                        <Button type="submit" disabled={isLoading || !selectedPmForTopUp || !selectedCountry} className="cursor-pointer bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50">
+                                        <Button type="submit" disabled={isLoading || !selectedPmForTopUp} className="cursor-pointer bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50">
                                             {isLoading ? "Processing..." : "Buy AI Number"}
                                         </Button>
                                     </div>
