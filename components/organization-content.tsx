@@ -50,7 +50,8 @@ export function OrganizationContent() {
         billing_email_address: "",
         is_submitted_for_verification: false,
         existing_certificate_url: "",
-        existing_proof_url: ""
+        existing_proof_url: "",
+        country_iso_code: ""
     })
     const [org, setOrg] = useState({
         name: "",
@@ -73,7 +74,8 @@ export function OrganizationContent() {
         billing_email_address: "",
         is_submitted_for_verification: false,
         existing_certificate_url: "",
-        existing_proof_url: ""
+        existing_proof_url: "",
+        country_iso_code: ""
     })
     const [editOrg, setEditOrg] = useState({ ...org })
 
@@ -140,7 +142,8 @@ export function OrganizationContent() {
                 billing_email_address: data.billing_email_address || "",
                 is_submitted_for_verification: data.is_submitted_for_verification || false,
                 existing_certificate_url: data.business_registration_certificate || "",
-                existing_proof_url: data.proof_of_address || ""
+                existing_proof_url: data.proof_of_address || "",
+                country_iso_code: data.country_iso_code || ""
             }
             setInitialOrg(orgData)
             setOrg(orgData)
@@ -174,6 +177,7 @@ export function OrganizationContent() {
             city: editOrg.city,
             post_code: editOrg.post_code,
             province: editOrg.province,
+            country_iso_code: editOrg.country_iso_code,
             name: editOrg.business_name // Mandatory match
         };
 
@@ -373,7 +377,7 @@ export function OrganizationContent() {
                                             className={`w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md h-10 px-3 flex items-center justify-between transition-colors ${editOrg.is_submitted_for_verification ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"}`}
                                         >
                                             <span className={editOrg.country ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
-                                                {editOrg.country || "Select country"}
+                                                {editOrg.country ? `${editOrg.country_iso_code ? `(${editOrg.country_iso_code}) ` : ""}${editOrg.country}` : "Select country"}
                                             </span>
                                             <ChevronsUpDown size={16} className="text-gray-400" />
                                         </div>
@@ -399,7 +403,7 @@ export function OrganizationContent() {
                                                             <div
                                                                 key={c.country_code}
                                                                 onClick={() => {
-                                                                    setEditOrg({ ...editOrg, country: c.country });
+                                                                    setEditOrg({ ...editOrg, country: c.country, country_iso_code: c.country_code });
                                                                     setIsCountryOpen(false);
                                                                     setCountrySearch("");
                                                                 }}

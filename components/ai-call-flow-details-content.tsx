@@ -7,11 +7,21 @@ import {
     CheckCircle2,
     Settings2,
     Bookmark,
+    AlertCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
 import { toast } from "sonner"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface FlowResult {
     id: number;
@@ -36,6 +46,14 @@ interface AICallFlowDetailsContentProps {
 export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps) {
     const router = useRouter()
     const [isConnecting, setIsConnecting] = useState(false)
+    const [errorDetail, _setErrorDetail] = useState<string | null>(null);
+    const setErrorDetail = (msg: string | null) => {
+        if (msg === "You didn't pay the development fee.") {
+            router.push('/dashboard/platform-activation');
+            return;
+        }
+        _setErrorDetail(msg);
+    };
 
     const handleConnectFlow = async () => {
         setIsConnecting(true);
@@ -49,16 +67,16 @@ export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps
                 }
             });
 
+            const data = await response.json();
             if (response.ok) {
                 toast.success("Flow connected successfully!");
                 router.push("/dashboard/phone-call-flows/");
             } else {
-                const errorData = await response.json();
-                toast.error(errorData.message || "Failed to connect flow");
+                setErrorDetail(data.details || data.detail || data.message || "Failed to connect flow");
             }
         } catch (error) {
             console.error("Error connecting flow:", error);
-            toast.error("An error occurred while connecting the flow");
+            setErrorDetail("An error occurred while connecting the flow");
         } finally {
             setIsConnecting(false);
         }
@@ -179,6 +197,32 @@ export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps
                     </Button>
                 </div>
             </div>
+
+            <AlertDialog open={!!errorDetail} onOpenChange={() => _setErrorDetail(null)}>
+                <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                    <AlertDialogHeader>
+                        <div className="flex justify-center items-center gap-3 mb-2">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+                                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <AlertDialogTitle className="text-lg font-bold text-red-600 dark:text-red-400">
+                                Error
+                            </AlertDialogTitle>
+                        </div>
+                        <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">
+                            {errorDetail}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="pt-4">
+                        <AlertDialogAction
+                            onClick={() => _setErrorDetail(null)}
+                            className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
+                        >
+                            Continue
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

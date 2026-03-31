@@ -52,8 +52,6 @@ interface Bundle {
 
 export function PhoneNumberBuyForm() {
     const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState("")
-    const [showErrorDialog, setShowErrorDialog] = useState(false)
     const [successMessage, setSuccessMessage] = useState("")
     const [showSuccessDialog, setShowSuccessDialog] = useState(false)
     const [toast, setToast] = useState<any>(null)
@@ -87,7 +85,14 @@ export function PhoneNumberBuyForm() {
     const [stateRegion, setStateRegion] = useState("");
     const [isDefault, setIsDefault] = useState(true);
     const [billingCountry, setBillingCountry] = useState("");
-    const [errorDetail, setErrorDetail] = useState<string | null>(null);
+    const [errorDetail, _setErrorDetail] = useState<string | null>(null);
+    const setErrorDetail = (msg: string | null) => {
+        if (msg === "You didn't pay the development fee.") {
+            router.push('/dashboard/platform-activation');
+            return;
+        }
+        _setErrorDetail(msg);
+    };
 
     // Country selection
     const [countries, setCountries] = useState<Country[]>([])
@@ -291,7 +296,7 @@ export function PhoneNumberBuyForm() {
                 fetchPaymentMethods();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.detail || "Failed to add payment method");
+                setErrorDetail(errData.details || errData.detail || "Failed to add payment method");
             }
         } catch (err) {
             console.error(err);
@@ -309,8 +314,7 @@ export function PhoneNumberBuyForm() {
             }
         } catch (err: any) {
             console.log("Error fetching countries:", err)
-            setError("Failed to load countries")
-            setShowErrorDialog(true)
+            setErrorDetail("Failed to load countries")
         }
     }
 
@@ -370,17 +374,13 @@ export function PhoneNumberBuyForm() {
 
     const handleSubmitPurchase = async (e: React.FormEvent) => {
         e.preventDefault()
-        setError("")
-
         if (!selectedPmForTopUp) {
-            setError("Please select a payment method")
-            setShowErrorDialog(true)
+            setErrorDetail("Please select a payment method")
             return
         }
 
         if (!selectedCountry) {
-            setError("Please select a country")
-            setShowErrorDialog(true)
+            setErrorDetail("Please select a country")
             return
         }
 
@@ -395,9 +395,8 @@ export function PhoneNumberBuyForm() {
             setShowSuccessDialog(true);
         } catch (err: any) {
             console.log("Error purchasing phone number:", err)
-            const errorMessage = err.response?.data?.error || "Failed to purchase phone number"
-            setError(errorMessage)
-            setShowErrorDialog(true)
+            const errorMessage = err.response?.data?.details || err.response?.data?.error || "Failed to purchase phone number"
+            setErrorDetail(errorMessage)
         } finally {
             setIsLoading(false)
         }
@@ -468,7 +467,7 @@ export function PhoneNumberBuyForm() {
                     </CardHeader> */}
 
                     <CardContent className="pt-8 p-6">
-                        {organization?.id === 8 && organization?.country_iso_code === "US" ? (
+                        {organization?.id === 8 || organization?.country_iso_code === "US" ? (
                             <form onSubmit={handleSubmitPurchase} className="space-y-6">
                                 {/* Country Selection HIDDEN for US */}
 
@@ -819,22 +818,6 @@ export function PhoneNumberBuyForm() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-destructive dark:text-red-400">Error</AlertDialogTitle>
-                        <AlertDialogDescription className="dark:text-gray-400">
-                            {error}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogAction onClick={() => setShowErrorDialog(false)} className="dark:bg-gray-100 dark:text-gray-900">
-                            OK
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
             <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
                 <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
                     <AlertDialogHeader>
@@ -850,6 +833,6 @@ export function PhoneNumberBuyForm() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </div >
     )
 }

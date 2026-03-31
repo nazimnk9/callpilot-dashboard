@@ -16,8 +16,8 @@ import {
 import { Sidebar } from '@/components/sidebar';
 import { Topbar } from '@/components/topbar';
 import { BASE_URL } from "@/lib/baseUrl";
-import { cookieUtils, authService } from "@/services/auth-service";
 import { profileService } from "@/services/profile-service";
+import { cookieUtils } from "@/services/auth-service";
 import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +35,6 @@ export default function PlatformActivationPage() {
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isTabletOrLarger, setIsTabletOrLarger] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
     const [selectedPm, setSelectedPm] = useState<any>(null);
@@ -66,50 +65,7 @@ export default function PlatformActivationPage() {
     const [isCountryOpen, setIsCountryOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            const accessToken = cookieUtils.get('access');
-            const refreshToken = cookieUtils.get('refresh');
 
-            if (!accessToken || !refreshToken) {
-                router.push('/login');
-                return;
-            }
-
-            try {
-                const verifyRes = await authService.verifyToken(accessToken);
-                if (verifyRes.ok) {
-                    const statusRes = await profileService.getPlatformStatus();
-                    if (!statusRes.data.is_given_company_details) {
-                        router.push('/activation');
-                        return;
-                    }
-                    setIsAuthenticated(true);
-                } else {
-                    // Try refresh
-                    const refreshRes = await authService.refreshToken(refreshToken);
-                    if (refreshRes.ok) {
-                        const data = await refreshRes.json();
-                        cookieUtils.set('access', data.access, 7);
-                        cookieUtils.set('refresh', data.refresh, 7);
-
-                        const statusRes = await profileService.getPlatformStatus();
-                        if (!statusRes.data.is_given_company_details) {
-                            router.push('/activation');
-                            return;
-                        }
-                        setIsAuthenticated(true);
-                    } else {
-                        router.push('/login');
-                    }
-                }
-            } catch (err) {
-                router.push('/login');
-            }
-        };
-
-        checkAuth();
-    }, [router]);
     useEffect(() => {
         // Check if viewport is tablet or larger (768px+)
         const checkViewport = () => {
@@ -154,55 +110,53 @@ export default function PlatformActivationPage() {
     };
 
     useEffect(() => {
-        if (isAuthenticated) {
-            const fetchOrgStatus = async () => {
-                try {
-                    const token = cookieUtils.get("access");
-                    const response = await fetch(`${BASE_URL}/organizations/me`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.is_platform_activated) {
-                            router.push('/dashboard');
-                        } else {
-                            setIsPlatformActivated(false);
-                        }
+        const fetchOrgStatus = async () => {
+            try {
+                const token = cookieUtils.get("access");
+                const response = await fetch(`${BASE_URL}/organizations/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.is_platform_activated) {
+                        router.push('/dashboard');
                     } else {
                         setIsPlatformActivated(false);
                     }
-                } catch (err) {
+                } else {
                     setIsPlatformActivated(false);
                 }
-            };
+            } catch (err) {
+                setIsPlatformActivated(false);
+            }
+        };
 
-            fetchOrgStatus();
-            fetchPaymentMethods();
-            const initStripe = async () => {
-                const stripeInstance = await loadStripe('pk_test_51T28pm7kECw44sgCk3RxtMKst01YwUY02L1R93SaiJVPHloYcnWAar0NytN5TcduerTeWbS1yRa0hJehyB7N2JSC00WWO8y9aa');
-                setStripe(stripeInstance);
-            };
-            initStripe();
+        fetchOrgStatus();
+        fetchPaymentMethods();
+        const initStripe = async () => {
+            const stripeInstance = await loadStripe('pk_test_51T28pm7kECw44sgCk3RxtMKst01YwUY02L1R93SaiJVPHloYcnWAar0NytN5TcduerTeWbS1yRa0hJehyB7N2JSC00WWO8y9aa');
+            setStripe(stripeInstance);
+        };
+        initStripe();
 
-            // Fetch user's country automatically
-            const fetchUserCountry = async () => {
-                try {
-                    const countryCode = await getCountryCode();
-                    if (countryCode) {
-                        const country = countriesData.find(c => c.country_code === countryCode);
-                        if (country && !selectedCountry) {
-                            setSelectedCountry(country);
-                        }
+        // Fetch user's country automatically
+        const fetchUserCountry = async () => {
+            try {
+                const countryCode = await getCountryCode();
+                if (countryCode) {
+                    const country = countriesData.find(c => c.country_code === countryCode);
+                    if (country && !selectedCountry) {
+                        setSelectedCountry(country);
                     }
-                } catch (error) {
-                    console.error("Error fetching country:", error);
                 }
-            };
-            fetchUserCountry();
-        }
-    }, [isAuthenticated, router]);
+            } catch (error) {
+                console.error("Error fetching country:", error);
+            }
+        };
+        fetchUserCountry();
+    }, [router]);
 
     useEffect(() => {
         if (isAddPaymentOpen && stripe && !cardNumberRef.current) {
@@ -326,7 +280,7 @@ export default function PlatformActivationPage() {
         }
     };
 
-    if (isAuthenticated === null || isPlatformActivated === null) {
+    if (isPlatformActivated === null) {
         return (
             <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100" />

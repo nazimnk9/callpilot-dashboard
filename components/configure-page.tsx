@@ -508,8 +508,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 console.error("Error saving diner configuration:", err)
                 setResultTitle("Error")
                 const errorMsg = err.response?.data?.message || err.response?.data?.detail || err.message || "Failed to save configuration"
-                if (errorMsg.includes("Details: You didn't pay the development fee.")) {
-                    setRedirectToActivation(true)
+                if (errorMsg.includes("You didn't pay the development fee.")) {
+                    router.push('/dashboard/platform-activation');
+                    return;
                 }
                 setResultMessage(errorMsg)
                 setShowResultDialog(true)
@@ -633,8 +634,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 errorMessage = err.message
             }
 
-            if (errorMessage.includes("Details: You didn't pay the development fee.")) {
-                setRedirectToActivation(true)
+            if (errorMessage.includes("You didn't pay the development fee.")) {
+                router.push('/dashboard/platform-activation');
+                return;
             }
             setResultMessage(errorMessage)
             setShowResultDialog(true)

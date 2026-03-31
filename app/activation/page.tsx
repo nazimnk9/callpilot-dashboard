@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { profileService } from "@/services/profile-service";
 import { LoaderOverlay } from "@/components/auth/loader-overlay";
-import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone, LogOut } from "lucide-react";
-import { authService, cookieUtils } from '@/services/auth-service';
+import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone, LogOut, X } from "lucide-react";
+import { cookieUtils } from '@/services/auth-service';
 import countriesData from "@/lib/countries.json";
 import {
     AlertDialog,
@@ -19,12 +19,17 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ActivationPage() {
     //const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isTabletOrLarger, setIsTabletOrLarger] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -69,50 +74,12 @@ export default function ActivationPage() {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            const accessToken = cookieUtils.get('access');
-            const refreshToken = cookieUtils.get('refresh');
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewFileType, setPreviewFileType] = useState<string | null>(null);
+    const [previewFileName, setPreviewFileName] = useState("");
 
-            if (!accessToken || !refreshToken) {
-                router.push('/login');
-                return;
-            }
 
-            try {
-                const verifyRes = await authService.verifyToken(accessToken);
-                if (verifyRes.ok) {
-                    const statusRes = await profileService.getPlatformStatus();
-                    if (statusRes.data.is_given_company_details) {
-                        router.push('/dashboard');
-                        return;
-                    }
-                    setIsAuthenticated(true);
-                } else {
-                    // Try refresh
-                    const refreshRes = await authService.refreshToken(refreshToken);
-                    if (refreshRes.ok) {
-                        const data = await refreshRes.json();
-                        cookieUtils.set('access', data.access, 7);
-                        cookieUtils.set('refresh', data.refresh, 7);
-
-                        const statusRes = await profileService.getPlatformStatus();
-                        if (statusRes.data.is_given_company_details) {
-                            router.push('/dashboard');
-                            return;
-                        }
-                        setIsAuthenticated(true);
-                    } else {
-                        router.push('/login');
-                    }
-                }
-            } catch (err) {
-                router.push('/login');
-            }
-        };
-
-        checkAuth();
-    }, [router]);
 
     useEffect(() => {
         const step1 = localStorage.getItem("activation_step1");
@@ -124,6 +91,13 @@ export default function ActivationPage() {
         if (step2) {
             const data = JSON.parse(step2);
             setOrg(prev => ({ ...prev, ...data }));
+        }
+        const step3 = localStorage.getItem("activation_step3");
+        if (step3) {
+            // Note: Files cannot be recovered from localStorage directly as File objects
+            // But we can keep the info that they were selected if we store names
+            const data = JSON.parse(step3);
+            // setOrg(prev => ({ ...prev, ...data }));
         }
         fetchOrganization();
     }, []);
@@ -216,6 +190,18 @@ export default function ActivationPage() {
         setCurrentStep(3);
     };
 
+    const handleNextStep3 = () => {
+        // Prepare file info for localStorage (since we can't store File objects directly easily)
+        const fileInfo = {
+            has_cert: !!org.business_registration_certificate,
+            cert_name: org.business_registration_certificate?.name || "",
+            has_proof: !!org.proof_of_address,
+            proof_name: org.proof_of_address?.name || ""
+        };
+        localStorage.setItem("activation_step3", JSON.stringify(fileInfo));
+        setCurrentStep(4);
+    };
+
     const handleSave = async () => {
         const formData = new FormData();
 
@@ -257,6 +243,7 @@ export default function ActivationPage() {
             // Clear local storage
             localStorage.removeItem("activation_step1");
             localStorage.removeItem("activation_step2");
+            localStorage.removeItem("activation_step3");
 
             setAlertConfig({
                 open: true,
@@ -303,9 +290,66 @@ export default function ActivationPage() {
         c.phone_code.includes(countrySearch)
     );
 
+    const handleFilePreview = (file: File) => {
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+        setPreviewFileType(file.type);
+        setPreviewFileName(file.name);
+        setIsPreviewOpen(true);
+    };
+
+    useEffect(() => {
+        // Cleanup blob URLs
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [previewUrl]);
+
     return (
         <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col">
             <LoaderOverlay isLoading={isLoading || isSaving} />
+
+            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl bg-black/5 dark:bg-gray-900/50 backdrop-blur-xl">
+                    <DialogHeader className="p-4 bg-white/80 dark:bg-gray-900/80 border-b border-gray-100 dark:border-gray-800 flex flex-row items-center justify-between sticky top-0 z-10 transition-colors">
+                        <DialogTitle className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate pr-8 flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Search size={16} className="text-primary" />
+                            </div>
+                            {previewFileName}
+                        </DialogTitle>
+                        <button
+                            type="button"
+                            onClick={() => setIsPreviewOpen(false)}
+                            className="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-all"
+                        >
+                            <X size={18} />
+                        </button>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-auto p-6 flex items-center justify-center bg-gray-50/50 dark:bg-gray-950/50">
+                        {previewUrl && (
+                            previewFileType?.startsWith("image/") ? (
+                                <img
+                                    src={previewUrl}
+                                    alt={previewFileName}
+                                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg animate-in fade-in zoom-in duration-300"
+                                />
+                            ) : (
+                                <div className="w-full h-[70vh] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 shadow-xl bg-white dark:bg-gray-900">
+                                    <iframe
+                                        src={`${previewUrl}#toolbar=0`}
+                                        className="w-full h-full border-none"
+                                        title={previewFileName}
+                                    />
+                                </div>
+                            )
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
                 <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
@@ -431,7 +475,7 @@ export default function ActivationPage() {
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verify Business Details</h2>
                         <div className="flex items-center gap-2">
-                            {[1, 2, 3].map((step) => (
+                            {[1, 2, 3, 4].map((step) => (
                                 <div
                                     key={step}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${currentStep === step
@@ -723,11 +767,136 @@ export default function ActivationPage() {
                                         Previous
                                     </Button>
                                     <Button
+                                        onClick={handleNextStep3}
+                                        className="bg-primary hover:bg-primary/90 text-white px-8"
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {currentStep === 4 && (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Review & Submit</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Please review all information before final submission.</p>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {/* Step 1 Preview */}
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            Business Information
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Name</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registration Number</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 2 Preview */}
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            Business Address
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State / Province</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 3 Preview */}
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            Supporting Documents
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registration Certificate</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                                    {org.business_registration_certificate ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleFilePreview(org.business_registration_certificate as File)}
+                                                            className="flex items-center gap-2 text-primary hover:text-primary/70 hover:underline transition-all group font-bold bg-primary/5 px-2 py-1 rounded"
+                                                        >
+                                                            <Check size={14} className="text-green-500" />
+                                                            {org.business_registration_certificate.name}
+                                                            <Search size={12} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-400">No file uploaded</span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Proof of Address</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                                    {org.proof_of_address ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleFilePreview(org.proof_of_address as File)}
+                                                            className="flex items-center gap-2 text-primary hover:text-primary/70 hover:underline transition-all group font-bold bg-primary/5 px-2 py-1 rounded"
+                                                        >
+                                                            <Check size={14} className="text-green-500" />
+                                                            {org.proof_of_address.name}
+                                                            <Search size={12} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-400">No file uploaded</span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between pt-6">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setCurrentStep(3)}
+                                        className="px-8"
+                                    >
+                                        Previous
+                                    </Button>
+                                    <Button
                                         onClick={handleSave}
                                         disabled={isSaving}
                                         className="bg-primary hover:bg-primary/90 text-white px-8"
                                     >
-                                        {isSaving ? "Submitting..." : "Submit"}
+                                        {isSaving ? "Submitting..." : "Submit Verification"}
                                     </Button>
                                 </div>
                             </div>

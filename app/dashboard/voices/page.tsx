@@ -18,7 +18,6 @@ import {
 import { flowService } from "@/services/flow-service"
 import { Sidebar } from "@/components/sidebar"
 import { Topbar } from "@/components/topbar"
-import { authService, cookieUtils } from "@/services/auth-service"
 import { profileService } from "@/services/profile-service"
 import { ArrowLeft, Volume2, Copy, Check, Play, Loader2, UserCheck, Filter } from "lucide-react"
 import { toast } from "sonner"
@@ -35,7 +34,6 @@ interface Voice {
 export default function VoicesPage() {
     const router = useRouter()
     const [voices, setVoices] = useState<Voice[]>([])
-    const [isLoading, setIsLoading] = useState(true)
     const [isDataLoading, setIsDataLoading] = useState(true)
     const [selectedVoice, setSelectedVoice] = useState<Voice | null>(null)
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
@@ -49,43 +47,6 @@ export default function VoicesPage() {
     const [isTabletOrLarger, setIsTabletOrLarger] = useState(false)
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const accessToken = cookieUtils.get('access');
-            const refreshToken = cookieUtils.get('refresh');
-
-            if (!accessToken || !refreshToken) {
-                router.push("/login")
-                return
-            }
-
-            const verifyRes = await authService.verifyToken(accessToken)
-            if (verifyRes.ok) {
-                const statusRes = await profileService.getPlatformStatus();
-                if (!statusRes.data.is_given_company_details) {
-                    router.push("/activation");
-                    return;
-                }
-            } else {
-                const refreshRes = await authService.refreshToken(refreshToken)
-                if (!refreshRes.ok) {
-                    router.push("/login")
-                    return
-                }
-                const data = await refreshRes.json();
-                cookieUtils.set('access', data.access, 7);
-                cookieUtils.set('refresh', data.refresh, 7);
-
-                const statusRes = await profileService.getPlatformStatus();
-                if (!statusRes.data.is_given_company_details) {
-                    router.push("/activation");
-                    return;
-                }
-            }
-            setIsLoading(false)
-        }
-
-        checkAuth()
-
         const checkViewport = () => {
             setIsTabletOrLarger(window.innerWidth >= 1024)
         }
@@ -107,10 +68,8 @@ export default function VoicesPage() {
                 setIsDataLoading(false)
             }
         }
-        if (!isLoading) {
-            fetchVoices()
-        }
-    }, [isLoading, genderFilter])
+        fetchVoices()
+    }, [genderFilter])
 
     const handleCopy = (id: string) => {
         navigator.clipboard.writeText(id)
@@ -138,9 +97,9 @@ export default function VoicesPage() {
         setIsSelectConfirmOpen(false)
     }
 
-    if (isLoading || isDataLoading) {
+    if (isDataLoading) {
         return (
-            <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
+            <div className="flex items-center justify-center h-[50vh]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white" />
             </div>
         )

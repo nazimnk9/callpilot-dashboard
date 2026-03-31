@@ -72,7 +72,7 @@ export function ProfileContent() {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false)
     const [showNewPassword, setShowNewPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    const [activeTab, setActiveTab] = useState("User")
+    const [activeTab, setActiveTab] = useState("Profile Details")
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
 
     const [alertConfig, setAlertConfig] = useState<{

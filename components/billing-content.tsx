@@ -135,7 +135,14 @@ export function BillingContent() {
     const [selectedPmForTopUp, setSelectedPmForTopUp] = useState<any>(null);
     const [isTopUpSubmitting, setIsTopUpSubmitting] = useState(false);
     const [isPmSelectorOpen, setIsPmSelectorOpen] = useState(false);
-    const [errorDetail, setErrorDetail] = useState<string | null>(null);
+    const [errorDetail, _setErrorDetail] = useState<string | null>(null);
+    const setErrorDetail = (msg: string | null) => {
+        if (msg === "You didn't pay the development fee.") {
+            router.push('/dashboard/platform-activation');
+            return;
+        }
+        _setErrorDetail(msg);
+    };
     const [successDetail, setSuccessDetail] = useState<string | null>(null);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [pmToDelete, setPmToDelete] = useState<any>(null);
@@ -390,7 +397,7 @@ export function BillingContent() {
                 fetchPaymentMethods();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.detail || "Failed to delete payment method");
+                setErrorDetail(errData.details || errData.detail || "Failed to delete payment method");
             }
         } catch (err) {
             console.error("Delete error:", err);
@@ -578,7 +585,7 @@ export function BillingContent() {
                 fetchPaymentMethods();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.detail || "Failed to add payment method");
+                setErrorDetail(errData.details || errData.detail || "Failed to add payment method");
             }
         } catch (err) {
             console.error(err);
@@ -621,6 +628,8 @@ export function BillingContent() {
                     setErrorDetail(errData.details);
                 } else if (errData.plan && Array.isArray(errData.plan)) {
                     setErrorDetail(errData.plan[0]);
+                } else if (errData.details) {
+                    setErrorDetail(errData.details);
                 } else if (errData.detail) {
                     setErrorDetail(errData.detail);
                 } else {
@@ -643,11 +652,11 @@ export function BillingContent() {
             if (response.status === 200 || response.status === 201) {
                 setSuccessDetail(response.data.detail || "Your request for a custom subscription has been sent. Our team will contact you soon.");
             } else {
-                setErrorDetail(response.data.detail || "Failed to send request. Please try again later.");
+                setErrorDetail(response.data.details || response.data.detail || "Failed to send request. Please try again later.");
             }
         } catch (err: any) {
             console.error("Contact sales error:", err);
-            setErrorDetail(err.response?.data?.detail || "An error occurred while sending the request. Please try again later.");
+            setErrorDetail(err.response?.data?.details || err.response?.data?.detail || "An error occurred while sending the request. Please try again later.");
         } finally {
             setIsContactSalesSubmitting(false);
         }
@@ -671,7 +680,7 @@ export function BillingContent() {
                 fetchOrgData();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.detail || "Failed to cancel subscription plan");
+                setErrorDetail(errData.details || errData.detail || "Failed to cancel subscription plan");
             }
         } catch (err) {
             console.error("Cancellation error:", err);
@@ -720,6 +729,8 @@ export function BillingContent() {
                     setErrorDetail(errData.details);
                 } else if (errData.plan && Array.isArray(errData.plan)) {
                     setErrorDetail(errData.plan[0]);
+                } else if (errData.details) {
+                    setErrorDetail(errData.details);
                 } else if (errData.detail) {
                     setErrorDetail(errData.detail);
                 } else {
