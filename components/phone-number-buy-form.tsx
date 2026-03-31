@@ -468,7 +468,7 @@ export function PhoneNumberBuyForm() {
                     </CardHeader> */}
 
                     <CardContent className="pt-8 p-6">
-                        {organization?.country_iso_code === "US" ? (
+                        {organization?.id === 8 && organization?.country_iso_code === "US" ? (
                             <form onSubmit={handleSubmitPurchase} className="space-y-6">
                                 {/* Country Selection HIDDEN for US */}
 

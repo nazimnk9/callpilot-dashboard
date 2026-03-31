@@ -265,9 +265,9 @@ export default function ActivationPage() {
                 variant: "default"
             });
 
-            setTimeout(() => {
-                router.push("/dashboard");
-            }, 1500);
+            router.push("/dashboard");
+            // setTimeout(() => {
+            // }, 1500);
         } catch (err: any) {
             console.error("Error updating organization:", err);
             const errors = err.response?.data || {};
