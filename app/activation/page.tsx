@@ -52,7 +52,8 @@ export default function ActivationPage() {
         vat_number: "",
         state: "",
         billing_contact_name: "",
-        billing_email_address: ""
+        billing_email_address: "",
+        country_iso_code: ""
     });
     const [initialOrg, setInitialOrg] = useState({ ...org });
 
@@ -135,7 +136,8 @@ export default function ActivationPage() {
                 vat_number: data.vat_number || "",
                 state: data.state || "",
                 billing_contact_name: data.billing_contact_name || "",
-                billing_email_address: data.billing_email_address || ""
+                billing_email_address: data.billing_email_address || "",
+                country_iso_code: data.country_iso_code || ""
             };
             setOrg(orgData);
             setInitialOrg(orgData);
@@ -220,6 +222,7 @@ export default function ActivationPage() {
             city: org.city,
             post_code: org.post_code,
             province: org.province,
+            country_iso_code: org.country_iso_code,
             name: org.business_name // Mandatory match
         };
 
@@ -598,7 +601,7 @@ export default function ActivationPage() {
                                                 className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
                                             >
                                                 <span className={org.country ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
-                                                    {org.country || "Select country"}
+                                                    {org.country ? `${org.country_iso_code ? `(${org.country_iso_code}) ` : ""}${org.country}` : "Select country"}
                                                 </span>
                                                 <ChevronsUpDown size={16} className="text-gray-400" />
                                             </div>
@@ -624,7 +627,7 @@ export default function ActivationPage() {
                                                                 <div
                                                                     key={c.country_code}
                                                                     onClick={() => {
-                                                                        setOrg({ ...org, country: c.country });
+                                                                        setOrg({ ...org, country: c.country, country_iso_code: c.country_code });
                                                                         setIsCountryOpen(false);
                                                                         setCountrySearch("");
                                                                     }}
@@ -780,7 +783,7 @@ export default function ActivationPage() {
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Review & Submit</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Please review all information before final submission.</p>
+                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Please review all information before final submission.</p> */}
                                 </div>
 
                                 <div className="space-y-6">
@@ -792,11 +795,11 @@ export default function ActivationPage() {
                                         </h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Name</p>
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registration Number</p>
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
                                             </div>
                                         </div>
@@ -806,7 +809,7 @@ export default function ActivationPage() {
                                     <div className="space-y-3">
                                         <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            Business Address
+                                            Registered Business Address
                                         </h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
@@ -827,7 +830,9 @@ export default function ActivationPage() {
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {org.country ? `${org.country_iso_code ? `(${org.country_iso_code}) ` : ""}${org.country}` : "N/A"}
+                                                </p>
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
@@ -844,7 +849,7 @@ export default function ActivationPage() {
                                         </h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registration Certificate</p>
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Certificate</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                                     {org.business_registration_certificate ? (
                                                         <button
