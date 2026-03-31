@@ -1,52 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Topbar } from '@/components/topbar';
-import { Sidebar } from '@/components/sidebar';
-import { DashboardContent } from '@/components/dashboard-content';
+import { Loader2 } from 'lucide-react';
 
 export default function Page() {
-  const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isTabletOrLarger, setIsTabletOrLarger] = useState(true);
-
-  useEffect(() => {
-    // Check if viewport is tablet or larger (768px+)
-    const checkViewport = () => {
-      const isTabletUp = window.innerWidth >= 768;
-      setIsTabletOrLarger(isTabletUp);
-      // Always open sidebar on tablet and larger
-      if (isTabletUp) {
-        setIsSidebarOpen(true);
-      }
-    };
-
-    checkViewport();
-    window.addEventListener('resize', checkViewport);
-    return () => window.removeEventListener('resize', checkViewport);
-  }, []);
-
-
-
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      {/* Sidebar - always visible on tablet+, toggleable on mobile */}
-      <Sidebar
-        isOpen={isTabletOrLarger || isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation Bar */}
-        <Topbar
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          isSidebarOpen={isSidebarOpen}
-        />
-
-        {/* Page content */}
-        <DashboardContent />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-2">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100" />
+        {/* <p className="text-sm font-medium text-muted-foreground transition-all">{message}</p> */}
       </div>
     </div>
   );

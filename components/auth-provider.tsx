@@ -38,9 +38,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!accessToken || !refreshToken) {
             setIsAuthenticated(false);
             setIsLoading(false);
-            if (!isPublicRoute && pathname !== "/") {
+            if (!isPublicRoute && pathname === "/") {
                 router.push("/login");
             }
+            setIsLoading(false);
             return;
         }
 
@@ -57,6 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     router.push("/activation");
                 } else if (statusData.is_given_company_details && (pathname === "/" || pathname === "/activation" || pathname === "/login")) {
                     router.push("/dashboard");
+                    // Keep loading true while redirecting to dashboard from home
+                    if (pathname === "/") return;
                 }
             } else {
                 // Try refresh
@@ -74,19 +77,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         router.push("/activation");
                     } else if (statusRes.data.is_given_company_details && (pathname === "/" || pathname === "/activation" || pathname === "/login")) {
                         router.push("/dashboard");
+                        if (pathname === "/") return;
                     }
                 } else {
                     setIsAuthenticated(false);
+                    setIsLoading(false);
                     if (!isPublicRoute) {
                         router.push("/login");
+                        return;
                     }
                 }
             }
         } catch (err) {
             console.error("Auth check failed:", err);
             setIsAuthenticated(false);
+            setIsLoading(false);
             if (!isPublicRoute) {
                 router.push("/login");
+                return;
             }
         } finally {
             setIsLoading(false);
