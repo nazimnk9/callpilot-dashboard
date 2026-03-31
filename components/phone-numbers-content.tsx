@@ -646,7 +646,10 @@ export function PhoneNumbersContent() {
                     </div>
                 </div>
 
-                <div className="flex justify-start">
+                <div className="flex justify-start gap-4">
+                    <Button variant="outline" className="border-gray-200 dark:border-gray-700 font-semibold transition-all duration-200 gap-2 px-8" onClick={() => router.back()}>
+                        <ArrowLeft size={18} /> Back
+                    </Button>
                     <Button variant="default" className="bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold transition-all duration-200 gap-2 px-8" onClick={handleBuyNumber} disabled={isLoading}>
                         <Plus size={18} /> Buy AI Number
                     </Button>
