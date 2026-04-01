@@ -461,7 +461,7 @@ export function ProfileContent() {
                                     {profile.email}
                                 </p>
                             </div>
-
+                            <hr className="border-black dark:border-white" />
                             {/* OTP Toggle Field */}
                             <CustomToggle
                                 label="Two-Factor Authentication (2FA)"

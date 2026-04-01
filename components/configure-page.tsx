@@ -686,18 +686,18 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     }
 
     return (
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-3 sm:p-4 md:p-8">
             <LoaderOverlay
                 isLoading={isLoading || isSaving}
             />
 
             <div className="max-w-7xl mx-auto">
-                <div className="mb-5">
-                    <div className="flex items-center gap-6 mb-2">
-                        <button onClick={() => router.back()} className="h-8 w-8 -ml-2 cursor-pointer rounded-full transition-all duration-300 hover:scale-125 text-gray-900 dark:text-gray-100">
+                <div className="mb-5 px-1 sm:px-0">
+                    <div className="flex items-center gap-3 sm:gap-6 mb-2">
+                        <button onClick={() => router.back()} className="h-8 w-8 -ml-1 sm:-ml-2 cursor-pointer rounded-full transition-all duration-300 hover:scale-125 text-gray-900 dark:text-gray-100">
                             <ArrowLeft className="h-8 w-8" />
                         </button>
-                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Configure – {featureName || "Loading..."}</h1>
+                        <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Configure – {featureName || "Loading..."}</h1>
                     </div>
                 </div>
 
@@ -713,7 +713,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         <>
                             {/* Left Column */}
                             <div className="space-y-6">
-                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
                                     <div className="space-y-4">
                                         <div className="space-y-2">
@@ -769,7 +769,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                             {/* Right Column */}
                             <div className="space-y-6">
-                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Assistant Settings</h2>
                                     <div className="space-y-4">
                                         <div className="space-y-2">
@@ -800,7 +800,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         <>
                             {/* Left Column */}
                             <div className="space-y-6 flex flex-col h-full">
-                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
+                                <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
                                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
@@ -940,22 +940,22 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                             {/* Right Column */}
                             <div className="space-y-6 flex flex-col h-full">
-                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
+                                <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
                                     <div className="flex items-center justify-between gap-2 mb-6">
                                         <div className="flex items-center gap-2">
                                             <Clock className="h-6 w-6 text-gray-900 dark:text-gray-100" />
                                             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Call Active Timeline</h2>
                                         </div>
                                         {isUpdateMode && !isEditing && (
-                                            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full border border-green-100 dark:border-green-800/50">
-                                                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                                                <span className="text-xs font-bold uppercase tracking-wider">Running</span>
+                                            <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full border border-green-100 dark:border-green-800/50">
+                                                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-green-500 animate-pulse" />
+                                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Running</span>
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="grid grid-cols-12 gap-2 pb-1 border-b border-gray-100 dark:border-gray-700">
+                                        <div className="hidden md:grid grid-cols-12 gap-2 pb-1 border-b border-gray-100 dark:border-gray-700">
                                             <div className="col-span-3 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Day</div>
                                             <div className="col-span-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Start Time</div>
                                             <div className="col-span-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">End Time</div>
@@ -963,47 +963,63 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
 
                                         {timeline.map((item, index) => (
-                                            <div key={item.day} className="grid grid-cols-12 gap-2 items-center">
-                                                <div className="col-span-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                                    {item.day}
+                                            <div key={item.day} className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center p-3 md:p-0 bg-gray-50/50 md:bg-transparent dark:bg-gray-900/30 md:dark:bg-transparent rounded-xl md:rounded-none border border-gray-100 md:border-none dark:border-gray-800 md:dark:border-none">
+                                                <div className="w-full md:col-span-3 flex justify-between items-center">
+                                                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                                        {item.day}
+                                                    </span>
+                                                    <div className="md:hidden">
+                                                        <Checkbox
+                                                            disabled={isUpdateMode && !isEditing}
+                                                            checked={item.isActive}
+                                                            onCheckedChange={(checked) => handleTimelineChange(index, "isActive", checked)}
+                                                            className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div className="col-span-4">
-                                                    <Select
-                                                        disabled={isUpdateMode && !isEditing}
-                                                        value={item.startTime}
-                                                        onValueChange={(val) => handleTimelineChange(index, "startTime", val)}
-                                                    >
-                                                        <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
-                                                            <SelectValue placeholder="Start Time" />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                            {TIME_OPTIONS.map(opt => (
-                                                                <SelectItem key={opt.value} value={opt.value} className="dark:text-gray-100">
-                                                                    {opt.label}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
+
+                                                <div className="w-full md:col-span-8 grid grid-cols-2 gap-2">
+                                                    <div className="space-y-1">
+                                                        <span className="md:hidden text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Start Time</span>
+                                                        <Select
+                                                            disabled={isUpdateMode && !isEditing}
+                                                            value={item.startTime}
+                                                            onValueChange={(val) => handleTimelineChange(index, "startTime", val)}
+                                                        >
+                                                            <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-800 md:dark:bg-gray-700 dark:text-gray-100 text-sm bg-white">
+                                                                <SelectValue placeholder="Start" />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                                {TIME_OPTIONS.map(opt => (
+                                                                    <SelectItem key={opt.value} value={opt.value} className="dark:text-gray-100">
+                                                                        {opt.label}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <span className="md:hidden text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">End Time</span>
+                                                        <Select
+                                                            disabled={isUpdateMode && !isEditing}
+                                                            value={item.endTime}
+                                                            onValueChange={(val) => handleTimelineChange(index, "endTime", val)}
+                                                        >
+                                                            <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-800 md:dark:bg-gray-700 dark:text-gray-100 text-sm bg-white">
+                                                                <SelectValue placeholder="End" />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                                {TIME_OPTIONS.map(opt => (
+                                                                    <SelectItem key={opt.value} value={opt.value} className="dark:text-gray-100">
+                                                                        {opt.label}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
                                                 </div>
-                                                <div className="col-span-4">
-                                                    <Select
-                                                        disabled={isUpdateMode && !isEditing}
-                                                        value={item.endTime}
-                                                        onValueChange={(val) => handleTimelineChange(index, "endTime", val)}
-                                                    >
-                                                        <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100 text-sm">
-                                                            <SelectValue placeholder="End Time" />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                            {TIME_OPTIONS.map(opt => (
-                                                                <SelectItem key={opt.value} value={opt.value} className="dark:text-gray-100">
-                                                                    {opt.label}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="col-span-1 flex justify-end">
+
+                                                <div className="hidden md:flex md:col-span-1 justify-end">
                                                     <Checkbox
                                                         disabled={isUpdateMode && !isEditing}
                                                         checked={item.isActive}
@@ -1100,25 +1116,25 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     </div>
                                 </Card> */}
                             </div>
-                            <Card className="lg:col-span-2 p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                            <Card className="lg:col-span-2 p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                 <div className="flex flex-col md:flex-col justify-between gap-6">
                                     <h2 className="text-xl font-semibold text-[#1e293b] dark:text-gray-100 whitespace-nowrap">AI Call Flow</h2>
-                                    <div className="flex flex-wrap items-center gap-y-4 gap-x-2 text-sm font-semibold text-[#334155] dark:text-gray-300">
-                                        <span>Intro</span>
+                                    <div className="flex flex-wrap items-center gap-y-2 gap-x-2 text-[10px] sm:text-xs md:text-sm font-semibold text-[#334155] dark:text-gray-300">
+                                        <span className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Intro</span>
                                         <span className="text-gray-400">→</span>
-                                        <span>Right to Work</span>
+                                        <span className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Right to Work</span>
                                         <span className="text-gray-400">→</span>
-                                        <span>Job Requirements</span>
+                                        <span className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Job Requirements</span>
                                         <span className="text-gray-400">→</span>
-                                        <span>Experience</span>
+                                        <span className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Experience</span>
                                         <span className="text-gray-400">→</span>
-                                        <span>Qualifications</span>
+                                        <span className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Qualifications</span>
                                         <span className="text-gray-400">→</span>
-                                        <span>Shift/Days/Time/Duration</span>
+                                        <span className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Shift/Days/Time/Duration</span>
                                         <span className="text-gray-400">→</span>
-                                        <span>Travel/Commute</span>
+                                        <span className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Travel/Commute</span>
                                         <span className="text-gray-400">→</span>
-                                        <span>Ending</span>
+                                        <span className="bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">Ending</span>
                                         {/* <span className="text-gray-400">→</span>
                                         <Link href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Text Link</Link> */}
                                     </div>
@@ -1126,15 +1142,16 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             </Card>
 
                             <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">AI Call Additional Questions <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Optional)</span></h2>
                                     <div className="space-y-3">
+                                        {/* Questions Loop */}
                                         {[
                                             "When are you available to start?",
                                             "Are you available to work weekends?",
                                             "Are you willing to travel if required?"
                                         ].map((defaultQuestion, idx) => (
-                                            <div key={idx} className="flex gap-3">
+                                            <div key={idx} className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-3 sm:p-0 bg-gray-50 sm:bg-transparent dark:bg-gray-900/40 sm:dark:bg-transparent rounded-xl sm:rounded-none border border-gray-100 sm:border-none dark:border-gray-800 sm:dark:border-none">
                                                 <Input
                                                     disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx || addedQuestions.includes(idx)}
                                                     value={additionalQuestions[idx]}
@@ -1144,33 +1161,35 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         setAdditionalQuestions(newQuestions)
                                                     }}
                                                     placeholder={defaultQuestion}
-                                                    className={`flex-1 px-4 h-8 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-[#334155] dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${addedQuestions.includes(idx) ? "border-green-500 bg-green-50/20 dark:bg-green-500/10" : ""}`}
+                                                    className={`w-full h-9 sm:h-8 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-[#334155] dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${addedQuestions.includes(idx) ? "border-green-500 bg-green-50/20 dark:bg-green-500/10" : ""}`}
                                                 />
-                                                <Button
-                                                    onClick={() => {
-                                                        setDeletingIdx(idx)
-                                                        setShowDeleteConfirm(true)
-                                                    }}
-                                                    disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx}
-                                                    className="h-8 px-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    title="Delete Question"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    onClick={() => handleAddAdditionalQuestion(additionalQuestions[idx], idx)}
-                                                    disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx || addedQuestions.includes(idx)}
-                                                    className="h-8 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                                >
-                                                    {addingQuestionIdx === idx ? "Adding..." : addedQuestions.includes(idx) ? "Added" : "Add"}
-                                                </Button>
+                                                <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                                                    <Button
+                                                        onClick={() => {
+                                                            setDeletingIdx(idx)
+                                                            setShowDeleteConfirm(true)
+                                                        }}
+                                                        disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx}
+                                                        className="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed justify-center"
+                                                        title="Delete Question"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => handleAddAdditionalQuestion(additionalQuestions[idx], idx)}
+                                                        disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx || addedQuestions.includes(idx)}
+                                                        className="flex-[2] sm:flex-none h-9 sm:h-8 px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                                    >
+                                                        {addingQuestionIdx === idx ? "Adding..." : addedQuestions.includes(idx) ? "Added" : "Add"}
+                                                    </Button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </Card>
 
-                                <Card className="p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                    <h2 className="text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">Job Description Requirement</h2>
+                                <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <h2 className="text-lg sm:text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 border-b border-gray-50 dark:border-gray-700">Job Description Requirement</h2>
                                     <div className="space-y-4">
                                         <p className="text-[#475569] dark:text-gray-400 font-medium">Advert must include a section titled:</p>
                                         <p className="text-lg font-semibold text-[#1e293b] dark:text-gray-100 -mt-4">Job Requirements</p>
@@ -1182,7 +1201,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 </Card>
                             </div>
 
-                            <Card className="lg:col-span-2 p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                            <Card className="lg:col-span-2 p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                                     Please create the following 4 statuses in your ATS/CRM under the Job Application's Status creation section (if they are not already present):
@@ -1202,12 +1221,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 {/* Bottom Save Bar */}
                 <div className="mt-12 flex justify-center gap-4">
                     {searchParams.get("code") === "AICALL191" ? (
-                        <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex flex-row sm:flex-row gap-4">
                             <Button
                                 size="lg"
                                 onClick={handleSaveConfiguration}
                                 disabled={isSaving}
-                                className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
                             >
                                 {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
                             </Button>
@@ -1216,7 +1235,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     size="lg"
                                     variant="outline"
                                     onClick={() => setShowReleaseDialog(true)}
-                                    className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                    className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
                                 >
                                     Release Flow
                                 </Button>
@@ -1225,12 +1244,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     ) : (
                         <>
                             {!isUpdateMode ? (
-                                <>
+                                <div className="flex flex-row sm:flex-row gap-4 w-full justify-center items-center">
                                     <Button
                                         size="lg"
                                         onClick={handleSaveConfiguration}
                                         disabled={isSaving}
-                                        className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                        className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base sm:text-base px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
                                     >
                                         {isSaving ? "Activating..." : "Activate AI Call"}
                                     </Button>
@@ -1238,39 +1257,41 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         size="lg"
                                         variant="outline"
                                         onClick={() => setShowReleaseDialog(true)}
-                                        className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                        className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
                                     >
                                         Release Flow
                                     </Button>
-                                </>
+                                </div>
                             ) : (
                                 <>
-                                    {!isEditing ? (
+                                    <div className="flex flex-row sm:flex-row gap-4 w-full justify-center">
+                                        {!isEditing ? (
+                                            <Button
+                                                size="lg"
+                                                onClick={() => setIsEditing(true)}
+                                                className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
+                                            >
+                                                Edit Configure
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                size="lg"
+                                                onClick={handleSaveConfiguration}
+                                                disabled={isSaving}
+                                                className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
+                                            >
+                                                {isSaving ? "Updating..." : "Update Configure"}
+                                            </Button>
+                                        )}
                                         <Button
                                             size="lg"
-                                            onClick={() => setIsEditing(true)}
-                                            className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
+                                            variant="outline"
+                                            onClick={() => setShowReleaseDialog(true)}
+                                            className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
                                         >
-                                            Edit Configure
+                                            Release Flow
                                         </Button>
-                                    ) : (
-                                        <Button
-                                            size="lg"
-                                            onClick={handleSaveConfiguration}
-                                            disabled={isSaving}
-                                            className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
-                                        >
-                                            {isSaving ? "Updating..." : "Update Configure"}
-                                        </Button>
-                                    )}
-                                    <Button
-                                        size="lg"
-                                        variant="outline"
-                                        onClick={() => setShowReleaseDialog(true)}
-                                        className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-lg px-12 rounded-xl transition-all shadow-lg min-w-[280px]"
-                                    >
-                                        Release Flow
-                                    </Button>
+                                    </div>
                                 </>
                             )}
                         </>

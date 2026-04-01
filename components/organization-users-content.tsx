@@ -309,14 +309,14 @@ export function OrganizationUsersContent() {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="py-4 px-6 text-right">
-                                                        <div className="flex justify-end gap-2">
+                                                        {/* <div className="flex justify-end gap-2">
                                                             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-all">
                                                                 <Edit2 className="h-4 w-4" />
                                                             </Button>
                                                             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all">
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
-                                                        </div>
+                                                        </div> */}
                                                     </TableCell>
                                                 </TableRow>
                                             ))

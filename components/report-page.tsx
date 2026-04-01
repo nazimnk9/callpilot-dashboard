@@ -107,17 +107,17 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                 }
 
                 // Fetch Feature Name if UID is provided
-                if (featureUid) {
-                    const featuresRes = await flowService.getFlows()
-                    const currentFeature = featuresRes.data.results.find((f: any) => f.uid === featureUid)
-                    if (currentFeature) {
-                        setFeatureName(currentFeature.name)
-                        currentFlowCode = currentFeature.code || ""
-                        if (currentFlowCode === "AICALL191") {
-                            setIsDiner(true)
-                        }
-                    }
-                }
+                // if (featureUid) {
+                //     const featuresRes = await flowService.getFlows()
+                //     const currentFeature = featuresRes.data.results.find((f: any) => f.uid === featureUid)
+                //     if (currentFeature) {
+                //         setFeatureName(currentFeature.name)
+                //         currentFlowCode = currentFeature.code || ""
+                //         if (currentFlowCode === "AICALL191") {
+                //             setIsDiner(true)
+                //         }
+                //     }
+                // }
 
                 if (currentFlowCode === "AICALL191") {
                     const res = await flowService.getDinerReports()

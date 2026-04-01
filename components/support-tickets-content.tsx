@@ -164,13 +164,13 @@ export function SupportTicketsContent() {
                 </button> */}
 
                 {/* Header */}
-                <div className="flex items-start gap-4 mb-12">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-10 text-center sm:text-left">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 flex-shrink-0">
                         <MessageSquare size={24} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Support Tickets</h1>
-                        <p className="text-gray-500 dark:text-gray-400 mt-1">View your ticket history or submit a new request</p>
+                        <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Support Tickets</h1>
+                        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">View your ticket history or submit a new request</p>
                     </div>
                 </div>
 
@@ -193,15 +193,15 @@ export function SupportTicketsContent() {
                                             className="p-6 border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow dark:bg-gray-900/50 cursor-pointer"
                                             onClick={() => handleTicketClick(ticket.uid)}
                                         >
-                                            <div className="flex items-start justify-between gap-4 mb-4">
-                                                <div className="flex flex-wrap items-center gap-3">
-                                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">TKT-{ticket.id}</span>
-                                                    <Badge className={`px-2 py-0.5 rounded-full text-[10px] font-bold border-none ${color}`}>
+                                            <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
+                                                <div className="flex flex-wrap items-center gap-2.5">
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">TKT-{ticket.id}</span>
+                                                    <Badge className={`px-2 py-0.5 rounded-full text-[10px] font-bold border-none ${color} flex items-center`}>
                                                         <div className={`w-1 h-1 rounded-full mr-1.5 ${dot}`} />
                                                         {label}
                                                     </Badge>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-gray-400 text-[11px] font-medium whitespace-nowrap">
+                                                <div className="flex items-center gap-1.5 text-gray-400 text-[10px] sm:text-[11px] font-medium whitespace-nowrap">
                                                     <Clock size={12} />
                                                     {formatDate(ticket.created_at)}
                                                 </div>
@@ -239,7 +239,7 @@ export function SupportTicketsContent() {
                     {/* Sidebar Action */}
                     <div className="lg:col-span-1 space-y-6">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Need More Help?</h2>
-                        <Card className="bg-[#EBF2FF] dark:bg-blue-900/10 border-[#D6E6FF] dark:border-blue-800/30 p-8 min-w-[500px] text-center flex flex-col items-center">
+                        <Card className="bg-[#EBF2FF] dark:bg-blue-900/10 border-[#D6E6FF] dark:border-blue-800/30 p-6 sm:p-8 lg:p-6 xl:p-8 w-full text-center flex flex-col items-center">
                             <div className="w-14 h-14 rounded-full bg-blue-100/50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 border border-blue-200/50 dark:border-blue-700/30">
                                 <Send size={24} className="ml-0.5" />
                             </div>
@@ -249,7 +249,7 @@ export function SupportTicketsContent() {
                             </p>
                             <Button
                                 onClick={() => router.push('/dashboard/help/support-tickets/create')}
-                                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-6 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 sm:px-8 lg:px-4 xl:px-6 py-6 rounded-xl text-[13px] xl:text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
                             >
                                 <Send size={16} />
                                 Write a Support Ticket
@@ -275,22 +275,22 @@ export function SupportTicketsContent() {
                         </div>
                     ) : selectedTicket && (
                         <div className="px-8 pb-8 space-y-6 max-h-[70vh] overflow-y-auto">
-                            <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-b border-gray-100 dark:border-gray-800">
-                                <div className="space-y-1">
-                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">TKT-{selectedTicket.id}</span>
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 py-4 border-b border-gray-100 dark:border-gray-800 text-center sm:text-left">
+                                <div className="space-y-1 w-full flex-grow">
+                                    <span className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">TKT-{selectedTicket.id}</span>
                                     <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{selectedTicket.subject}</h2>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <Badge className={`px-2.5 py-1 rounded-full text-[11px] font-bold border-none ${getStatusDetails(selectedTicket.status).color}`}>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <Badge className={`px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-bold border-none ${getStatusDetails(selectedTicket.status).color}`}>
                                         <div className={`w-1.5 h-1.5 rounded-full mr-2 ${getStatusDetails(selectedTicket.status).dot}`} />
                                         {getStatusDetails(selectedTicket.status).label}
                                     </Badge>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                 <div className="space-y-1.5">
-                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <span className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                                         <FileText size={12} />
                                         Category
                                     </span>
@@ -299,7 +299,7 @@ export function SupportTicketsContent() {
                                     </p>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <span className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                                         <Clock size={12} />
                                         Submitted On
                                     </span>
@@ -325,16 +325,16 @@ export function SupportTicketsContent() {
                                         {selectedTicket.attachments.map((attachment) => {
                                             const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.file);
                                             return (
-                                                <div key={attachment.id} className="flex items-center justify-between p-3.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl hover:border-blue-100 dark:hover:border-blue-900/30 transition-colors group">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-500 transition-colors">
+                                                <div key={attachment.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl hover:border-blue-100 dark:hover:border-blue-900/30 transition-colors group gap-3">
+                                                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                                                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-500 transition-colors shrink-0">
                                                             {isImage ? <ImageIcon size={18} /> : <File size={18} />}
                                                         </div>
-                                                        <div className="max-w-[180px] sm:max-w-[280px]">
-                                                            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-bold text-gray-900 dark:text-white truncate pr-1">
                                                                 {attachment.file.substring(attachment.file.lastIndexOf('/') + 1)}
                                                             </p>
-                                                            <p className="text-[11px] text-gray-400 font-medium">Added on {formatDate(attachment.created_at)}</p>
+                                                            <p className="text-[10px] sm:text-[11px] text-gray-400 font-medium">Added on {formatDate(attachment.created_at)}</p>
                                                         </div>
                                                     </div>
                                                     <Button
@@ -345,13 +345,14 @@ export function SupportTicketsContent() {
                                                         variant="ghost"
                                                         size="sm"
                                                         disabled={isDownloading === attachment.uid}
-                                                        className="h-9 w-9 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shrink-0"
+                                                        className="h-9 w-full sm:w-9 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shrink-0 border border-gray-100 dark:border-gray-800 sm:border-none"
                                                     >
                                                         {isDownloading === attachment.uid ? (
-                                                            <Loader2 size={16} className="animate-spin" />
+                                                            <Loader2 size={16} className="animate-spin mr-2 sm:mr-0" />
                                                         ) : (
-                                                            <Download size={16} />
+                                                            <Download size={16} className="mr-2 sm:mr-0" />
                                                         )}
+                                                        <span className="sm:hidden text-xs font-bold">Download Attachment</span>
                                                     </Button>
                                                 </div>
                                             );

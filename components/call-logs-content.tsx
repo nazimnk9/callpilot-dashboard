@@ -375,7 +375,7 @@ export function CallLogsContent() {
                                 </div>
                             </div>
 
-                            <ScrollArea className="flex-1 p-6">
+                            <ScrollArea className="flex-1 p-6 overflow-y-auto">
                                 <div className="space-y-6">
                                     {selectedCall.conversation_json.map((msg, idx) => (
                                         <div

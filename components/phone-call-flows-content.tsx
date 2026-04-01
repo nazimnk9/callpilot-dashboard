@@ -121,7 +121,7 @@ export function PhoneCallFlowsContent() {
                         </div>
                         <div className="flex-1">
                             <div className="flex justify-between items-start mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight">{flow.name}</h3>
+                                <h3 className="sm:text-lg md:text-base lg:text-lg text-base font-semibold text-gray-900 dark:text-gray-100 leading-tight mt-1">{flow.name}</h3>
                                 <button
                                     onClick={() => {
                                         setSelectedFlow(flow);
@@ -132,22 +132,22 @@ export function PhoneCallFlowsContent() {
                                     <span className="text-sm font-medium underline">More</span>
                                 </button>
                             </div>
-                            <p className="text-gray-500 dark:text-gray-400 text-[15px] leading-relaxed mb-0 line-clamp-2">
+                            <p className="text-gray-500 dark:text-gray-400 text-sm md:text-[13px] lg:text-[15px] leading-relaxed mb-0">
                                 {flow.flow_summary}
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex gap-2.5 mt-auto">
+                    <div className="flex flex-row md:flex-row lg:flex-row gap-2.5 mt-auto">
                         <Button
-                            className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm"
+                            className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm w-full "
                             onClick={() => handleConfigureClick(item.uid, flow.name, flow.code)}
                         >
                             Configure
                         </Button>
-                        <Link href={flow.code === "AICALL191" ? `/dashboard/report?code=${flow.code}` : `/dashboard/report/${item.uid}`}>
+                        <Link href={flow.code === "AICALL191" ? `/dashboard/report?code=${flow.code}` : `/dashboard/report/${item.uid}`} className="w-full">
                             <Button
-                                className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none"
+                                className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none w-full"
                             >
                                 {flow.code === "AICALL191" ? "Reservations" : "Call History"}
                             </Button>
@@ -203,7 +203,7 @@ export function PhoneCallFlowsContent() {
                             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Choose from available flows in the Flow Store.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6">
                             {myFlows.map(item => (
                                 <FlowCard key={item.id} item={item} />
                             ))}
