@@ -51,7 +51,13 @@ export function OrganizationContent() {
         is_submitted_for_verification: false,
         existing_certificate_url: "",
         existing_proof_url: "",
-        country_iso_code: ""
+        country_iso_code: "",
+        business_registration_authority: "",
+        business_website: "",
+        authorize_representative_first_name: "",
+        authorize_representative_last_name: "",
+        authorize_representative_email: "",
+        authorize_representative_phone: ""
     })
     const [org, setOrg] = useState({
         name: "",
@@ -75,7 +81,13 @@ export function OrganizationContent() {
         is_submitted_for_verification: false,
         existing_certificate_url: "",
         existing_proof_url: "",
-        country_iso_code: ""
+        country_iso_code: "",
+        business_registration_authority: "",
+        business_website: "",
+        authorize_representative_first_name: "",
+        authorize_representative_last_name: "",
+        authorize_representative_email: "",
+        authorize_representative_phone: ""
     })
     const [editOrg, setEditOrg] = useState({ ...org })
 
@@ -92,7 +104,9 @@ export function OrganizationContent() {
     })
     const [countrySearch, setCountrySearch] = useState("");
     const [isCountryOpen, setIsCountryOpen] = useState(false);
+    const [isAuthorityOpen, setIsAuthorityOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const authorityDropdownRef = useRef<HTMLDivElement>(null);
 
     const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
 
@@ -104,6 +118,9 @@ export function OrganizationContent() {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsCountryOpen(false);
+            }
+            if (authorityDropdownRef.current && !authorityDropdownRef.current.contains(event.target as Node)) {
+                setIsAuthorityOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -143,7 +160,13 @@ export function OrganizationContent() {
                 is_submitted_for_verification: data.is_submitted_for_verification || false,
                 existing_certificate_url: data.business_registration_certificate || "",
                 existing_proof_url: data.proof_of_address || "",
-                country_iso_code: data.country_iso_code || ""
+                country_iso_code: data.country_iso_code || "",
+                business_registration_authority: data.business_registration_authority || "",
+                business_website: data.business_website || "",
+                authorize_representative_first_name: data.authorize_representative_first_name || "",
+                authorize_representative_last_name: data.authorize_representative_last_name || "",
+                authorize_representative_email: data.authorize_representative_email || "",
+                authorize_representative_phone: data.authorize_representative_phone || ""
             }
             setInitialOrg(orgData)
             setOrg(orgData)
@@ -191,6 +214,12 @@ export function OrganizationContent() {
             post_code: editOrg.post_code,
             province: editOrg.province,
             country_iso_code: editOrg.country_iso_code,
+            business_registration_authority: editOrg.business_registration_authority,
+            business_website: editOrg.business_website,
+            authorize_representative_first_name: editOrg.authorize_representative_first_name,
+            authorize_representative_last_name: editOrg.authorize_representative_last_name,
+            authorize_representative_email: editOrg.authorize_representative_email,
+            authorize_representative_phone: editOrg.authorize_representative_phone,
             name: editOrg.business_name, // Mandatory match
             is_submitted_for_verification: "true" // Explicitly mark for verification
         };
@@ -327,6 +356,54 @@ export function OrganizationContent() {
                                         required
                                     />
                                 </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="business_registration_authority" className="text-sm font-semibold dark:text-gray-100">Business Registration Authority <span className="text-red-500">*</span></Label>
+                                    <div className="relative" ref={authorityDropdownRef}>
+                                        <div
+                                            onClick={() => !editOrg.is_submitted_for_verification && setIsAuthorityOpen(!isAuthorityOpen)}
+                                            className={`w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md h-10 px-3 flex items-center justify-between transition-colors ${editOrg.is_submitted_for_verification ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"}`}
+                                        >
+                                            <span className={editOrg.business_registration_authority ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
+                                                {editOrg.business_registration_authority || "Select Authority"}
+                                            </span>
+                                            <ChevronsUpDown size={16} className="text-gray-400" />
+                                        </div>
+
+                                        {!editOrg.is_submitted_for_verification && isAuthorityOpen && (
+                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="max-h-[200px] overflow-y-auto font-sans">
+                                                    {["UK:CRN", "US:EIN", "CA:CBN", "AU:ACN", "OTHER"].map((option) => (
+                                                        <div
+                                                            key={option}
+                                                            onClick={() => {
+                                                                setEditOrg({ ...editOrg, business_registration_authority: option });
+                                                                setIsAuthorityOpen(false);
+                                                            }}
+                                                            className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                                        >
+                                                            <span>{option}</span>
+                                                            {editOrg.business_registration_authority === option && (
+                                                                <Check size={14} className="text-primary" />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="business_website" className="text-sm font-semibold dark:text-gray-100">Business Website <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="business_website"
+                                        placeholder="https://example.com"
+                                        value={editOrg.business_website}
+                                        onChange={(e) => setEditOrg({ ...editOrg, business_website: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                        required
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -452,6 +529,64 @@ export function OrganizationContent() {
                                         onChange={(e) => setEditOrg({ ...editOrg, apt_or_suite: e.target.value })}
                                         className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
                                         disabled={editOrg.is_submitted_for_verification}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Authorize Representative Information Section */}
+                        <div className="space-y-6">
+                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Authorize Representative Information</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="rep_first_name" className="text-sm font-semibold dark:text-gray-100">First Name <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="rep_first_name"
+                                        placeholder="Enter first name"
+                                        value={editOrg.authorize_representative_first_name}
+                                        onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_first_name: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="rep_last_name" className="text-sm font-semibold dark:text-gray-100">Last Name <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="rep_last_name"
+                                        placeholder="Enter last name"
+                                        value={editOrg.authorize_representative_last_name}
+                                        onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_last_name: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="rep_email" className="text-sm font-semibold dark:text-gray-100">Email <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="rep_email"
+                                        type="email"
+                                        placeholder="Enter email address"
+                                        value={editOrg.authorize_representative_email}
+                                        onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_email: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="rep_phone" className="text-sm font-semibold dark:text-gray-100">Phone Number <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="rep_phone"
+                                        placeholder="Enter phone number"
+                                        value={editOrg.authorize_representative_phone}
+                                        onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_phone: e.target.value })}
+                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+                                        disabled={editOrg.is_submitted_for_verification}
+                                        required
                                     />
                                 </div>
                             </div>

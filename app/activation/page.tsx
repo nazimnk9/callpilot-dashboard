@@ -97,7 +97,13 @@ export default function ActivationPage() {
         state: "",
         billing_contact_name: "",
         billing_email_address: "",
-        country_iso_code: ""
+        country_iso_code: "",
+        business_registration_authority: "",
+        business_website: "",
+        authorize_representative_first_name: "",
+        authorize_representative_last_name: "",
+        authorize_representative_email: "",
+        authorize_representative_phone: ""
     });
     const [initialOrg, setInitialOrg] = useState({ ...org });
 
@@ -116,7 +122,9 @@ export default function ActivationPage() {
 
     const [countrySearch, setCountrySearch] = useState("");
     const [isCountryOpen, setIsCountryOpen] = useState(false);
+    const [isAuthorityOpen, setIsAuthorityOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const authorityDropdownRef = useRef<HTMLDivElement>(null);
     const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
 
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -139,9 +147,14 @@ export default function ActivationPage() {
         }
         const step3 = localStorage.getItem("activation_step3");
         if (step3) {
+            const data = JSON.parse(step3);
+            setOrg(prev => ({ ...prev, ...data }));
+        }
+        const step4 = localStorage.getItem("activation_step4");
+        if (step4) {
             // Note: Files cannot be recovered from localStorage directly as File objects
             // But we can keep the info that they were selected if we store names
-            const data = JSON.parse(step3);
+            const data = JSON.parse(step4);
             // setOrg(prev => ({ ...prev, ...data }));
         }
         fetchOrganization();
@@ -151,6 +164,9 @@ export default function ActivationPage() {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsCountryOpen(false);
+            }
+            if (authorityDropdownRef.current && !authorityDropdownRef.current.contains(event.target as Node)) {
+                setIsAuthorityOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -181,7 +197,13 @@ export default function ActivationPage() {
                 state: data.state || "",
                 billing_contact_name: data.billing_contact_name || "",
                 billing_email_address: data.billing_email_address || "",
-                country_iso_code: data.country_iso_code || ""
+                country_iso_code: data.country_iso_code || "",
+                business_registration_authority: data.business_registration_authority || "",
+                business_website: data.business_website || "",
+                authorize_representative_first_name: data.authorize_representative_first_name || "",
+                authorize_representative_last_name: data.authorize_representative_last_name || "",
+                authorize_representative_email: data.authorize_representative_email || "",
+                authorize_representative_phone: data.authorize_representative_phone || ""
             };
             setOrg(orgData);
             setInitialOrg(orgData);
@@ -199,7 +221,7 @@ export default function ActivationPage() {
     };
 
     const handleNextStep1 = () => {
-        if (!org.business_name || !org.reg_number) {
+        if (!org.business_name || !org.reg_number || !org.business_registration_authority || !org.business_website) {
             setAlertConfig({
                 open: true,
                 title: "Missing Information",
@@ -210,7 +232,9 @@ export default function ActivationPage() {
         }
         localStorage.setItem("activation_step1", JSON.stringify({
             business_name: org.business_name,
-            reg_number: org.reg_number
+            reg_number: org.reg_number,
+            business_registration_authority: org.business_registration_authority,
+            business_website: org.business_website
         }));
         setCurrentStep(2);
     };
@@ -237,6 +261,25 @@ export default function ActivationPage() {
     };
 
     const handleNextStep3 = () => {
+        if (!org.authorize_representative_first_name || !org.authorize_representative_last_name || !org.authorize_representative_email || !org.authorize_representative_phone) {
+            setAlertConfig({
+                open: true,
+                title: "Missing Information",
+                description: ["Please fill in all required fields."],
+                variant: "destructive"
+            });
+            return;
+        }
+        localStorage.setItem("activation_step3", JSON.stringify({
+            authorize_representative_first_name: org.authorize_representative_first_name,
+            authorize_representative_last_name: org.authorize_representative_last_name,
+            authorize_representative_email: org.authorize_representative_email,
+            authorize_representative_phone: org.authorize_representative_phone
+        }));
+        setCurrentStep(4);
+    };
+
+    const handleNextStep4 = () => {
         if (!org.business_registration_certificate || !org.proof_of_address) {
             setAlertConfig({
                 open: true,
@@ -254,8 +297,8 @@ export default function ActivationPage() {
             has_proof: !!org.proof_of_address,
             proof_name: org.proof_of_address?.name || ""
         };
-        localStorage.setItem("activation_step3", JSON.stringify(fileInfo));
-        setCurrentStep(4);
+        localStorage.setItem("activation_step4", JSON.stringify(fileInfo));
+        setCurrentStep(5);
     };
 
     const handleSave = async () => {
@@ -264,10 +307,12 @@ export default function ActivationPage() {
         // Combine all data
         const step1 = JSON.parse(localStorage.getItem("activation_step1") || "{}");
         const step2 = JSON.parse(localStorage.getItem("activation_step2") || "{}");
+        const step3 = JSON.parse(localStorage.getItem("activation_step3") || "{}");
 
         const finalData = {
             ...step1,
             ...step2,
+            ...step3,
             business_name: org.business_name,
             reg_number: org.reg_number,
             country: org.country,
@@ -277,6 +322,12 @@ export default function ActivationPage() {
             post_code: org.post_code,
             province: org.province,
             country_iso_code: org.country_iso_code,
+            business_registration_authority: org.business_registration_authority,
+            business_website: org.business_website,
+            authorize_representative_first_name: org.authorize_representative_first_name,
+            authorize_representative_last_name: org.authorize_representative_last_name,
+            authorize_representative_email: org.authorize_representative_email,
+            authorize_representative_phone: org.authorize_representative_phone,
             name: org.business_name // Mandatory match
         };
 
@@ -301,6 +352,7 @@ export default function ActivationPage() {
             localStorage.removeItem("activation_step1");
             localStorage.removeItem("activation_step2");
             localStorage.removeItem("activation_step3");
+            localStorage.removeItem("activation_step4");
 
             setAlertConfig({
                 open: true,
@@ -540,7 +592,7 @@ export default function ActivationPage() {
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verify Business Details</h2>
                         <div className="flex items-center gap-2">
-                            {[1, 2, 3, 4].map((step) => (
+                            {[1, 2, 3, 4, 5].map((step) => (
                                 <div
                                     key={step}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${currentStep === step
@@ -584,6 +636,52 @@ export default function ActivationPage() {
                                             required
                                         />
                                     </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <Label htmlFor="business_registration_authority" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Business Registration Authority <span className="text-red-500">*</span></Label>
+                                        <div className="relative" ref={authorityDropdownRef}>
+                                            <div
+                                                onClick={() => setIsAuthorityOpen(!isAuthorityOpen)}
+                                                className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                                            >
+                                                <span className={org.business_registration_authority ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
+                                                    {org.business_registration_authority || "Select Authority"}
+                                                </span>
+                                                <ChevronsUpDown size={16} className="text-gray-400" />
+                                            </div>
+
+                                            {isAuthorityOpen && (
+                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                    <div className="max-h-[200px] overflow-y-auto font-sans">
+                                                        {["UK:CRN", "US:EIN", "CA:CBN", "AU:ACN", "OTHER"].map((option) => (
+                                                            <div
+                                                                key={option}
+                                                                onClick={() => {
+                                                                    setOrg({ ...org, business_registration_authority: option });
+                                                                    setIsAuthorityOpen(false);
+                                                                }}
+                                                                className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                                            >
+                                                                <span>{option}</span>
+                                                                {org.business_registration_authority === option && (
+                                                                    <Check size={14} className="text-primary" />
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <Label htmlFor="business_website" className="text-sm font-semibold">Business Website <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="business_website"
+                                            placeholder="https://example.com"
+                                            value={org.business_website}
+                                            onChange={(e) => setOrg({ ...org, business_website: e.target.value })}
+                                            required
+                                        />
+                                    </div>
                                 </div>
                                 <div className="flex justify-end pt-6">
                                     <Button
@@ -612,6 +710,14 @@ export default function ActivationPage() {
                                     <div className="space-y-1">
                                         <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
                                     </div>
                                 </div>
 
@@ -743,6 +849,118 @@ export default function ActivationPage() {
                         )}
 
                         {currentStep === 3 && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Authorize Representative Information</h3>
+                                </div>
+
+                                {/* Preview Section for Step 1 & 2 */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="rep_first_name" className="text-sm font-semibold">First Name <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="rep_first_name"
+                                            placeholder="Enter first name"
+                                            value={org.authorize_representative_first_name}
+                                            onChange={(e) => setOrg({ ...org, authorize_representative_first_name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="rep_last_name" className="text-sm font-semibold">Last Name <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="rep_last_name"
+                                            placeholder="Enter last name"
+                                            value={org.authorize_representative_last_name}
+                                            onChange={(e) => setOrg({ ...org, authorize_representative_last_name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="rep_email" className="text-sm font-semibold">Email <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="rep_email"
+                                            type="email"
+                                            placeholder="Enter email address"
+                                            value={org.authorize_representative_email}
+                                            onChange={(e) => setOrg({ ...org, authorize_representative_email: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="rep_phone" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="rep_phone"
+                                            placeholder="Enter phone number"
+                                            value={org.authorize_representative_phone}
+                                            onChange={(e) => setOrg({ ...org, authorize_representative_phone: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between pt-6">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setCurrentStep(2)}
+                                        className="px-8"
+                                    >
+                                        Previous
+                                    </Button>
+                                    <Button
+                                        onClick={handleNextStep3}
+                                        className="bg-primary hover:bg-primary/90 text-white px-8"
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {currentStep === 4 && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
@@ -758,6 +976,18 @@ export default function ActivationPage() {
                                     <div className="space-y-1">
                                         <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Name</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_first_name} {org.authorize_representative_last_name}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Email</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_email}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Phone</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_phone}</p>
                                     </div>
                                     <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
                                         <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
@@ -828,13 +1058,13 @@ export default function ActivationPage() {
                                 <div className="flex justify-between pt-6">
                                     <Button
                                         variant="outline"
-                                        onClick={() => setCurrentStep(2)}
+                                        onClick={() => setCurrentStep(3)}
                                         className="px-8"
                                     >
                                         Previous
                                     </Button>
                                     <Button
-                                        onClick={handleNextStep3}
+                                        onClick={handleNextStep4}
                                         className="bg-primary hover:bg-primary/90 text-white px-8"
                                     >
                                         Next
@@ -843,7 +1073,7 @@ export default function ActivationPage() {
                             </div>
                         )}
 
-                        {currentStep === 4 && (
+                        {currentStep === 5 && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Review & Submit</h3>
@@ -865,6 +1095,14 @@ export default function ActivationPage() {
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -906,6 +1144,28 @@ export default function ActivationPage() {
                                     </div>
 
                                     {/* Step 3 Preview */}
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                            Authorize Representative Information
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Name</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_first_name} {org.authorize_representative_last_name}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Email</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_email}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Phone</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_phone}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 4 Preview */}
                                     <div className="space-y-3">
                                         <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -955,7 +1215,7 @@ export default function ActivationPage() {
                                 <div className="flex justify-between pt-6">
                                     <Button
                                         variant="outline"
-                                        onClick={() => setCurrentStep(3)}
+                                        onClick={() => setCurrentStep(4)}
                                         className="px-8"
                                     >
                                         Previous
