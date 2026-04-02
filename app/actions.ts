@@ -2,7 +2,6 @@
 
 import axios from "axios";
 import { headers } from "next/headers";
-import geoip from "geoip-lite";
 
 export async function getCountryCode() {
     const headersList = await headers();
@@ -12,23 +11,8 @@ export async function getCountryCode() {
         return vercelCountry;
     }
 
-    // Try geoip-lite for local environments (e.g. self-hosted Ubuntu server)
     try {
-        const forwardedFor = headersList.get("x-forwarded-for");
-        const userIp = forwardedFor ? forwardedFor.split(',')[0].trim() : "";
-
-        if (userIp && userIp !== "127.0.0.1" && userIp !== "::1") {
-            const lookup = geoip.lookup(userIp);
-            if (lookup && lookup.country) {
-                return lookup.country;
-            }
-        }
-    } catch (error) {
-        console.error("GeoIP-lite lookup failed:", error);
-    }
-
-    try {
-        // Fallback to primary provider (ipapi.co)
+        // Try primary provider
         const response = await axios.get("https://ipapi.co/json/");
         if (response.data && response.data.country_code) {
             return response.data.country_code;
@@ -38,7 +22,7 @@ export async function getCountryCode() {
     }
 
     try {
-        // Final fallback provider (ipwho.is)
+        // Fallback provider
         const response = await axios.get("https://ipwho.is/");
         if (response.data && response.data.country_code) {
             return response.data.country_code;
