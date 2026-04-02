@@ -6,9 +6,14 @@ import { headers } from "next/headers";
 export async function getCountryCode() {
     const headersList = await headers();
     const vercelCountry = headersList.get("x-vercel-ip-country");
+    const country = headersList.get("cf-ipcountry");
 
     if (vercelCountry) {
         return vercelCountry;
+    }
+
+    if(country){
+        return country;
     }
 
     try {
