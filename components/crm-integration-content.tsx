@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Zap, Check, Phone, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { cookieUtils } from "@/services/auth-service";
 import { crmService, Platform } from "@/services/crm-service";
 import {
@@ -317,28 +318,38 @@ export function CRMIntegrationContent() {
                                             </div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="flex items-center gap-4">
-                                        <Button
-                                            onClick={() => handleIntegrate(platform)}
-                                            disabled={isIntegrating || platform.is_connected}
-                                            className={`gap-2 ${platform.is_connected
-                                                ? "bg-green-500/50 text-white cursor-not-allowed"
-                                                : "bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200"
-                                                } font-semibold transition-all duration-200`}
+                                    <CardContent className="flex flex-col gap-4">
+                                        <Link
+                                            href="https://callpilot.pro/job-adder/document-uploader"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium underline underline-offset-4 flex items-center gap-1.5 transition-colors"
                                         >
-                                            <Zap className="w-4 h-4" />
-                                            {platform.is_connected ? "Already Integrated" : `Integrate ${platform.name} Account`}
-                                        </Button>
-
-                                        {platform.is_connected && (
+                                            JobAdder Document Uploader
+                                        </Link>
+                                        <div className="flex items-center gap-4">
                                             <Button
-                                                onClick={() => setDisconnectDialog({ show: true, platform })}
-                                                disabled={isIntegrating}
-                                                className="bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200"
+                                                onClick={() => handleIntegrate(platform)}
+                                                disabled={isIntegrating || platform.is_connected}
+                                                className={`gap-2 ${platform.is_connected
+                                                    ? "bg-green-500/50 text-white cursor-not-allowed"
+                                                    : "bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200"
+                                                    } font-semibold transition-all duration-200`}
                                             >
-                                                Disconnect
+                                                <Zap className="w-4 h-4" />
+                                                {platform.is_connected ? "Already Integrated" : `Integrate ${platform.name} Account`}
                                             </Button>
-                                        )}
+
+                                            {platform.is_connected && (
+                                                <Button
+                                                    onClick={() => setDisconnectDialog({ show: true, platform })}
+                                                    disabled={isIntegrating}
+                                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200"
+                                                >
+                                                    Disconnect
+                                                </Button>
+                                            )}
+                                        </div>
                                     </CardContent>
                                 </Card>
                             ))
