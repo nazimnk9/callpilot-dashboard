@@ -8,6 +8,7 @@ import { profileService } from "@/services/profile-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import { Search, ChevronsUpDown, Check } from "lucide-react"
 import countriesData from "@/lib/countries.json";
+import { getCountryCode } from "@/app/actions";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -109,9 +110,31 @@ export function OrganizationContent() {
     const authorityDropdownRef = useRef<HTMLDivElement>(null);
 
     const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
+    const [isPhoneCodeOpen, setIsPhoneCodeOpen] = useState(false);
+    const [phoneCodeSearch, setPhoneCodeSearch] = useState("");
+    const [selectedPhoneCode, setSelectedPhoneCode] = useState("");
+    const phoneCodeDropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         fetchOrganization()
+
+        // Initialize country code
+        const initCountryCode = async () => {
+            if (selectedPhoneCode) return; // Don't overwrite if already set (e.g. by fetchOrganization)
+            const code = await getCountryCode();
+            if (code) {
+                const country = countriesData.find(c => c.country_code === code);
+                if (country) {
+                    const phoneCode = country.phone_code.startsWith("+") ? country.phone_code : `+${country.phone_code}`;
+                    setSelectedPhoneCode(phoneCode);
+                } else {
+                    setSelectedPhoneCode("+44"); // Default
+                }
+            } else {
+                setSelectedPhoneCode("+44"); // Default
+            }
+        };
+        initCountryCode();
     }, [])
 
     useEffect(() => {
@@ -121,6 +144,9 @@ export function OrganizationContent() {
             }
             if (authorityDropdownRef.current && !authorityDropdownRef.current.contains(event.target as Node)) {
                 setIsAuthorityOpen(false);
+            }
+            if (phoneCodeDropdownRef.current && !phoneCodeDropdownRef.current.contains(event.target as Node)) {
+                setIsPhoneCodeOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -133,11 +159,34 @@ export function OrganizationContent() {
         (c.phone_code && c.phone_code.includes(countrySearch))
     );
 
+    const filteredPhoneCountries = countries.filter(c =>
+        c.country.toLowerCase().includes(phoneCodeSearch.toLowerCase()) ||
+        c.country_code.toLowerCase().includes(phoneCodeSearch.toLowerCase()) ||
+        (c.phone_code && c.phone_code.includes(phoneCodeSearch))
+    );
+
     const fetchOrganization = async () => {
         try {
             setIsLoading(true)
             const response = await profileService.getOrganization()
             const data = response.data
+            let phoneVal = data.authorize_representative_phone || "";
+            if (phoneVal.startsWith("+")) {
+                const sortedCountries = [...countriesData].sort((a, b) => {
+                    const codeA = a.phone_code.startsWith("+") ? a.phone_code.length : a.phone_code.length + 1;
+                    const codeB = b.phone_code.startsWith("+") ? b.phone_code.length : b.phone_code.length + 1;
+                    return codeB - codeA;
+                });
+                for (const c of sortedCountries) {
+                    const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                    if (phoneVal.startsWith(code)) {
+                        setSelectedPhoneCode(code);
+                        phoneVal = phoneVal.slice(code.length);
+                        break;
+                    }
+                }
+            }
+
             const orgData = {
                 name: data.name || "",
                 uid: data.uid || "",
@@ -166,7 +215,7 @@ export function OrganizationContent() {
                 authorize_representative_first_name: data.authorize_representative_first_name || "",
                 authorize_representative_last_name: data.authorize_representative_last_name || "",
                 authorize_representative_email: data.authorize_representative_email || "",
-                authorize_representative_phone: data.authorize_representative_phone || ""
+                authorize_representative_phone: phoneVal
             }
             setInitialOrg(orgData)
             setOrg(orgData)
@@ -204,6 +253,15 @@ export function OrganizationContent() {
 
         const formData = new FormData();
 
+        let phone = editOrg.authorize_representative_phone;
+        if (phone.startsWith('0')) {
+            phone = phone.substring(1);
+        }
+
+        const fullPhone = phone.startsWith("+")
+            ? phone
+            : `${selectedPhoneCode}${phone}`;
+
         const finalData = {
             business_name: editOrg.business_name,
             reg_number: editOrg.reg_number,
@@ -219,7 +277,7 @@ export function OrganizationContent() {
             authorize_representative_first_name: editOrg.authorize_representative_first_name,
             authorize_representative_last_name: editOrg.authorize_representative_last_name,
             authorize_representative_email: editOrg.authorize_representative_email,
-            authorize_representative_phone: editOrg.authorize_representative_phone,
+            authorize_representative_phone: fullPhone,
             name: editOrg.business_name, // Mandatory match
             is_submitted_for_verification: "true" // Explicitly mark for verification
         };
@@ -315,7 +373,14 @@ export function OrganizationContent() {
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Business Details</h2>
                     </div>
-
+                    {editOrg.is_submitted_for_verification && (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl flex items-center gap-3 m-4">
+                            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                            <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                                Verification in progress. Details are locked until reviewed.
+                            </p>
+                        </div>
+                    )}
                     <div className="p-8 space-y-12">
                         {/* Business Information Section */}
                         <div className="space-y-6">
@@ -323,14 +388,6 @@ export function OrganizationContent() {
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Information</h3>
                                 {/* <p className="text-sm text-gray-500 dark:text-gray-400">Basic identification details for your business.</p> */}
                             </div>
-                            {editOrg.is_submitted_for_verification && (
-                                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl flex items-center gap-3">
-                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                                        Verification in progress. Details are locked until reviewed.
-                                    </p>
-                                </div>
-                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="business_name" className="text-sm font-semibold dark:text-gray-100">Registered Business Name <span className="text-red-500">*</span></Label>
@@ -475,7 +532,7 @@ export function OrganizationContent() {
                                         </div>
 
                                         {!editOrg.is_submitted_for_verification && isCountryOpen && (
-                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="absolute top-[calc(100%+4px)] left-0 w-[450px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                                                 <div className="p-2 border-b border-gray-100 dark:border-gray-800">
                                                     <div className="relative">
                                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
@@ -501,7 +558,7 @@ export function OrganizationContent() {
                                                                 }}
                                                                 className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
                                                             >
-                                                                <div className="flex items-center gap-2">
+                                                                <div className="flex items-center justify-between gap-2">
                                                                     <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{c.country_code}</span>
                                                                     <span>{c.country}</span>
                                                                 </div>
@@ -579,15 +636,74 @@ export function OrganizationContent() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="rep_phone" className="text-sm font-semibold dark:text-gray-100">Phone Number <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="rep_phone"
-                                        placeholder="Enter phone number"
-                                        value={editOrg.authorize_representative_phone}
-                                        onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_phone: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
+                                    <div className="flex gap-2">
+                                        <div className="relative w-[140px]" ref={phoneCodeDropdownRef}>
+                                            <div
+                                                onClick={() => !editOrg.is_submitted_for_verification && setIsPhoneCodeOpen(!isPhoneCodeOpen)}
+                                                className={`w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between transition-colors ${editOrg.is_submitted_for_verification ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"}`}
+                                            >
+                                                <span className="text-gray-900 dark:text-gray-100 text-[14px] truncate">
+                                                    {selectedPhoneCode || "Code"}
+                                                </span>
+                                                <ChevronsUpDown size={16} className="text-gray-400 shrink-0" />
+                                            </div>
+
+                                            {!editOrg.is_submitted_for_verification && isPhoneCodeOpen && (
+                                                <div className="absolute bottom-[calc(100%+4px)] left-0 w-[390px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                    <div className="p-2 border-b border-gray-100 dark:border-gray-800">
+                                                        <div className="relative">
+                                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                                            <input
+                                                                autoFocus
+                                                                type="text"
+                                                                placeholder="Search code..."
+                                                                value={phoneCodeSearch}
+                                                                onChange={(e) => setPhoneCodeSearch(e.target.value)}
+                                                                className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="max-h-[200px] overflow-y-auto font-sans">
+                                                        {filteredPhoneCountries.length > 0 ? (
+                                                            filteredPhoneCountries.map((c, index) => (
+                                                                <div
+                                                                    key={`${c.country_code}-${index}`}
+                                                                    onClick={() => {
+                                                                        const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                                                                        setSelectedPhoneCode(code);
+                                                                        setIsPhoneCodeOpen(false);
+                                                                        setPhoneCodeSearch("");
+                                                                    }}
+                                                                    className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                                                >
+                                                                    <div className="flex items-center justify-between gap-2 w-full truncate">
+                                                                        <span className="text-primary font-bold w-12">{c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`}</span>
+                                                                        <span className="text-gray-500 dark:text-gray-400 text-xs truncate">{c.country}</span>
+                                                                    </div>
+                                                                    {selectedPhoneCode === (c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`) && (
+                                                                        <Check size={14} className="text-primary shrink-0" />
+                                                                    )}
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
+                                                                No results
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <Input
+                                            id="rep_phone"
+                                            placeholder="Enter phone number"
+                                            value={editOrg.authorize_representative_phone}
+                                            onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_phone: e.target.value })}
+                                            className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 flex-1"
+                                            disabled={editOrg.is_submitted_for_verification}
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>

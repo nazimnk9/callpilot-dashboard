@@ -10,6 +10,7 @@ import { LoaderOverlay } from "@/components/auth/loader-overlay";
 import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone, LogOut, X } from "lucide-react";
 import { cookieUtils, authService } from '@/services/auth-service';
 import countriesData from "@/lib/countries.json";
+import { getCountryCode } from "@/app/actions";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -126,6 +127,10 @@ export default function ActivationPage() {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const authorityDropdownRef = useRef<HTMLDivElement>(null);
     const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
+    const [isPhoneCodeOpen, setIsPhoneCodeOpen] = useState(false);
+    const [phoneCodeSearch, setPhoneCodeSearch] = useState("");
+    const [selectedPhoneCode, setSelectedPhoneCode] = useState("");
+    const phoneCodeDropdownRef = useRef<HTMLDivElement>(null);
 
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -148,29 +153,48 @@ export default function ActivationPage() {
         const step3 = localStorage.getItem("activation_step3");
         if (step3) {
             const data = JSON.parse(step3);
-            setOrg(prev => ({ ...prev, ...data }));
+            let phoneVal = data.authorize_representative_phone || "";
+            if (phoneVal.startsWith("+")) {
+                const sortedCountries = [...countriesData].sort((a, b) => {
+                    const codeA = a.phone_code.startsWith("+") ? a.phone_code.length : a.phone_code.length + 1;
+                    const codeB = b.phone_code.startsWith("+") ? b.phone_code.length : b.phone_code.length + 1;
+                    return codeB - codeA;
+                });
+                for (const c of sortedCountries) {
+                    const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                    if (phoneVal.startsWith(code)) {
+                        setSelectedPhoneCode(code);
+                        phoneVal = phoneVal.slice(code.length);
+                        break;
+                    }
+                }
+            }
+            setOrg(prev => ({ ...prev, authorize_representative_phone: phoneVal }));
         }
         const step4 = localStorage.getItem("activation_step4");
         if (step4) {
-            // Note: Files cannot be recovered from localStorage directly as File objects
-            // But we can keep the info that they were selected if we store names
             const data = JSON.parse(step4);
             // setOrg(prev => ({ ...prev, ...data }));
         }
         fetchOrganization();
-    }, []);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsCountryOpen(false);
-            }
-            if (authorityDropdownRef.current && !authorityDropdownRef.current.contains(event.target as Node)) {
-                setIsAuthorityOpen(false);
+        // Initialize country code
+        const initCountryCode = async () => {
+            if (selectedPhoneCode) return;
+            const code = await getCountryCode();
+            if (code) {
+                const country = countriesData.find(c => c.country_code === code);
+                if (country) {
+                    const phoneCode = country.phone_code.startsWith("+") ? country.phone_code : `+${country.phone_code}`;
+                    setSelectedPhoneCode(phoneCode);
+                } else {
+                    setSelectedPhoneCode("+44"); // Default
+                }
+            } else {
+                setSelectedPhoneCode("+44"); // Default
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        initCountryCode();
     }, []);
 
     const fetchOrganization = async () => {
@@ -178,6 +202,23 @@ export default function ActivationPage() {
             setIsLoading(true);
             const response = await profileService.getOrganization();
             const data = response.data;
+            let phoneVal = data.authorize_representative_phone || "";
+            if (phoneVal.startsWith("+")) {
+                const sortedCountries = [...countriesData].sort((a, b) => {
+                    const codeA = a.phone_code.startsWith("+") ? a.phone_code.length : a.phone_code.length + 1;
+                    const codeB = b.phone_code.startsWith("+") ? b.phone_code.length : b.phone_code.length + 1;
+                    return codeB - codeA;
+                });
+                for (const c of sortedCountries) {
+                    const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                    if (phoneVal.startsWith(code)) {
+                        setSelectedPhoneCode(code);
+                        phoneVal = phoneVal.slice(code.length);
+                        break;
+                    }
+                }
+            }
+
             const orgData = {
                 name: data.name || "",
                 uid: data.uid || "",
@@ -203,7 +244,7 @@ export default function ActivationPage() {
                 authorize_representative_first_name: data.authorize_representative_first_name || "",
                 authorize_representative_last_name: data.authorize_representative_last_name || "",
                 authorize_representative_email: data.authorize_representative_email || "",
-                authorize_representative_phone: data.authorize_representative_phone || ""
+                authorize_representative_phone: phoneVal
             };
             setOrg(orgData);
             setInitialOrg(orgData);
@@ -219,6 +260,27 @@ export default function ActivationPage() {
             setIsLoading(false);
         }
     };
+
+    // Handle stripping country code when returning to Step 3 via "Previous"
+    useEffect(() => {
+        if (currentStep === 3 && org.authorize_representative_phone.startsWith("+")) {
+            let phoneVal = org.authorize_representative_phone;
+            const sortedCountries = [...countriesData].sort((a, b) => {
+                const codeA = a.phone_code.startsWith("+") ? a.phone_code.length : a.phone_code.length + 1;
+                const codeB = b.phone_code.startsWith("+") ? b.phone_code.length : b.phone_code.length + 1;
+                return codeB - codeA;
+            });
+            for (const c of sortedCountries) {
+                const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                if (phoneVal.startsWith(code)) {
+                    setSelectedPhoneCode(code);
+                    const stripped = phoneVal.slice(code.length);
+                    setOrg(prev => ({ ...prev, authorize_representative_phone: stripped }));
+                    break;
+                }
+            }
+        }
+    }, [currentStep, org.authorize_representative_phone]);
 
     const handleNextStep1 = () => {
         if (!org.business_name || !org.reg_number || !org.business_registration_authority || !org.business_website) {
@@ -270,11 +332,23 @@ export default function ActivationPage() {
             });
             return;
         }
+
+        let phone = org.authorize_representative_phone;
+        if (phone.startsWith('0')) {
+            phone = phone.substring(1);
+        }
+
+        const fullPhone = phone.startsWith("+")
+            ? phone
+            : `${selectedPhoneCode}${phone}`;
+
+        setOrg(prev => ({ ...prev, authorize_representative_phone: fullPhone }));
+
         localStorage.setItem("activation_step3", JSON.stringify({
             authorize_representative_first_name: org.authorize_representative_first_name,
             authorize_representative_last_name: org.authorize_representative_last_name,
             authorize_representative_email: org.authorize_representative_email,
-            authorize_representative_phone: org.authorize_representative_phone
+            authorize_representative_phone: fullPhone
         }));
         setCurrentStep(4);
     };
@@ -397,6 +471,12 @@ export default function ActivationPage() {
         c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
         c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
         c.phone_code.includes(countrySearch)
+    );
+
+    const filteredPhoneCountries = countries.filter(c =>
+        c.country.toLowerCase().includes(phoneCodeSearch.toLowerCase()) ||
+        c.country_code.toLowerCase().includes(phoneCodeSearch.toLowerCase()) ||
+        c.phone_code.includes(phoneCodeSearch)
     );
 
     const handleFilePreview = (file: File) => {
@@ -588,7 +668,7 @@ export default function ActivationPage() {
                 </div>
 
                 {/* Form Section */}
-                <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm">
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verify Business Details</h2>
                         <div className="flex items-center gap-2">
@@ -789,7 +869,7 @@ export default function ActivationPage() {
                                                             />
                                                         </div>
                                                     </div>
-                                                    <div className="max-h-[200px] overflow-y-auto font-sans">
+                                                    <div className="max-h-[150px] overflow-y-auto font-sans">
                                                         {filteredCountries.length > 0 ? (
                                                             filteredCountries.map((c) => (
                                                                 <div
@@ -801,7 +881,7 @@ export default function ActivationPage() {
                                                                     }}
                                                                     className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
                                                                 >
-                                                                    <div className="flex items-center gap-2">
+                                                                    <div className="flex items-center justify-between gap-2 w-full">
                                                                         <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{c.country_code}</span>
                                                                         <span>{c.country}</span>
                                                                     </div>
@@ -932,13 +1012,73 @@ export default function ActivationPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="rep_phone" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="rep_phone"
-                                            placeholder="Enter phone number"
-                                            value={org.authorize_representative_phone}
-                                            onChange={(e) => setOrg({ ...org, authorize_representative_phone: e.target.value })}
-                                            required
-                                        />
+                                        <div className="flex gap-2">
+                                            <div className="relative w-[140px]" ref={phoneCodeDropdownRef}>
+                                                <div
+                                                    onClick={() => setIsPhoneCodeOpen(!isPhoneCodeOpen)}
+                                                    className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                                                >
+                                                    <span className="text-gray-900 dark:text-gray-100 text-[14px] truncate">
+                                                        {selectedPhoneCode || "Code"}
+                                                    </span>
+                                                    <ChevronsUpDown size={16} className="text-gray-400 shrink-0" />
+                                                </div>
+
+                                                {isPhoneCodeOpen && (
+                                                    <div className="absolute bottom-[calc(100%+4px)] left-0 w-[390px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                        <div className="p-2 border-b border-gray-100 dark:border-gray-800">
+                                                            <div className="relative">
+                                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                                                <input
+                                                                    autoFocus
+                                                                    type="text"
+                                                                    placeholder="Search code..."
+                                                                    value={phoneCodeSearch}
+                                                                    onChange={(e) => setPhoneCodeSearch(e.target.value)}
+                                                                    className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="max-h-[200px] overflow-y-auto font-sans">
+                                                            {filteredPhoneCountries.length > 0 ? (
+                                                                filteredPhoneCountries.map((c, index) => (
+                                                                    <div
+                                                                        key={`${c.country_code}-${index}`}
+                                                                        onClick={() => {
+                                                                            const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                                                                            setSelectedPhoneCode(code);
+                                                                            setIsPhoneCodeOpen(false);
+                                                                            setPhoneCodeSearch("");
+                                                                        }}
+                                                                        className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                                                    >
+                                                                        <div className="flex items-center justify-between gap-2 w-full truncate">
+                                                                            <span className="text-primary font-bold w-12">{c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`}</span>
+                                                                            <span className="text-gray-500 dark:text-gray-400 text-xs truncate">{c.country}</span>
+                                                                        </div>
+                                                                        {selectedPhoneCode === (c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`) && (
+                                                                            <Check size={14} className="text-primary shrink-0" />
+                                                                        )}
+                                                                    </div>
+                                                                ))
+                                                            ) : (
+                                                                <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
+                                                                    No results
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <Input
+                                                id="rep_phone"
+                                                placeholder="Enter phone number"
+                                                value={org.authorize_representative_phone}
+                                                onChange={(e) => setOrg({ ...org, authorize_representative_phone: e.target.value })}
+                                                required
+                                                className="flex-1"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
