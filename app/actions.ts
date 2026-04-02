@@ -1,89 +1,46 @@
-// "use server";
-
-// import axios from "axios";
-// import { headers } from "next/headers";
-
-// export async function getCountryCode() {
-//     const headersList = await headers();
-//     const vercelCountry = headersList.get("x-vercel-ip-country");
-
-//     if (vercelCountry) {
-//         return vercelCountry;
-//     }
-
-//     try {
-//         // Try primary provider
-//         const response = await axios.get("https://ipapi.co/json/");
-//         if (response.data && response.data.country_code) {
-//             return response.data.country_code;
-//         }
-//     } catch (error) {
-//         console.error("Primary geo-IP service failed, trying fallback...", error);
-//     }
-
-//     try {
-//         // Fallback provider
-//         const response = await axios.get("https://ipwho.is/");
-//         if (response.data && response.data.country_code) {
-//             return response.data.country_code;
-//         }
-//     } catch (error) {
-//         console.error("All geo-IP services failed:", error);
-//     }
-
-//     return null;
-// }
-
-
 "use server";
 
 import axios from "axios";
 import { headers } from "next/headers";
+import geoip from "geoip-lite";
 
 export async function getCountryCode() {
     const headersList = await headers();
-
-    // 1️⃣ Vercel header (best & fastest)
     const vercelCountry = headersList.get("x-vercel-ip-country");
+
     if (vercelCountry) {
         return vercelCountry;
     }
 
-    // 2️⃣ Try to get client IP (for Ubuntu / custom server)
-    const forwardedFor = headersList.get("x-forwarded-for");
-    const realIP = headersList.get("x-real-ip");
+    // Try geoip-lite for local environments (e.g. self-hosted Ubuntu server)
+    try {
+        const forwardedFor = headersList.get("x-forwarded-for");
+        const userIp = forwardedFor ? forwardedFor.split(',')[0].trim() : "";
 
-    const ip =
-        forwardedFor?.split(",")[0]?.trim() ||
-        realIP ||
-        null;
-
-    // 3️⃣ If IP exists → use Geo API with IP
-    if (ip) {
-        try {
-            const response = await axios.get(`https://ipapi.co/${ip}/json/`);
-            if (response.data?.country_code) {
-                return response.data.country_code;
+        if (userIp && userIp !== "127.0.0.1" && userIp !== "::1") {
+            const lookup = geoip.lookup(userIp);
+            if (lookup && lookup.country) {
+                return lookup.country;
             }
-        } catch (error) {
-            console.error("IP-based geo lookup failed:", error);
         }
+    } catch (error) {
+        console.error("GeoIP-lite lookup failed:", error);
     }
 
-    // 4️⃣ Fallback (no IP)
     try {
+        // Fallback to primary provider (ipapi.co)
         const response = await axios.get("https://ipapi.co/json/");
-        if (response.data?.country_code) {
+        if (response.data && response.data.country_code) {
             return response.data.country_code;
         }
     } catch (error) {
-        console.error("Primary geo-IP failed:", error);
+        console.error("Primary geo-IP service failed, trying fallback...", error);
     }
 
-    // 5️⃣ Final fallback
     try {
+        // Final fallback provider (ipwho.is)
         const response = await axios.get("https://ipwho.is/");
-        if (response.data?.country_code) {
+        if (response.data && response.data.country_code) {
             return response.data.country_code;
         }
     } catch (error) {
