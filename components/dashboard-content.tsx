@@ -876,6 +876,7 @@ export function DashboardContent() {
                         { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
                         { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
                         { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
+                        { label: 'Connect Your ATS', key: 'is_ats_connected', path: '/dashboard/connect-ats' },
                         { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/ai-call-flow-options' }
                     ];
 
@@ -904,7 +905,16 @@ export function DashboardContent() {
                                                     <div
                                                         key={idx}
                                                         className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
-                                                        onClick={() => !isCompleted && router.push(option.path)}
+                                                        onClick={() => {
+                                                            if (!isCompleted) {
+                                                                if (option.key === 'is_purchased_anything') {
+                                                                    setSelectedPlan(null);
+                                                                    setIsSubscriptionModalOpen(true);
+                                                                } else {
+                                                                    router.push(option.path);
+                                                                }
+                                                            }
+                                                        }}
                                                     >
                                                         {isCompleted ? (
                                                             <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -947,7 +957,16 @@ export function DashboardContent() {
                                             <div
                                                 key={idx}
                                                 className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
-                                                onClick={() => !isCompleted && router.push(option.path)}
+                                                onClick={() => {
+                                                    if (!isCompleted) {
+                                                        if (option.key === 'is_purchased_anything') {
+                                                            setSelectedPlan(null);
+                                                            setIsSubscriptionModalOpen(true);
+                                                        } else {
+                                                            router.push(option.path);
+                                                        }
+                                                    }
+                                                }}
                                             >
                                                 {isCompleted ? (
                                                     <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -1545,6 +1564,32 @@ export function DashboardContent() {
                                     setErrorDetail(null);
                                 }}
                                 className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
+                            >
+                                Continue
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog open={!!successDetail} onOpenChange={() => setSuccessDetail(null)}>
+                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                        <AlertDialogHeader>
+                            <div className="flex justify-center items-center gap-3 mb-2">
+                                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
+                                    <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <AlertDialogTitle className="text-lg font-bold text-green-600 dark:text-green-400">
+                                    Success
+                                </AlertDialogTitle>
+                            </div>
+                            <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">
+                                {successDetail}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="pt-4">
+                            <AlertDialogAction
+                                onClick={() => setSuccessDetail(null)}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
                             >
                                 Continue
                             </AlertDialogAction>

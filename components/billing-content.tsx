@@ -871,6 +871,20 @@ export function BillingContent() {
 
                                 {/* Right Side: Actions */}
                                 <div className="flex flex-row gap-3">
+                                     <button
+                                        onClick={() => {
+                                            if (orgData?.current_plan) {
+                                                fetchCurrentSubscription();
+                                                setIsUpdateSubscriptionModalOpen(true);
+                                            } else {
+                                                setSelectedPlan(null);
+                                                setIsSubscriptionModalOpen(true);
+                                            }
+                                        }}
+                                        className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[12px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
+                                    </button>
                                     <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                         <DialogTrigger asChild>
                                             <button className="bg-primary hover:bg-black text-white dark:text-black dark:bg-primary px-0 py-1  sm:px-0 sm:py-1 rounded-2xl text-[12px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] w-[100px] md:w-[110px] sm:w-[15%]">
@@ -1038,20 +1052,6 @@ export function BillingContent() {
                                             </div>
                                         </DialogContent>
                                     </Dialog>
-                                    <button
-                                        onClick={() => {
-                                            if (orgData?.current_plan) {
-                                                fetchCurrentSubscription();
-                                                setIsUpdateSubscriptionModalOpen(true);
-                                            } else {
-                                                setSelectedPlan(null);
-                                                setIsSubscriptionModalOpen(true);
-                                            }
-                                        }}
-                                        className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[12px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
-                                    >
-                                        {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
-                                    </button>
 
                                     {orgData?.current_plan && (
                                         <button

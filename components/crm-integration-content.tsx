@@ -320,7 +320,7 @@ export function CRMIntegrationContent() {
                                     </CardHeader>
                                     <CardContent className="flex flex-col gap-4">
                                         <Link
-                                            href="https://callpilot.pro/job-adder/document-uploader"
+                                            href={`https://callpilot.pro/job-adder/document-uploader${platform.my_platform?.uid ? `?uid=${platform.my_platform.uid}` : ''}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium underline underline-offset-4 flex items-center gap-1.5 transition-colors"
