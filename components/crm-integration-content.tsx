@@ -319,7 +319,8 @@ export function CRMIntegrationContent() {
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex flex-col gap-4">
-                                        <Link
+                                        {platform.is_connected && (
+                                            <Link
                                             href={`https://callpilot.pro/job-adder/document-uploader${platform.my_platform?.uid ? `?uid=${platform.my_platform.uid}` : ''}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
@@ -327,6 +328,8 @@ export function CRMIntegrationContent() {
                                         >
                                             JobAdder Document Uploader
                                         </Link>
+                                        )}
+                                        
                                         <div className="flex items-center gap-4">
                                             <Button
                                                 onClick={() => handleIntegrate(platform)}
