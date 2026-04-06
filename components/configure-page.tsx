@@ -1292,7 +1292,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 onClick={() => setIsEditing(true)}
                                                 className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
                                             >
-                                                Edit Configure
+                                                Edit AI Call
                                             </Button>
                                         ) : (
                                             <Button
@@ -1301,7 +1301,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 disabled={isSaving}
                                                 className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
                                             >
-                                                {isSaving ? "Updating..." : "Update Configure"}
+                                                {isSaving ? "Updating..." : "Update AI Call"}
                                             </Button>
                                         )}
                                         <Button
