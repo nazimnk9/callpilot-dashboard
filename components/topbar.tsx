@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Menu, ChevronDown, Settings, Phone, MessageSquare, ChevronUp, User, Check } from 'lucide-react';
 import { UserProfilePanel } from './user-profile-panel';
 import { cn } from '@/lib/utils';
+import { profileService } from '@/services/profile-service';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -14,7 +15,23 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState('Your Business');
+  const [organization, setOrganization] = useState<any>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchOrg = async () => {
+      try {
+        const response = await profileService.getOrganization();
+        if (response.data) {
+          setOrganization(response.data);
+          setSelectedOrg(response.data.business_name || 'Your Business');
+        }
+      } catch (error) {
+        console.error('Failed to fetch organization:', error);
+      }
+    };
+    fetchOrg();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -53,21 +70,23 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
 
                 <div
                   onClick={() => {
-                    setSelectedOrg('Your Business');
+                    setSelectedOrg(organization?.business_name || 'Your Business');
                     setIsOrgDropdownOpen(false);
                   }}
                   className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="w-4 flex justify-center">
-                    {selectedOrg === 'Your Business' || selectedOrg === 'Your Business' ? (
+                    {selectedOrg === (organization?.business_name || 'Your Business') ? (
                       <Check size={14} className="text-gray-600 dark:text-gray-400" />
                     ) : null}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
-                      P
+                      {(organization?.business_name?.[0] || 'P').toUpperCase()}
                     </div>
-                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">Your Business</span>
+                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                      {organization?.business_name || 'Your Business'}
+                    </span>
                   </div>
                 </div>
               </div>

@@ -132,7 +132,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     // Status Assignments
     const [jobAdStatus, setJobAdStatus] = useState("Current")
     const [applicationStatus, setApplicationStatus] = useState<string>("")
-    const [callingTime, setCallingTime] = useState<string>("5")
+    const [callingTimeAfterStatusUpdate, setCallingTimeAfterStatusUpdate] = useState<string>("fastest")
     const [unsuccessfulStatus, setUnsuccessfulStatus] = useState<string>("")
     const [successfulStatus, setSuccessfulStatus] = useState<string>("")
     const [placedStatus, setPlacedStatus] = useState<string>("")
@@ -266,6 +266,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             }
                             setMyFlowUid(configData.my_flow?.uid || featureUid || "")
                             setTimezone(configData.timezone || "")
+                            setCallingTimeAfterStatusUpdate(configData.calling_time_after_status_update ? String(configData.calling_time_after_status_update) : "fastest")
 
                             // Sync additional questions
                             if (configData.primary_questions && Array.isArray(configData.primary_questions)) {
@@ -534,6 +535,10 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 voice_data: selectedVoiceData
             }
 
+            if (callingTimeAfterStatusUpdate !== "fastest") {
+                payload.calling_time_after_status_update = callingTimeAfterStatusUpdate
+            }
+
             // Add flattened timeline fields in 24h format
             timeline.forEach(dayInfo => {
                 const dayKey = dayInfo.day.toLowerCase()
@@ -576,6 +581,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     setSelectedVoiceData(configData.voice_data || null)
                     setMyFlowUid(configData.my_flow?.uid || "")
                     setTimezone(configData.timezone || "")
+                    setCallingTimeAfterStatusUpdate(configData.calling_time_after_status_update ? String(configData.calling_time_after_status_update) : "fastest")
 
                     // Sync additional questions
                     if (configData.primary_questions && Array.isArray(configData.primary_questions)) {
@@ -863,6 +869,21 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                     <Link href="/dashboard/voices" className="text-blue-600 dark:text-blue-400 hover:underline">Choose Another One</Link>
                                                 </p>
                                             )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">AI Call placed within</Label>
+                                            <Select disabled={isUpdateMode && !isEditing} value={callingTimeAfterStatusUpdate} onValueChange={setCallingTimeAfterStatusUpdate}>
+                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 text-sm">
+                                                    <SelectValue placeholder="Select Time" />
+                                                </SelectTrigger>
+                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                    <SelectItem value="5" className="dark:text-gray-100">5 min</SelectItem>
+                                                    <SelectItem value="10" className="dark:text-gray-100">10 min</SelectItem>
+                                                    <SelectItem value="15" className="dark:text-gray-100">15 min</SelectItem>
+                                                    <SelectItem value="20" className="dark:text-gray-100">20 min</SelectItem>
+                                                    <SelectItem value="fastest" className="dark:text-gray-100">Fastest Time Possible</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         <div className="mb-6 space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
