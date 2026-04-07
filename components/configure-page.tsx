@@ -1168,7 +1168,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     <div className="space-y-3">
                                         {/* Questions Loop */}
                                         {[
-                                            "When are you available to start?",
+                                            "Do you have reliable transportation?",
                                             "Are you available to work weekends?",
                                             "Are you willing to travel if required?"
                                         ].map((defaultQuestion, idx) => (

@@ -1379,7 +1379,7 @@ export default function ActivationPage() {
                             href="mailto:contact@swiftwave.ai"
                             className="text-primary hover:underline font-medium"
                         >
-                            Contact support with link to support ticket.
+                            Contact Support link.
                         </a>
                     </p>
                 </div>
