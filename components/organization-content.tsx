@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { profileService } from "@/services/profile-service"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
-import { Search, ChevronsUpDown, Check } from "lucide-react"
+import { Search, ChevronsUpDown, Check, ClipboardCheck } from "lucide-react"
 import countriesData from "@/lib/countries.json";
 import { getCountryCode } from "@/app/actions";
 import {
@@ -91,6 +92,8 @@ export function OrganizationContent() {
         authorize_representative_phone: ""
     })
     const [editOrg, setEditOrg] = useState({ ...org })
+    const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false)
+    const [isComplianceAgreed, setIsComplianceAgreed] = useState(false)
 
     const [alertConfig, setAlertConfig] = useState<{
         open: boolean
@@ -805,6 +808,31 @@ export function OrganizationContent() {
                             </div>
                         </div> */}
 
+                        {!editOrg.is_submitted_for_verification && (
+                            <div className="flex items-center space-x-2 mb-6 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                <Checkbox
+                                    id="compliance"
+                                    checked={isComplianceAgreed}
+                                    onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
+                                />
+                                <label
+                                    htmlFor="compliance"
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                >
+                                    I have read and agree to the{" "}
+                                    <span
+                                        className="text-primary hover:underline font-bold"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setIsComplianceModalOpen(true);
+                                        }}
+                                    >
+                                        Privacy Policy and Terms
+                                    </span>.
+                                </label>
+                            </div>
+                        )}
+
                         <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
                             <Button
                                 onClick={() => router.back()}
@@ -815,7 +843,7 @@ export function OrganizationContent() {
                             </Button>
                             <Button
                                 onClick={handleSave}
-                                disabled={isSaving || editOrg.is_submitted_for_verification}
+                                disabled={isSaving || editOrg.is_submitted_for_verification || !isComplianceAgreed}
                                 className="bg-primary hover:bg-black text-white dark:text-black dark:bg-primary"
                             >
                                 {isSaving ? "Saving..." : "Submit for Verification"}
@@ -824,6 +852,68 @@ export function OrganizationContent() {
                     </div>
                 </div>
             </div>
+
+            <Dialog open={isComplianceModalOpen} onOpenChange={setIsComplianceModalOpen}>
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto dark:bg-gray-950 dark:border-gray-800 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+                    <DialogHeader className="border-b border-gray-100 dark:border-gray-800 pb-4">
+                        <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                            <ClipboardCheck className="text-primary" />
+                            CallPilot Compliance
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-8 py-6">
+                        <div className="space-y-6">
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Terms & Conditions</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I agree to the Terms & Conditions</p>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Privacy Policy</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I agree to the Privacy Policy.</p>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">AI Acknowledgement</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I understand CallPilot uses AI to make and manage calls and communications</p>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Legal Compliance</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm I will use CallPilot in full compliance with all applicable laws and regulations, including GDPR and local data protection laws</p>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">AI Disclosure Responsibility</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I will ensure all individuals are informed when interacting with AI systems</p>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Acceptable Use</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm I will not use CallPilot to generate, distribute, or facilitate offensive, abusive, misleading, or unlawful content.</p>
+                            </section>
+                        </div>
+
+                        <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <h2 className="text-xl font-bold text-primary uppercase tracking-tight">Compliance Settings</h2>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">AI Disclosure</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">AI disclosure at start of call</p>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Opt out option</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Allow recipient opt-out option</p>
+                            </section>
+                            <div className="text-sm font-semibold italic text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
+                                “Disabling this may result in non-compliant use of the platform. You are responsible for ensuring legal compliance.”
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <h2 className="text-xl font-bold text-primary uppercase tracking-tight">Applicant Consent</h2>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Data consent</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Candidate consent to their personal data being processed for recruitment purposes</p>
+                            </section>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </main>
     )
 }
