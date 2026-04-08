@@ -1399,14 +1399,14 @@ export default function ActivationPage() {
                         )}
                     </div>
                 </div>
-                <div className="flex justify-end text-sm text-gray-500 dark:text-gray-400 mt-4">
+                <div className="flex justify-center text-sm text-gray-500 dark:text-gray-400 mt-4">
                     <p>
                         Need help?{" "}
                         <a
                             href="mailto:contact@swiftwave.ai"
                             className="text-primary hover:underline font-medium"
                         >
-                            Contact Support link.
+                            Contact Support.
                         </a>
                     </p>
                 </div>

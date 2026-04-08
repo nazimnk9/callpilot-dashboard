@@ -26,6 +26,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export function OrganizationContent() {
     const router = useRouter()
@@ -852,6 +853,18 @@ export function OrganizationContent() {
                     </div>
                 </div>
             </div>
+
+                <div className="flex justify-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    <p>
+                        Need help?{" "}
+                        <Link
+                            href="/dashboard/help/support-tickets"
+                            className="text-primary hover:underline font-medium"
+                        >
+                            Contact Support.
+                        </Link>
+                    </p>
+                </div>
 
             <Dialog open={isComplianceModalOpen} onOpenChange={setIsComplianceModalOpen}>
                 <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto dark:bg-gray-950 dark:border-gray-800 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
