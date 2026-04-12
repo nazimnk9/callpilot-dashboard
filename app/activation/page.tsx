@@ -79,7 +79,6 @@ export default function ActivationPage() {
         checkAuth();
     }, [router]);
     const [isSaving, setIsSaving] = useState(false);
-    const [currentStep, setCurrentStep] = useState(1);
     const [org, setOrg] = useState({
         name: "",
         uid: "",
@@ -124,28 +123,19 @@ export default function ActivationPage() {
 
     const [countrySearch, setCountrySearch] = useState("");
     const [isCountryOpen, setIsCountryOpen] = useState(false);
-    const [isAuthorityOpen, setIsAuthorityOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const authorityDropdownRef = useRef<HTMLDivElement>(null);
     const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
-    const [isPhoneCodeOpen, setIsPhoneCodeOpen] = useState(false);
-    const [phoneCodeSearch, setPhoneCodeSearch] = useState("");
-    const [selectedPhoneCode, setSelectedPhoneCode] = useState("");
-    const phoneCodeDropdownRef = useRef<HTMLDivElement>(null);
 
     const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false);
     const [isComplianceAgreed, setIsComplianceAgreed] = useState(false);
 
-    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [previewFileType, setPreviewFileType] = useState<string | null>(null);
-    const [previewFileName, setPreviewFileName] = useState("");
-
 
 
     useEffect(() => {
+        // Load any previously saved data from localStorage to help the user
         const step1 = localStorage.getItem("activation_step1");
         const step2 = localStorage.getItem("activation_step2");
+        const step3 = localStorage.getItem("activation_step3");
         if (step1) {
             const data = JSON.parse(step1);
             setOrg(prev => ({ ...prev, ...data }));
@@ -154,51 +144,7 @@ export default function ActivationPage() {
             const data = JSON.parse(step2);
             setOrg(prev => ({ ...prev, ...data }));
         }
-        const step3 = localStorage.getItem("activation_step3");
-        if (step3) {
-            const data = JSON.parse(step3);
-            let phoneVal = data.authorize_representative_phone || "";
-            if (phoneVal.startsWith("+")) {
-                const sortedCountries = [...countriesData].sort((a, b) => {
-                    const codeA = a.phone_code.startsWith("+") ? a.phone_code.length : a.phone_code.length + 1;
-                    const codeB = b.phone_code.startsWith("+") ? b.phone_code.length : b.phone_code.length + 1;
-                    return codeB - codeA;
-                });
-                for (const c of sortedCountries) {
-                    const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
-                    if (phoneVal.startsWith(code)) {
-                        setSelectedPhoneCode(code);
-                        phoneVal = phoneVal.slice(code.length);
-                        break;
-                    }
-                }
-            }
-            setOrg(prev => ({ ...prev, authorize_representative_phone: phoneVal }));
-        }
-        const step4 = localStorage.getItem("activation_step4");
-        if (step4) {
-            const data = JSON.parse(step4);
-            // setOrg(prev => ({ ...prev, ...data }));
-        }
         fetchOrganization();
-
-        // Initialize country code
-        const initCountryCode = async () => {
-            if (selectedPhoneCode) return;
-            const code = await getCountryCode();
-            if (code) {
-                const country = countriesData.find(c => c.country_code === code);
-                if (country) {
-                    const phoneCode = country.phone_code.startsWith("+") ? country.phone_code : `+${country.phone_code}`;
-                    setSelectedPhoneCode(phoneCode);
-                } else {
-                    setSelectedPhoneCode("+44"); // Default
-                }
-            } else {
-                setSelectedPhoneCode("+44"); // Default
-            }
-        };
-        initCountryCode();
     }, []);
 
     const fetchOrganization = async () => {
@@ -216,7 +162,6 @@ export default function ActivationPage() {
                 for (const c of sortedCountries) {
                     const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
                     if (phoneVal.startsWith(code)) {
-                        setSelectedPhoneCode(code);
                         phoneVal = phoneVal.slice(code.length);
                         break;
                     }
@@ -265,147 +210,33 @@ export default function ActivationPage() {
         }
     };
 
-    // Handle stripping country code when returning to Step 3 via "Previous"
-    useEffect(() => {
-        if (currentStep === 3 && org.authorize_representative_phone.startsWith("+")) {
-            let phoneVal = org.authorize_representative_phone;
-            const sortedCountries = [...countriesData].sort((a, b) => {
-                const codeA = a.phone_code.startsWith("+") ? a.phone_code.length : a.phone_code.length + 1;
-                const codeB = b.phone_code.startsWith("+") ? b.phone_code.length : b.phone_code.length + 1;
-                return codeB - codeA;
-            });
-            for (const c of sortedCountries) {
-                const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
-                if (phoneVal.startsWith(code)) {
-                    setSelectedPhoneCode(code);
-                    const stripped = phoneVal.slice(code.length);
-                    setOrg(prev => ({ ...prev, authorize_representative_phone: stripped }));
-                    break;
-                }
-            }
-        }
-    }, [currentStep, org.authorize_representative_phone]);
 
-    const handleNextStep1 = () => {
-        if (!org.business_name || !org.reg_number || !org.business_registration_authority || !org.business_website) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please fill in all required fields."],
-                variant: "destructive"
-            });
-            return;
-        }
-        localStorage.setItem("activation_step1", JSON.stringify({
-            business_name: org.business_name,
-            reg_number: org.reg_number,
-            business_registration_authority: org.business_registration_authority,
-            business_website: org.business_website
-        }));
-        setCurrentStep(2);
-    };
-
-    const handleNextStep2 = () => {
-        if (!org.country || !org.street_address || !org.city || !org.post_code) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please fill in all required fields."],
-                variant: "destructive"
-            });
-            return;
-        }
-        localStorage.setItem("activation_step2", JSON.stringify({
-            country: org.country,
-            street_address: org.street_address,
-            apt_or_suite: org.apt_or_suite,
-            city: org.city,
-            post_code: org.post_code,
-            province: org.province
-        }));
-        setCurrentStep(3);
-    };
-
-    const handleNextStep3 = () => {
-        if (!org.authorize_representative_first_name || !org.authorize_representative_last_name || !org.authorize_representative_email || !org.authorize_representative_phone) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please fill in all required fields."],
-                variant: "destructive"
-            });
-            return;
-        }
-
-        let phone = org.authorize_representative_phone;
-        if (phone.startsWith('0')) {
-            phone = phone.substring(1);
-        }
-
-        const fullPhone = phone.startsWith("+")
-            ? phone
-            : `${selectedPhoneCode}${phone}`;
-
-        setOrg(prev => ({ ...prev, authorize_representative_phone: fullPhone }));
-
-        localStorage.setItem("activation_step3", JSON.stringify({
-            authorize_representative_first_name: org.authorize_representative_first_name,
-            authorize_representative_last_name: org.authorize_representative_last_name,
-            authorize_representative_email: org.authorize_representative_email,
-            authorize_representative_phone: fullPhone
-        }));
-        setCurrentStep(4);
-    };
-
-    const handleNextStep4 = () => {
-        if (!org.business_registration_certificate || !org.proof_of_address) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Documents",
-                description: ["You are required to provide the following documents to verify your business."],
-                variant: "destructive"
-            });
-            return;
-        }
-
-        // Prepare file info for localStorage (since we can't store File objects directly easily)
-        const fileInfo = {
-            has_cert: !!org.business_registration_certificate,
-            cert_name: org.business_registration_certificate?.name || "",
-            has_proof: !!org.proof_of_address,
-            proof_name: org.proof_of_address?.name || ""
-        };
-        localStorage.setItem("activation_step4", JSON.stringify(fileInfo));
-        setCurrentStep(5);
+    // Unified validation function
+    const validateForm = () => {
+        const errors: string[] = [];
+        if (!org.business_name) errors.push("Registered Business Name is required");
+        if (!org.street_address) errors.push("Street Address is required");
+        if (!org.city) errors.push("Town / City is required");
+        if (org.country === "United Kingdom" && !org.post_code) errors.push("Postcode is required for UK");
+        return errors;
     };
 
     const handleSave = async () => {
+        const errors = validateForm();
+        if (errors.length > 0) {
+            setAlertConfig({
+                open: true,
+                title: "Validation Error",
+                description: errors,
+                variant: "destructive"
+            });
+            return;
+        }
+
         const formData = new FormData();
 
-        // Combine all data
-        const step1 = JSON.parse(localStorage.getItem("activation_step1") || "{}");
-        const step2 = JSON.parse(localStorage.getItem("activation_step2") || "{}");
-        const step3 = JSON.parse(localStorage.getItem("activation_step3") || "{}");
-
-        const finalData = {
-            ...step1,
-            ...step2,
-            ...step3,
-            business_name: org.business_name,
-            reg_number: org.reg_number,
-            country: org.country,
-            street_address: org.street_address,
-            apt_or_suite: org.apt_or_suite,
-            city: org.city,
-            post_code: org.post_code,
-            province: org.province,
-            country_iso_code: org.country_iso_code,
-            business_registration_authority: org.business_registration_authority,
-            business_website: org.business_website,
-            authorize_representative_first_name: org.authorize_representative_first_name,
-            authorize_representative_last_name: org.authorize_representative_last_name,
-            authorize_representative_email: org.authorize_representative_email,
-            authorize_representative_phone: org.authorize_representative_phone,
+        const finalData: any = {
+            ...org,
             name: org.business_name // Mandatory match
         };
 
@@ -477,29 +308,6 @@ export default function ActivationPage() {
         c.phone_code.includes(countrySearch)
     );
 
-    const filteredPhoneCountries = countries.filter(c =>
-        c.country.toLowerCase().includes(phoneCodeSearch.toLowerCase()) ||
-        c.country_code.toLowerCase().includes(phoneCodeSearch.toLowerCase()) ||
-        c.phone_code.includes(phoneCodeSearch)
-    );
-
-    const handleFilePreview = (file: File) => {
-        if (!file) return;
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-        setPreviewFileType(file.type);
-        setPreviewFileName(file.name);
-        setIsPreviewOpen(true);
-    };
-
-    useEffect(() => {
-        // Cleanup blob URLs
-        return () => {
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, [previewUrl]);
 
     if (isAuthenticated === null) {
         return (
@@ -513,44 +321,6 @@ export default function ActivationPage() {
         <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col">
             <LoaderOverlay isLoading={isLoading || isSaving} />
 
-            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl bg-black/5 dark:bg-gray-900/50 backdrop-blur-xl">
-                    <DialogHeader className="p-4 bg-white/80 dark:bg-gray-900/80 border-b border-gray-100 dark:border-gray-800 flex flex-row items-center justify-between sticky top-0 z-10 transition-colors">
-                        <DialogTitle className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate pr-8 flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Search size={16} className="text-primary" />
-                            </div>
-                            {previewFileName}
-                        </DialogTitle>
-                        <button
-                            type="button"
-                            onClick={() => setIsPreviewOpen(false)}
-                            className="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-all"
-                        >
-                            <X size={18} />
-                        </button>
-                    </DialogHeader>
-                    <div className="flex-1 overflow-auto p-6 flex items-center justify-center bg-gray-50/50 dark:bg-gray-950/50">
-                        {previewUrl && (
-                            previewFileType?.startsWith("image/") ? (
-                                <img
-                                    src={previewUrl}
-                                    alt={previewFileName}
-                                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg animate-in fade-in zoom-in duration-300"
-                                />
-                            ) : (
-                                <div className="w-full h-[70vh] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800 shadow-xl bg-white dark:bg-gray-900">
-                                    <iframe
-                                        src={`${previewUrl}#toolbar=0`}
-                                        className="w-full h-full border-none"
-                                        title={previewFileName}
-                                    />
-                                </div>
-                            )
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
                 <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
@@ -622,7 +392,6 @@ export default function ActivationPage() {
             <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-12 space-y-12">
                 {/* Stepper */}
                 <div className="flex items-center justify-between relative max-w-xl mx-auto mb-16 px-4">
-                    {/* Step 1: Account Created */}
                     <div className="flex flex-col items-center z-10">
                         <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white mb-2">
                             <CheckCircle2 size={24} />
@@ -632,180 +401,40 @@ export default function ActivationPage() {
 
                     <div className="flex-1 h-[2px] bg-green-500 mt-[-1.5rem]" />
 
-                    {/* Step 2: Platform Activation */}
                     <div className="flex flex-col items-center z-10 transform translate-x-[-1px]">
                         <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white mb-2 ring-4 ring-blue-100 dark:ring-blue-900/30">
                             <div className="w-4 h-4 rounded-full border-2 border-white" />
                         </div>
-                        <span className="text-xs font-semibold text-blue-600 whitespace-nowrap">Upload Business Details</span>
+                        <span className="text-xs font-semibold text-blue-600 whitespace-nowrap">Verify Business Details</span>
                     </div>
-
-                    {/* <div className="flex-1 h-[2px] bg-blue-600/30 mt-[-1.5rem]" /> */}
-
-                    {/* Step 3: Company Details */}
-                    {/* <div className="flex flex-col items-center z-10">
-                        <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 mb-2">
-                            <Building2 size={20} />
-                        </div>
-                        <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Company Details</span>
-                    </div> */}
-
-                    {/* <div className="flex-1 h-[2px] bg-gray-200 dark:bg-gray-800 mt-[-1.5rem]" /> */}
-
-                    {/* Step 4: Choose Plan */}
-                    {/* <div className="flex flex-col items-center z-10">
-                        <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 mb-2">
-                            <ClipboardCheck size={20} />
-                        </div>
-                        <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Choose Plan</span>
-                    </div> */}
-
-                    {/* <div className="flex-1 h-[2px] bg-gray-200 dark:bg-gray-800 mt-[-1.5rem]" /> */}
-
-                    {/* Step 5: Buy AI Number */}
-                    {/* <div className="flex flex-col items-center z-10">
-                        <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 mb-2">
-                            <Phone size={20} />
-                        </div>
-                        <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Buy AI Number</span>
-                    </div> */}
                 </div>
 
                 {/* Form Section */}
                 <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm">
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verify Business Details</h2>
-                        <div className="flex items-center gap-2">
-                            {[1, 2, 3, 4, 5].map((step) => (
-                                <div
-                                    key={step}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${currentStep === step
-                                        ? "bg-primary text-white"
-                                        : currentStep > step
-                                            ? "bg-green-500 text-white"
-                                            : "bg-gray-100 dark:bg-gray-800 text-gray-400"
-                                        }`}
-                                >
-                                    {currentStep > step ? <Check size={16} /> : step}
-                                </div>
-                            ))}
-                        </div>
                     </div>
 
                     <div className="p-8">
-                        {currentStep === 1 && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Information</h3>
-                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Please provide your basic business details.</p> */}
-                                </div>
+                        <div className="space-y-12">
+
+                            {/* Address & Identity Section */}
+                            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                                {/* <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Registered Business Details</h3>
+                                </div> */}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 md:col-span-2">
                                         <Label htmlFor="business_name" className="text-sm font-semibold">Registered Business Name <span className="text-red-500">*</span></Label>
                                         <Input
                                             id="business_name"
-                                            placeholder="Enter business name"
+                                            placeholder="Enter your registered business name"
                                             value={org.business_name}
                                             onChange={(e) => setOrg({ ...org, business_name: e.target.value })}
                                             required
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="reg_number" className="text-sm font-semibold">Business Registration Number <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="reg_number"
-                                            placeholder="Enter registration number"
-                                            value={org.reg_number}
-                                            onChange={(e) => setOrg({ ...org, reg_number: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2">
-                                        <Label htmlFor="business_registration_authority" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Business Registration Authority <span className="text-red-500">*</span></Label>
-                                        <div className="relative" ref={authorityDropdownRef}>
-                                            <div
-                                                onClick={() => setIsAuthorityOpen(!isAuthorityOpen)}
-                                                className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-                                            >
-                                                <span className={org.business_registration_authority ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
-                                                    {org.business_registration_authority || "Select Authority"}
-                                                </span>
-                                                <ChevronsUpDown size={16} className="text-gray-400" />
-                                            </div>
-
-                                            {isAuthorityOpen && (
-                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                    <div className="max-h-[200px] overflow-y-auto font-sans">
-                                                        {["UK:CRN", "US:EIN", "CA:CBN", "AU:ACN", "OTHER"].map((option) => (
-                                                            <div
-                                                                key={option}
-                                                                onClick={() => {
-                                                                    setOrg({ ...org, business_registration_authority: option });
-                                                                    setIsAuthorityOpen(false);
-                                                                }}
-                                                                className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
-                                                            >
-                                                                <span>{option}</span>
-                                                                {org.business_registration_authority === option && (
-                                                                    <Check size={14} className="text-primary" />
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2">
-                                        <Label htmlFor="business_website" className="text-sm font-semibold">Business Website <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="business_website"
-                                            placeholder="https://example.com"
-                                            value={org.business_website}
-                                            onChange={(e) => setOrg({ ...org, business_website: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex justify-end pt-6">
-                                    <Button
-                                        onClick={handleNextStep1}
-                                        className="bg-primary hover:bg-primary/90 text-white px-8"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {currentStep === 2 && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Registered Business Address</h3>
-                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Where is your business located?</p> */}
-                                </div>
-
-                                {/* Preview Section from Step 1 */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="street_address" className="text-sm font-semibold">Street Address <span className="text-red-500">*</span></Label>
                                         <Input
@@ -914,449 +543,10 @@ export default function ActivationPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="flex justify-between pt-6">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setCurrentStep(1)}
-                                        className="px-8"
-                                    >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        onClick={handleNextStep2}
-                                        className="bg-primary hover:bg-primary/90 text-white px-8"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
                             </div>
-                        )}
 
-                        {currentStep === 3 && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Authorize Representative Information</h3>
-                                </div>
-
-                                {/* Preview Section for Step 1 & 2 */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rep_first_name" className="text-sm font-semibold">First Name <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="rep_first_name"
-                                            placeholder="Enter first name"
-                                            value={org.authorize_representative_first_name}
-                                            onChange={(e) => setOrg({ ...org, authorize_representative_first_name: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rep_last_name" className="text-sm font-semibold">Last Name <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="rep_last_name"
-                                            placeholder="Enter last name"
-                                            value={org.authorize_representative_last_name}
-                                            onChange={(e) => setOrg({ ...org, authorize_representative_last_name: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rep_email" className="text-sm font-semibold">Email <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="rep_email"
-                                            type="email"
-                                            placeholder="Enter email address"
-                                            value={org.authorize_representative_email}
-                                            onChange={(e) => setOrg({ ...org, authorize_representative_email: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rep_phone" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
-                                        <div className="flex gap-2">
-                                            <div className="relative w-[140px]" ref={phoneCodeDropdownRef}>
-                                                <div
-                                                    onClick={() => setIsPhoneCodeOpen(!isPhoneCodeOpen)}
-                                                    className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-                                                >
-                                                    <span className="text-gray-900 dark:text-gray-100 text-[14px] truncate">
-                                                        {selectedPhoneCode || "Code"}
-                                                    </span>
-                                                    <ChevronsUpDown size={16} className="text-gray-400 shrink-0" />
-                                                </div>
-
-                                                {isPhoneCodeOpen && (
-                                                    <div className="absolute bottom-[calc(100%+4px)] left-0 w-[390px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                        <div className="p-2 border-b border-gray-100 dark:border-gray-800">
-                                                            <div className="relative">
-                                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                                                <input
-                                                                    autoFocus
-                                                                    type="text"
-                                                                    placeholder="Search code..."
-                                                                    value={phoneCodeSearch}
-                                                                    onChange={(e) => setPhoneCodeSearch(e.target.value)}
-                                                                    className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="max-h-[200px] overflow-y-auto font-sans">
-                                                            {filteredPhoneCountries.length > 0 ? (
-                                                                filteredPhoneCountries.map((c, index) => (
-                                                                    <div
-                                                                        key={`${c.country_code}-${index}`}
-                                                                        onClick={() => {
-                                                                            const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
-                                                                            setSelectedPhoneCode(code);
-                                                                            setIsPhoneCodeOpen(false);
-                                                                            setPhoneCodeSearch("");
-                                                                        }}
-                                                                        className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
-                                                                    >
-                                                                        <div className="flex items-center justify-between gap-2 w-full truncate">
-                                                                            <span className="text-primary font-bold w-12">{c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`}</span>
-                                                                            <span className="text-gray-500 dark:text-gray-400 text-xs truncate">{c.country}</span>
-                                                                        </div>
-                                                                        {selectedPhoneCode === (c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`) && (
-                                                                            <Check size={14} className="text-primary shrink-0" />
-                                                                        )}
-                                                                    </div>
-                                                                ))
-                                                            ) : (
-                                                                <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
-                                                                    No results
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <Input
-                                                id="rep_phone"
-                                                placeholder="Enter phone number"
-                                                value={org.authorize_representative_phone}
-                                                onChange={(e) => setOrg({ ...org, authorize_representative_phone: e.target.value })}
-                                                required
-                                                className="flex-1"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between pt-6">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setCurrentStep(2)}
-                                        className="px-8"
-                                    >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        onClick={handleNextStep3}
-                                        className="bg-primary hover:bg-primary/90 text-white px-8"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {currentStep === 4 && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
-                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Upload required documents for verification.</p> */}
-                                </div>
-
-                                {/* Preview Section */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Name</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_first_name} {org.authorize_representative_last_name}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Email</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_email}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Phone</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_phone}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="cert" className="text-sm font-semibold">Business Registration Certificate <span className="text-red-500">*</span></Label>
-                                        <div className="flex flex-col gap-2">
-                                            <Input
-                                                id="cert"
-                                                type="file"
-                                                accept="image/*,.pdf"
-                                                onChange={(e) => setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null })}
-                                                className="cursor-pointer"
-                                                required
-                                            />
-                                            {org.business_registration_certificate && (
-                                                <p className="text-xs text-green-500 flex items-center gap-1">
-                                                    <Check size={12} /> {(org.business_registration_certificate as File).name}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="proof" className="text-sm font-semibold">Proof of Address <span className="text-red-500">*</span></Label>
-                                        <div className="flex flex-col gap-2">
-                                            <Input
-                                                id="proof"
-                                                type="file"
-                                                accept="image/*,.pdf"
-                                                onChange={(e) => setOrg({ ...org, proof_of_address: e.target.files?.[0] || null })}
-                                                className="cursor-pointer"
-                                                required
-                                            />
-                                            <p className="text-[10px] text-gray-500 italic">Utility Bill or Tax Notice Or Rent</p>
-                                            {org.proof_of_address && (
-                                                <p className="text-xs text-green-500 flex items-center gap-1">
-                                                    <Check size={12} /> {(org.proof_of_address as File).name}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between pt-6">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setCurrentStep(3)}
-                                        className="px-8"
-                                    >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        onClick={handleNextStep4}
-                                        className="bg-primary hover:bg-primary/90 text-white px-8"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {currentStep === 5 && (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Review & Submit</h3>
-                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Please review all information before final submission.</p> */}
-                                </div>
-
-                                <div className="space-y-6">
-                                    {/* Step 1 Preview */}
-                                    <div className="space-y-3">
-                                        <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            Business Information
-                                        </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Step 2 Preview */}
-                                    <div className="space-y-3">
-                                        <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            Registered Business Address
-                                        </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State / Province</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {org.country ? `${org.country_iso_code ? `(${org.country_iso_code}) ` : ""}${org.country}` : "N/A"}
-                                                </p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Step 3 Preview */}
-                                    <div className="space-y-3">
-                                        <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            Authorize Representative Information
-                                        </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Name</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_first_name} {org.authorize_representative_last_name}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Email</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_email}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Phone</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_phone}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Step 4 Preview */}
-                                    <div className="space-y-3">
-                                        <h4 className="text-sm font-bold text-primary flex items-center gap-2 uppercase tracking-wider">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            Supporting Documents
-                                        </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Certificate</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                                    {org.business_registration_certificate ? (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleFilePreview(org.business_registration_certificate as File)}
-                                                            className="flex items-center gap-2 text-primary hover:text-primary/70 hover:underline transition-all group font-bold bg-primary/5 px-2 py-1 rounded"
-                                                        >
-                                                            <Check size={14} className="text-green-500" />
-                                                            {org.business_registration_certificate.name}
-                                                            <Search size={12} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-gray-400">No file uploaded</span>
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Proof of Address</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                                    {org.proof_of_address ? (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleFilePreview(org.proof_of_address as File)}
-                                                            className="flex items-center gap-2 text-primary hover:text-primary/70 hover:underline transition-all group font-bold bg-primary/5 px-2 py-1 rounded"
-                                                        >
-                                                            <Check size={14} className="text-green-500" />
-                                                            {org.proof_of_address.name}
-                                                            <Search size={12} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1" />
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-gray-400">No file uploaded</span>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                 <div className="flex items-center space-x-2 mb-6 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                            <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                     <Checkbox
                                         id="compliance"
                                         checked={isComplianceAgreed}
@@ -1379,24 +569,17 @@ export default function ActivationPage() {
                                     </label>
                                 </div>
 
-                                <div className="flex justify-between pt-6">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setCurrentStep(4)}
-                                        className="px-8"
-                                    >
-                                        Previous
-                                    </Button>
+                                <div className="flex justify-end">
                                     <Button
                                         onClick={handleSave}
                                         disabled={isSaving || !isComplianceAgreed}
-                                        className="bg-primary hover:bg-primary/90 text-white px-8"
+                                        className="bg-primary hover:bg-primary/90 text-white px-12 h-12 text-lg font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         {isSaving ? "Submitting..." : "Submit Verification"}
                                     </Button>
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
                 <div className="flex justify-center text-sm text-gray-500 dark:text-gray-400 mt-4">
@@ -1410,7 +593,7 @@ export default function ActivationPage() {
                         </a>
                     </p>
                 </div>
-            </main>
+            </main >
 
             <Dialog open={isComplianceModalOpen} onOpenChange={setIsComplianceModalOpen}>
                 <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto dark:bg-gray-950 dark:border-gray-800 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
