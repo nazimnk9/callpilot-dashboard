@@ -92,7 +92,7 @@ const STATIC_PRICING_PLANS = [
         ],
         icon: Building2,
         popular: false,
-        disabled: true
+        disabled: false
     }
 ];
 
@@ -167,6 +167,8 @@ export function BillingContent() {
     const [fetchedPlans, setFetchedPlans] = useState<any[]>([]);
     const [isFetchingPlans, setIsFetchingPlans] = useState(false);
     const [isContactSalesSubmitting, setIsContactSalesSubmitting] = useState(false);
+    const enterpriseSectionRef = useRef<HTMLDivElement>(null);
+    const enterpriseSectionUpdateRef = useRef<HTMLDivElement>(null);
 
 
     const tabs = ["Overview", "Payment methods", "Billing history"]
@@ -304,6 +306,23 @@ export function BillingContent() {
             }
         }
     }, [currentSubscription, orgData, fetchedPlans]);
+
+    useEffect(() => {
+        if (selectedPlan) {
+            if (selectedPlan === 'Enterprise') {
+                if (isSubscriptionModalOpen && enterpriseSectionRef.current) {
+                    enterpriseSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else if (isUpdateSubscriptionModalOpen && enterpriseSectionUpdateRef.current) {
+                    enterpriseSectionUpdateRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            } else {
+                // For other plans, scroll to the payment/action section
+                if (paymentSectionRef.current) {
+                    paymentSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+    }, [selectedPlan, isSubscriptionModalOpen, isUpdateSubscriptionModalOpen]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -871,7 +890,7 @@ export function BillingContent() {
 
                                 {/* Right Side: Actions */}
                                 <div className="flex flex-row gap-3">
-                                     <button
+                                    <button
                                         onClick={() => {
                                             if (orgData?.current_plan) {
                                                 fetchCurrentSubscription();
@@ -1566,12 +1585,10 @@ export function BillingContent() {
                                         onClick={() => {
                                             if (!tier.disabled) {
                                                 setSelectedPlan(tier.name);
-                                                paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
                                             }
                                         }}
                                         className={[
                                             "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
-                                            tier.disabled ? (tier.name === "Enterprise" ? "opacity-80 grayscale-[0.3]" : "opacity-50 cursor-not-allowed grayscale") : "",
                                             isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
                                             !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
                                         ].join(" ")}
@@ -1634,102 +1651,126 @@ export function BillingContent() {
                         </div>
 
 
-                        {/* Payment Method Selector (Styled like Top-up modal) */}
-                        <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                    Payment method
-                                </label>
-                                <div className="relative">
-                                    <div
-                                        onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
-                                        className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                        {selectedPlan === 'Enterprise' ? (
+                            <div ref={enterpriseSectionRef} className="flex flex-col items-center justify-center space-y-4 pt-6">
+                                <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm font-medium">
+                                    For our custom Enterprise solutions, please contact our sales team to discuss your specific requirements.
+                                </p>
+                                <div className='flex flex-row gap-3'>
+                                    <Button
+                                        onClick={handleContactSales}
+                                        disabled={isContactSalesSubmitting}
+                                        className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
-                                                {selectedPmForSubscription?.card.brand === 'visa' ? (
-                                                    <span className="text-white font-bold italic text-[8px]">VISA</span>
-                                                ) : (
-                                                    <div className="flex -space-x-1.5">
-                                                        <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                        <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
-                                            </span>
-                                        </div>
-                                        <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
-                                            <ChevronUp size={16} />
-                                            <ChevronDown size={16} />
-                                        </div>
-                                    </div>
-
-                                    {isPmSelectorForSubOpen && (
-                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                            <div className="max-h-[200px] overflow-y-auto">
-                                                {paymentMethods.map((pm) => (
-                                                    <div
-                                                        key={pm.id}
-                                                        onClick={() => {
-                                                            setSelectedPmForSubscription(pm);
-                                                            setIsPmSelectorForSubOpen(false);
-                                                        }}
-                                                        className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
-                                                                {pm.card.brand === 'visa' ? (
-                                                                    <span className="text-white font-bold italic text-[6px]">VISA</span>
-                                                                ) : (
-                                                                    <div className="flex -space-x-1">
-                                                                        <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                        <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                        {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                        Contact Sales
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setIsSubscriptionModalOpen(false)}
+                                        className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                        Payment method
+                                    </label>
+                                    <div className="relative">
+                                        <div
+                                            onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
+                                            className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                    {selectedPmForSubscription?.card.brand === 'visa' ? (
+                                                        <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                    ) : (
+                                                        <div className="flex -space-x-1.5">
+                                                            <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                            <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
                                                         </div>
-                                                        {selectedPmForSubscription?.id === pm.id && (
-                                                            <Check size={14} className="text-gray-900 dark:text-gray-100" />
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                    )}
+                                                </div>
+                                                <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                    {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                                <ChevronUp size={16} />
+                                                <ChevronDown size={16} />
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                                <div className="flex justify-end pt-1">
-                                    <button
-                                        onClick={() => {
-                                            setIsTopUpOpen(false)
-                                            setIsAddPaymentOpen(true)
-                                        }}
-                                        className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
-                                    >
-                                        + Add payment method
-                                    </button>
-                                </div>
-                            </div>
 
-                            <div className="flex justify-end gap-3 pt-6">
-                                <Button
-                                    onClick={() => setIsSubscriptionModalOpen(false)}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={handleCreateSubscription}
-                                    disabled={isSubscriptionSubmitting || !selectedPlan || !selectedPmForSubscription}
-                                    className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
-                                >
-                                    {isSubscriptionSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    Create Subscription Plan
-                                </Button>
+                                        {isPmSelectorForSubOpen && (
+                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="max-h-[200px] overflow-y-auto">
+                                                    {paymentMethods.map((pm) => (
+                                                        <div
+                                                            key={pm.id}
+                                                            onClick={() => {
+                                                                setSelectedPmForSubscription(pm);
+                                                                setIsPmSelectorForSubOpen(false);
+                                                            }}
+                                                            className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                    {pm.card.brand === 'visa' ? (
+                                                                        <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                    ) : (
+                                                                        <div className="flex -space-x-1">
+                                                                            <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                            <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                            </div>
+                                                            {selectedPmForSubscription?.id === pm.id && (
+                                                                <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex justify-end pt-1">
+                                        <button
+                                            onClick={() => {
+                                                setIsTopUpOpen(false)
+                                                setIsAddPaymentOpen(true)
+                                            }}
+                                            className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                        >
+                                            + Add payment method
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-6">
+                                    <Button
+                                        onClick={() => setIsSubscriptionModalOpen(false)}
+                                        className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleCreateSubscription}
+                                        disabled={isSubscriptionSubmitting || !selectedPlan || !selectedPmForSubscription}
+                                        className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                    >
+                                        {isSubscriptionSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                        Create Subscription Plan
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>
@@ -1793,12 +1834,10 @@ export function BillingContent() {
                                                 onClick={() => {
                                                     if (!tier.disabled) {
                                                         setSelectedPlan(tier.name);
-                                                        paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
                                                     }
                                                 }}
                                                 className={[
                                                     "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
-                                                    tier.disabled ? (tier.name === "Enterprise" ? "opacity-80 grayscale-[0.3]" : "opacity-50 cursor-not-allowed grayscale") : "",
                                                     isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
                                                     !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
                                                 ].join(" ")}
@@ -1861,102 +1900,126 @@ export function BillingContent() {
                                 </div>
 
 
-                                {/* Payment Method Selector (Styled like Top-up modal) */}
-                                <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                            Payment method
-                                        </label>
-                                        <div className="relative">
-                                            <div
-                                                onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
-                                                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                {selectedPlan === 'Enterprise' ? (
+                                    <div ref={enterpriseSectionUpdateRef} className="flex flex-col items-center justify-center space-y-4 pt-6">
+                                        <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm font-medium">
+                                            For our custom Enterprise solutions, please contact our sales team to discuss your specific requirements.
+                                        </p>
+                                        <div className='flex flex-row gap-3'>
+                                            <Button
+                                                onClick={handleContactSales}
+                                                disabled={isContactSalesSubmitting}
+                                                className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
                                             >
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
-                                                        {selectedPmForSubscription?.card.brand === 'visa' ? (
-                                                            <span className="text-white font-bold italic text-[8px]">VISA</span>
-                                                        ) : (
-                                                            <div className="flex -space-x-1.5">
-                                                                <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                                <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                        {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
-                                                    <ChevronUp size={16} />
-                                                    <ChevronDown size={16} />
-                                                </div>
-                                            </div>
-
-                                            {isPmSelectorForSubOpen && (
-                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                    <div className="max-h-[200px] overflow-y-auto">
-                                                        {paymentMethods.map((pm) => (
-                                                            <div
-                                                                key={pm.id}
-                                                                onClick={() => {
-                                                                    setSelectedPmForSubscription(pm);
-                                                                    setIsPmSelectorForSubOpen(false);
-                                                                }}
-                                                                className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
-                                                                        {pm.card.brand === 'visa' ? (
-                                                                            <span className="text-white font-bold italic text-[6px]">VISA</span>
-                                                                        ) : (
-                                                                            <div className="flex -space-x-1">
-                                                                                <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                                <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                    <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                Contact Sales
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => setIsUpdateSubscriptionModalOpen(false)}
+                                                className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                Payment method
+                                            </label>
+                                            <div className="relative">
+                                                <div
+                                                    onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
+                                                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                            {selectedPmForSubscription?.card.brand === 'visa' ? (
+                                                                <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                            ) : (
+                                                                <div className="flex -space-x-1.5">
+                                                                    <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                                    <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
                                                                 </div>
-                                                                {selectedPmForSubscription?.id === pm.id && (
-                                                                    <Check size={14} className="text-gray-900 dark:text-gray-100" />
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                            {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                                        <ChevronUp size={16} />
+                                                        <ChevronDown size={16} />
                                                     </div>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className="flex justify-end pt-1">
-                                            <button
-                                                onClick={() => {
-                                                    setIsTopUpOpen(false)
-                                                    setIsAddPaymentOpen(true)
-                                                }}
-                                                className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
-                                            >
-                                                + Add payment method
-                                            </button>
-                                        </div>
-                                    </div>
 
-                                    <div className="flex justify-end gap-3 pt-6">
-                                        <Button
-                                            onClick={() => setIsUpdateSubscriptionModalOpen(false)}
-                                            className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            onClick={handleUpdateSubscription}
-                                            disabled={isUpdateSubmitting || !selectedPlan || !selectedPmForSubscription}
-                                            className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
-                                        >
-                                            {isUpdateSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                            Update Subscription Plan
-                                        </Button>
+                                                {isPmSelectorForSubOpen && (
+                                                    <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                        <div className="max-h-[200px] overflow-y-auto">
+                                                            {paymentMethods.map((pm) => (
+                                                                <div
+                                                                    key={pm.id}
+                                                                    onClick={() => {
+                                                                        setSelectedPmForSubscription(pm);
+                                                                        setIsPmSelectorForSubOpen(false);
+                                                                    }}
+                                                                    className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                            {pm.card.brand === 'visa' ? (
+                                                                                <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                            ) : (
+                                                                                <div className="flex -space-x-1">
+                                                                                    <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                                    <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                                    </div>
+                                                                    {selectedPmForSubscription?.id === pm.id && (
+                                                                        <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex justify-end pt-1">
+                                                <button
+                                                    onClick={() => {
+                                                        setIsTopUpOpen(false)
+                                                        setIsAddPaymentOpen(true)
+                                                    }}
+                                                    className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                                >
+                                                    + Add payment method
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end gap-3 pt-6">
+                                            <Button
+                                                onClick={() => setIsUpdateSubscriptionModalOpen(false)}
+                                                className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                onClick={handleUpdateSubscription}
+                                                disabled={isUpdateSubmitting || !selectedPlan || !selectedPmForSubscription}
+                                                className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                            >
+                                                {isUpdateSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                Update Subscription Plan
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </>
                         )}
                     </div>
