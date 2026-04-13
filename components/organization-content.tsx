@@ -854,17 +854,17 @@ export function OrganizationContent() {
                 </div>
             </div>
 
-                <div className="flex justify-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-                    <p>
-                        Need help?{" "}
-                        <Link
-                            href="/dashboard/help/support-tickets"
-                            className="text-primary hover:underline font-medium"
-                        >
-                            Contact Support.
-                        </Link>
-                    </p>
-                </div>
+            <div className="flex justify-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+                <p>
+                    Need help?{" "}
+                    <Link
+                        href="/dashboard/help/support-tickets"
+                        className="text-primary hover:underline font-medium"
+                    >
+                        Contact Support.
+                    </Link>
+                </p>
+            </div>
 
             <Dialog open={isComplianceModalOpen} onOpenChange={setIsComplianceModalOpen}>
                 <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto dark:bg-gray-950 dark:border-gray-800 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
@@ -878,51 +878,58 @@ export function OrganizationContent() {
                         <div className="space-y-6">
                             <section className="space-y-2">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Terms & Conditions</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I agree to the Terms & Conditions</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm that I have read, understood, and agree to the Terms & Conditions.</p>
                             </section>
                             <section className="space-y-2">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Privacy Policy</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I agree to the Privacy Policy.</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm that I have read and agree to the Privacy Policy, including how personal data is collected, processed, and stored.</p>
                             </section>
                             <section className="space-y-2">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">AI Acknowledgement</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I understand CallPilot uses AI to make and manage calls and communications</p>
-                            </section>
-                            <section className="space-y-2">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Legal Compliance</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm I will use CallPilot in full compliance with all applicable laws and regulations, including GDPR and local data protection laws</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I understand that CallPilot uses artificial intelligence to initiate, manage, and respond to phone calls, WhatsApp messages, SMS communications, and other automated interactions.</p>
                             </section>
                             <section className="space-y-2">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">AI Disclosure Responsibility</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I will ensure all individuals are informed when interacting with AI systems</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm that I will clearly disclose the use of AI when interacting with individuals, where required by applicable laws and regulations.</p>
                             </section>
                             <section className="space-y-2">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Acceptable Use</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm I will not use CallPilot to generate, distribute, or facilitate offensive, abusive, misleading, or unlawful content.</p>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Legal & Regulatory Compliance</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm that I will use CallPilot in full compliance with all applicable laws and regulations in the jurisdictions in which I operate, including but not limited to:</p>
+                                <ul className="list-disc pl-5 text-sm text-gray-600 dark:text-gray-400 font-medium space-y-1">
+                                    <li>Data protection and privacy laws (e.g. UK GDPR, EU GDPR, CCPA or equivalent)</li>
+                                    <li>Employment and recruitment legislation</li>
+                                    <li>Electronic communications and marketing regulations</li>
+                                </ul>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">User Responsibility</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium text-justify">I acknowledge that I am solely responsible for how CallPilot is used within my organisation, including: Lawful use of personal data, Compliance with all applicable laws, Ensuring communications are accurate, appropriate, and compliant.</p>
+                                <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-2">CallPilot and its operators accept no liability for misuse of the platform.</p>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">AI Usage & Communication Standards</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I agree that I will not use CallPilot to:</p>
+                                <ul className="list-disc pl-5 text-sm text-gray-600 dark:text-gray-400 font-medium space-y-1">
+                                    <li>Send unsolicited or unlawful communications (including spam)</li>
+                                    <li>Harass, mislead, or deceive individuals</li>
+                                    <li>Conduct unlawful recruitment or employment practices</li>
+                                    <li>Distribute offensive, abusive, or inappropriate content</li>
+                                </ul>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Data Rights & Consent</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I confirm that I have the legal right and lawful basis to process any personal data submitted into CallPilot, including obtaining consent where required under applicable law.</p>
+                            </section>
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Audit & Compliance Record</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">I understand that my acceptance of these terms may be recorded, including date, time, IP address, and user details, for compliance, audit, and legal purposes.</p>
                             </section>
                         </div>
 
-                        <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-                            <h2 className="text-xl font-bold text-primary uppercase tracking-tight">Compliance Settings</h2>
-                            <section className="space-y-2">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">AI Disclosure</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">AI disclosure at start of call</p>
-                            </section>
-                            <section className="space-y-2">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Opt out option</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Allow recipient opt-out option</p>
-                            </section>
-                            <div className="text-sm font-semibold italic text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
-                                “Disabling this may result in non-compliant use of the platform. You are responsible for ensuring legal compliance.”
-                            </div>
-                        </div>
-
-                        <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
-                            <h2 className="text-xl font-bold text-primary uppercase tracking-tight">Applicant Consent</h2>
-                            <section className="space-y-2">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Data consent</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Candidate consent to their personal data being processed for recruitment purposes</p>
-                            </section>
+                        <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 text-center">
+                                By proceeding, you confirm that you have read, understood, and agree to all of the above requirements, as well as our full Terms & Conditions and Privacy Policy
+                            </p>
                         </div>
                     </div>
                 </DialogContent>
