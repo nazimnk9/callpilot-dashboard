@@ -157,6 +157,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [error, setError] = useState("")
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
     const [showResultDialog, setShowResultDialog] = useState(false)
     const [resultMessage, setResultMessage] = useState("")
@@ -481,8 +482,19 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         return timeStr || "00:00:00"
     }
 
+    const scrollToFirstError = (errors: Record<string, string>) => {
+        const firstErrorField = Object.keys(errors)[0]
+        if (firstErrorField) {
+            const element = document.getElementById(firstErrorField)
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" })
+            }
+        }
+    }
+
     const handleSaveConfiguration = async () => {
         setError("")
+        setFieldErrors({})
         const codeParam = searchParams.get("code")
 
         if (codeParam === "AICALL191") {
@@ -508,12 +520,28 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             } catch (err: any) {
                 console.error("Error saving diner configuration:", err)
                 setResultTitle("Error")
-                const errorMsg = err.response?.data?.message || err.response?.data?.detail || err.message || "Failed to save configuration"
-                if (errorMsg.includes("You didn't pay the development fee.")) {
+                const errorData = err.response?.data
+                let errorMessage = "Failed to save configuration"
+
+                if (errorData && typeof errorData === "object" && !Array.isArray(errorData)) {
+                    setFieldErrors(errorData)
+                    scrollToFirstError(errorData)
+                    return
+                } else if (Array.isArray(errorData) && errorData.length > 0) {
+                    errorMessage = errorData[0]
+                } else if (typeof errorData === "string") {
+                    errorMessage = errorData
+                } else if (errorData?.error) {
+                    errorMessage = errorData.error
+                } else if (err.message) {
+                    errorMessage = err.message
+                }
+
+                if (errorMessage.includes("You didn't pay the development fee.")) {
                     router.push('/dashboard/platform-activation');
                     return;
                 }
-                setResultMessage(errorMsg)
+                setResultMessage(errorMessage)
                 setShowResultDialog(true)
             } finally {
                 setIsSaving(false)
@@ -622,14 +650,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             let errorMessage = "Failed to save configuration"
 
             if (errorData && typeof errorData === "object" && !Array.isArray(errorData)) {
-                const errorMessages = Object.entries(errorData).map(([key, value]: [string, any]) => {
-                    const field = key.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
-                    const error = Array.isArray(value) ? value[0] : value
-                    return `${field}: ${error}`
-                })
-                if (errorMessages.length > 0) {
-                    errorMessage = errorMessages.join("\n")
-                }
+                setFieldErrors(errorData)
+                scrollToFirstError(errorData)
+                return
             } else if (Array.isArray(errorData) && errorData.length > 0) {
                 errorMessage = errorData[0]
             } else if (typeof errorData === "string") {
@@ -724,19 +747,22 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
-                                            <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                    <SelectValue placeholder="Select phone number" />
-                                                </SelectTrigger>
-                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                                    {phoneNumberOptions.map(p => (
-                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
-                                                            {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div id="phone_uid" className={fieldErrors.phone_uid ? "border-2 border-red-500 rounded-xl" : ""}>
+                                                <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
+                                                    <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                        <SelectValue placeholder="Select phone number" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                        <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                        {phoneNumberOptions.map(p => (
+                                                            <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
+                                                                {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            {fieldErrors.phone_uid && <p className="text-xs text-red-500 mt-1">{fieldErrors.phone_uid}</p>}
                                             <p className="text-xs text-gray-400 dark:text-gray-500">
                                                 Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
                                             </p>
@@ -781,22 +807,26 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Restaurant Name</Label>
                                             <Input
+                                                id="restaurant_name"
                                                 disabled={searchParams.get("code") !== "AICALL191" && isUpdateMode && !isEditing}
                                                 value={restaurantName}
                                                 onChange={(e) => setRestaurantName(e.target.value)}
                                                 placeholder="Enter Restaurant Name"
-                                                className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                                className={`h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${fieldErrors.restaurant_name ? "border-red-500 border-2" : ""}`}
                                             />
+                                            {fieldErrors.restaurant_name && <p className="text-xs text-red-500 mt-1">{fieldErrors.restaurant_name}</p>}
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Assistant Name</Label>
                                             <Input
+                                                id="assistant_name"
                                                 disabled={searchParams.get("code") !== "AICALL191" && isUpdateMode && !isEditing}
                                                 value={assistantName}
                                                 onChange={(e) => setAssistantName(e.target.value)}
                                                 placeholder="Enter Assistant Name"
-                                                className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                                className={`h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${fieldErrors.assistant_name ? "border-red-500 border-2" : ""}`}
                                             />
+                                            {fieldErrors.assistant_name && <p className="text-xs text-red-500 mt-1">{fieldErrors.assistant_name}</p>}
                                         </div>
                                     </div>
                                 </Card>
@@ -811,34 +841,40 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     <div className="space-y-6">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform</Label>
-                                            <Select disabled={isUpdateMode && !isEditing} value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
-                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                    <SelectValue placeholder="Select Platform" />
-                                                </SelectTrigger>
-                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                                    {platformOptions.map(p => (
-                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">{p.platform.name}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div id="platform_uid" className={fieldErrors.platform_uid ? "border-2 border-red-500 rounded-xl" : ""}>
+                                                <Select disabled={isUpdateMode && !isEditing} value={platformUid} onValueChange={handleSelectChange(setPlatformUid)}>
+                                                    <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                        <SelectValue placeholder="Select Platform" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                        <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                        {platformOptions.map(p => (
+                                                            <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">{p.platform.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            {fieldErrors.platform_uid && <p className="text-xs text-red-500 mt-1">{fieldErrors.platform_uid}</p>}
                                         </div>
 
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
-                                            <Select disabled={isUpdateMode && !isEditing} value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                    <SelectValue placeholder="Select phone number" />
-                                                </SelectTrigger>
-                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                    <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
-                                                    {phoneNumberOptions.map(p => (
-                                                        <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
-                                                            {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div id="phone_uid" className={fieldErrors.phone_uid ? "border-2 border-red-500 rounded-xl" : ""}>
+                                                <Select disabled={isUpdateMode && !isEditing} value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
+                                                    <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                        <SelectValue placeholder="Select phone number" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                        <SelectItem value="_CLEAR_" className="text-gray-400 dark:text-gray-500 font-medium">Remove Selection</SelectItem>
+                                                        {phoneNumberOptions.map(p => (
+                                                            <SelectItem key={p.id} value={p.uid} className="dark:text-gray-100">
+                                                                {p.phone_number} {p.friendly_name ? `(${p.friendly_name})` : ''}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            {fieldErrors.phone_uid && <p className="text-xs text-red-500 mt-1">{fieldErrors.phone_uid}</p>}
                                             <p className="text-xs text-gray-400 dark:text-gray-500">
                                                 Need another number? <Link href="/dashboard/phone-number-buy" className="text-blue-600 dark:text-blue-400 hover:underline">Buy New AI Phone Number</Link>
                                             </p>
@@ -872,43 +908,49 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">AI Call placed within</Label>
-                                            <Select disabled={isUpdateMode && !isEditing} value={callingTimeAfterStatusUpdate} onValueChange={setCallingTimeAfterStatusUpdate}>
-                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 text-sm">
-                                                    <SelectValue placeholder="Select Time" />
-                                                </SelectTrigger>
-                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                    <SelectItem value="5" className="dark:text-gray-100">5 min</SelectItem>
-                                                    <SelectItem value="10" className="dark:text-gray-100">10 min</SelectItem>
-                                                    <SelectItem value="15" className="dark:text-gray-100">15 min</SelectItem>
-                                                    <SelectItem value="20" className="dark:text-gray-100">20 min</SelectItem>
-                                                    <SelectItem value="fastest" className="dark:text-gray-100">Fastest Time Possible</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <div id="calling_time_after_status_update" className={fieldErrors.calling_time_after_status_update ? "border-2 border-red-500 rounded-xl" : ""}>
+                                                <Select disabled={isUpdateMode && !isEditing} value={callingTimeAfterStatusUpdate} onValueChange={setCallingTimeAfterStatusUpdate}>
+                                                    <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 text-sm">
+                                                        <SelectValue placeholder="Select Time" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                        <SelectItem value="5" className="dark:text-gray-100">5 min</SelectItem>
+                                                        <SelectItem value="10" className="dark:text-gray-100">10 min</SelectItem>
+                                                        <SelectItem value="15" className="dark:text-gray-100">15 min</SelectItem>
+                                                        <SelectItem value="20" className="dark:text-gray-100">20 min</SelectItem>
+                                                        <SelectItem value="fastest" className="dark:text-gray-100">Fastest Time Possible</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            {fieldErrors.calling_time_after_status_update && <p className="text-xs text-red-500 mt-1">{fieldErrors.calling_time_after_status_update}</p>}
                                         </div>
                                         <div className="mb-6 space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
-                                            <Select disabled={isUpdateMode && !isEditing} value={timezone} onValueChange={setTimezone}>
-                                                <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                    <SelectValue placeholder="Select Time Zone" />
-                                                </SelectTrigger>
-                                                <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                    {[
-                                                        "Africa/Abidjan",
-                                                        "Africa/Accra",
-                                                        "Africa/Addis_Ababa",
-                                                        "Africa/Algiers",
-                                                        "America/Anchorage",
-                                                        "America/New_York",
-                                                        "Asia/Dhaka",
-                                                        "Asia/Dubai",
-                                                        "Asia/Kolkata",
-                                                        "Europe/London",
-                                                        "Pacific/Auckland"
-                                                    ].map(tz => (
-                                                        <SelectItem key={tz} value={tz} className="dark:text-gray-100">{tz}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div id="timezone" className={fieldErrors.timezone ? "border-2 border-red-500 rounded-xl" : ""}>
+                                                <Select disabled={isUpdateMode && !isEditing} value={timezone} onValueChange={setTimezone}>
+                                                    <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                        <SelectValue placeholder="Select Time Zone" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                                                        {[
+                                                            "Africa/Abidjan",
+                                                            "Africa/Accra",
+                                                            "Africa/Addis_Ababa",
+                                                            "Africa/Algiers",
+                                                            "America/Anchorage",
+                                                            "America/New_York",
+                                                            "Asia/Dhaka",
+                                                            "Asia/Dubai",
+                                                            "Asia/Kolkata",
+                                                            "Europe/London",
+                                                            "Pacific/Auckland"
+                                                        ].map(tz => (
+                                                            <SelectItem key={tz} value={tz} className="dark:text-gray-100">{tz}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            {fieldErrors.timezone && <p className="text-xs text-red-500 mt-1">{fieldErrors.timezone}</p>}
                                         </div>
                                     </div>
                                 </Card>
@@ -1018,6 +1060,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
+                                                        {fieldErrors[`${item.day.toLowerCase()}_start`] && <p className="text-[10px] text-red-500 mt-1">{fieldErrors[`${item.day.toLowerCase()}_start`]}</p>}
                                                     </div>
                                                     <div className="space-y-1">
                                                         <span className="md:hidden text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">End Time</span>
@@ -1037,16 +1080,19 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
+                                                        {fieldErrors[`${item.day.toLowerCase()}_end`] && <p className="text-[10px] text-red-500 mt-1">{fieldErrors[`${item.day.toLowerCase()}_end`]}</p>}
                                                     </div>
                                                 </div>
 
                                                 <div className="hidden md:flex md:col-span-1 justify-end">
-                                                    <Checkbox
-                                                        disabled={isUpdateMode && !isEditing}
-                                                        checked={item.isActive}
-                                                        onCheckedChange={(checked) => handleTimelineChange(index, "isActive", checked)}
-                                                        className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                                                    />
+                                                    <div id={item.day.toLowerCase() + "_enabled"}>
+                                                        <Checkbox
+                                                            disabled={isUpdateMode && !isEditing}
+                                                            checked={item.isActive}
+                                                            onCheckedChange={(checked) => handleTimelineChange(index, "isActive", checked)}
+                                                            className="h-5 w-5 border-2 border-gray-300 dark:border-gray-600 rounded data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
