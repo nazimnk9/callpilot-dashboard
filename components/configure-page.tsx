@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { TimezoneSelect } from "@/components/timezone-select"
 import Link from "next/link"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { flowService } from "@/services/flow-service"
@@ -730,13 +731,6 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     </div>
                 </div>
 
-                {/* {error && (
-                    <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 flex items-center gap-2 border border-red-100 dark:border-red-900/30">
-                        <AlertCircle className="h-5 w-5" />
-                        <span>{error}</span>
-                    </div>
-                )} */}
-
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {searchParams.get("code") === "AICALL191" ? (
                         <>
@@ -926,31 +920,16 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
                                         <div className="mb-6 space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
-                                            <div id="timezone" className={fieldErrors.timezone ? "border-2 border-red-500 rounded-xl" : ""}>
-                                                <Select disabled={isUpdateMode && !isEditing} value={timezone} onValueChange={setTimezone}>
-                                                    <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
-                                                        <SelectValue placeholder="Select Time Zone" />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                        {[
-                                                            "Africa/Abidjan",
-                                                            "Africa/Accra",
-                                                            "Africa/Addis_Ababa",
-                                                            "Africa/Algiers",
-                                                            "America/Anchorage",
-                                                            "America/New_York",
-                                                            "Asia/Dhaka",
-                                                            "Asia/Dubai",
-                                                            "Asia/Kolkata",
-                                                            "Europe/London",
-                                                            "Pacific/Auckland"
-                                                        ].map(tz => (
-                                                            <SelectItem key={tz} value={tz} className="dark:text-gray-100">{tz}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                            <div id="timezone" className={fieldErrors.timezone ? "border-2 border-red-500 rounded-xl p-1" : ""}>
+                                                <TimezoneSelect
+                                                    disabled={isUpdateMode && !isEditing}
+                                                    value={timezone}
+                                                    onChange={(val) => setTimezone(val)}
+                                                />
                                             </div>
-                                            {fieldErrors.timezone && <p className="text-xs text-red-500 mt-1">{fieldErrors.timezone}</p>}
+                                            {fieldErrors.timezone && (
+                                                <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{fieldErrors.timezone}</p>
+                                            )}
                                         </div>
                                     </div>
                                 </Card>
@@ -960,12 +939,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
                                         Add primary questions for the interview. Save each question before saving the full configuration.
                                     </p>
-                                    
+
                                     <div className="space-y-5">
                                         {questions.map((q, index) => (
                                             <div key={q.tempId} className="space-y-2">
                                                 <div className="flex gap-2 items-center">
-                                                <Input
+                                                    <Input
                                                         value={q.value}
                                                         onChange={(e) => handleQuestionChange(index, e.target.value)}
                                                         placeholder="Type a question"
@@ -985,13 +964,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                     <div className="border border-gray-100 dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-900/30 space-y-3">
                                                         <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Suggested Questions:</p>
                                                         <div className="flex flex-col gap-2">
-                                                        {suggestedQuestions.map(s => (
+                                                            {suggestedQuestions.map(s => (
                                                                 <div key={s.id} onClick={() => handleSuggestionClick(index, s.question)} className="text-sm p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg cursor-pointer transition-all shadow-sm dark:text-gray-100">{s.question}</div>
                                                             ))}
                                                         </div>
                                                     </div>
-                        )}
-                    </div>
+                                                )}
+                                            </div>
                                         ))}
                                         <Button onClick={handleAddQuestion} variant="outline" className="h-10 px-6 border-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 transition-all">
                                             <Plus className="h-4 w-4 mr-2" /> Add More Question

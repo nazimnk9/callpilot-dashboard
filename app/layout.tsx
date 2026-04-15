@@ -2,6 +2,7 @@ import React from "react"
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme-provider"
+import { BaseUIProvider } from "@/components/base-ui-provider"
 
 import './globals.css'
 
@@ -31,7 +32,9 @@ export default function RootLayout({
           enableSystem={true}
           disableTransitionOnChange
         >
-          {children}
+          <BaseUIProvider>
+            {children}
+          </BaseUIProvider>
         </ThemeProvider>
       </body>
     </html>
