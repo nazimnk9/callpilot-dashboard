@@ -80,7 +80,7 @@ export const profileService = {
         return api.get("/organizations/users/");
     },
 
-    async inviteUser(data: { role: string; email: string }) {
+    async inviteUser(data: { role: string; email: string; password?: string }) {
         return api.post("/organizations/invite/", data);
     },
 

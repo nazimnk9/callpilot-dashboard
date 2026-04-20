@@ -75,6 +75,7 @@ export function OrganizationUsersContent() {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
     const [inviteRole, setInviteRole] = useState("")
     const [inviteEmail, setInviteEmail] = useState("")
+    const [invitePassword, setInvitePassword] = useState("")
     const [isInviting, setIsInviting] = useState(false)
 
     useEffect(() => {
@@ -120,7 +121,7 @@ export function OrganizationUsersContent() {
     }
 
     const handleInviteUser = async () => {
-        if (!inviteRole || !inviteEmail) {
+        if (!inviteRole || !inviteEmail || !invitePassword) {
             setToast({
                 title: "Error",
                 description: "Please fill in all fields",
@@ -133,7 +134,8 @@ export function OrganizationUsersContent() {
             setIsInviting(true)
             await profileService.inviteUser({
                 role: inviteRole,
-                email: inviteEmail
+                email: inviteEmail,
+                password: invitePassword
             })
             setToast({
                 title: "Success",
@@ -143,6 +145,7 @@ export function OrganizationUsersContent() {
             setIsInviteModalOpen(false)
             setInviteRole("")
             setInviteEmail("")
+            setInvitePassword("")
 
             if (activeTab === "invites") {
                 fetchInvites()
@@ -151,7 +154,21 @@ export function OrganizationUsersContent() {
             }
         } catch (err: any) {
             console.error("Error inviting user:", err)
-            const errorMessage = err.response?.data?.detail || err.response?.data?.error || "Failed to send invitation"
+
+            // Extract error message from API response
+            const responseData = err.response?.data
+            let errorMessage = "Failed to send invitation"
+
+            if (responseData) {
+                if (responseData.email && Array.isArray(responseData.email) && responseData.email.length > 0) {
+                    errorMessage = responseData.email[0]
+                } else if (responseData.detail) {
+                    errorMessage = responseData.detail
+                } else if (responseData.error) {
+                    errorMessage = responseData.error
+                }
+            }
+
             setToast({
                 title: "Error",
                 description: errorMessage,
@@ -188,7 +205,7 @@ export function OrganizationUsersContent() {
                             <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Manage your team members and their roles.</p>
                         </div>
 
-                        <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                        {/* <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
                             <Button
                                 onClick={() => setActiveTab("users")}
                                 variant="ghost"
@@ -213,14 +230,14 @@ export function OrganizationUsersContent() {
                             >
                                 Invite
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                     <Button
                         onClick={() => setIsInviteModalOpen(true)}
                         className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-blue-500/20 transition-all font-semibold"
                     >
                         <UserPlus className="h-5 w-5" />
-                        Invite User
+                        Add User
                     </Button>
                 </div>
 
@@ -397,7 +414,7 @@ export function OrganizationUsersContent() {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                    Email Address
+                                    Email Address <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                     id="email"
@@ -405,23 +422,42 @@ export function OrganizationUsersContent() {
                                     placeholder="Enter colleague's email"
                                     value={inviteEmail}
                                     onChange={(e) => setInviteEmail(e.target.value)}
+                                    required
+                                    className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="password" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Password <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="Enter password"
+                                    value={invitePassword}
+                                    onChange={(e) => setInvitePassword(e.target.value)}
+                                    required
                                     className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                                 />
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                    Assign Role
+                                    Assign Role <span className="text-red-500">*</span>
                                 </Label>
                                 <Select value={inviteRole} onValueChange={setInviteRole}>
                                     <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                                         <SelectValue placeholder="Select a role" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
-                                        <SelectItem value="ADMIN" className="rounded-lg">Admin</SelectItem>
+                                        <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem>
+                                        {/* <SelectItem value="ADMIN" className="rounded-lg">Admin</SelectItem>
                                         <SelectItem value="MANAGER" className="rounded-lg">Manager</SelectItem>
-                                        <SelectItem value="RECRUITER" className="rounded-lg">Recruiter</SelectItem>
-                                        <SelectItem value="VIEWER" className="rounded-lg">Viewer</SelectItem>
+                                        <SelectItem value="RECRUITER" className="rounded-lg">Recruiter</SelectItem> */}
+                                        <SelectItem value="CONSULTANT" className="rounded-lg">Consultant</SelectItem>
+                                        <SelectItem value="ACCOUNTS" className="rounded-lg">Accounts</SelectItem>
+                                        {/* <SelectItem value="VIEWER" className="rounded-lg">Viewer</SelectItem> */}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -438,16 +474,16 @@ export function OrganizationUsersContent() {
                         </Button>
                         <Button
                             onClick={handleInviteUser}
-                            disabled={isInviting || !inviteEmail || !inviteRole}
+                            disabled={isInviting || !inviteEmail || !inviteRole || !invitePassword}
                             className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
                         >
                             {isInviting ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Inviting...
+                                    Adding...
                                 </>
                             ) : (
-                                "Invite User"
+                                "Add User"
                             )}
                         </Button>
                     </DialogFooter>
