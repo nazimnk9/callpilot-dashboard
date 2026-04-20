@@ -204,6 +204,20 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     }, [])
 
     useEffect(() => {
+        // Only set default if we are in create mode and timezone is still at default
+        if (!isUpdateMode && timezone === "Europe/London") {
+            try {
+                const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+                if (browserTimezone) {
+                    setTimezone(browserTimezone)
+                }
+            } catch (e) {
+                console.error("Error getting browser timezone:", e)
+            }
+        }
+    }, [isUpdateMode])
+
+    useEffect(() => {
         const nameParam = searchParams.get("name")
         const codeParam = searchParams.get("code")
         if (nameParam) {
