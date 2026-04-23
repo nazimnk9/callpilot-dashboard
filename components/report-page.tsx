@@ -324,7 +324,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                             </TableRow>
                         ) : (
                             <TableRow className="bg-muted/50">
-                                <TableHead className="font-semibold text-foreground">Interview ID</TableHead>
+                                {/* <TableHead className="font-semibold text-foreground">Interview ID</TableHead> */}
                                 <TableHead className="font-semibold text-foreground">Candidate ID</TableHead>
                                 <TableHead className="font-semibold text-foreground">Candidate Name</TableHead>
                                 <TableHead className="font-semibold text-foreground">Candidate Email</TableHead>
@@ -382,7 +382,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                         ) : (
                             reports.map((row) => (
                                 <TableRow key={row.id} className="hover:bg-muted/30">
-                                    <TableCell className="text-sm">{row.uid}</TableCell>
+                                    {/* <TableCell className="text-sm">{row.uid}</TableCell> */}
                                     <TableCell className="text-sm">{row.candidate_id}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_name}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_email}</TableCell>
