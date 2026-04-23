@@ -90,5 +90,28 @@ export const flowService = {
         return api.get("/interview/voices/", {
             params: gender ? { gender } : {}
         });
+    },
+    async getWhatsappTemplate(configUid: string) {
+        return api.get(`/twilio/whatsapp/template/${configUid}/`);
+    },
+
+    async createWhatsappAccount(data: { account_sid: string, auth_token: string }) {
+        return api.post("/twilio/whatsapp/account/", data);
+    },
+
+    async fetchWhatsappSenders() {
+        return api.post("/twilio/whatsapp/senders/fetch/");
+    },
+
+    async getWhatsappSenders() {
+        return api.get("/twilio/whatsapp/senders/");
+    },
+
+    async selectWhatsappSender(data: { sender_uid: string }) {
+        return api.post("/twilio/whatsapp/senders/select/", data);
+    },
+
+    async setupWhatsappTemplate(data: { config_uid: string, sender_uid: string }) {
+        return api.post("/twilio/whatsapp/template/setup/", data);
     }
 };

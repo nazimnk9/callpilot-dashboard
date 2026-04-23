@@ -29,6 +29,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+import { WhatsappConfigModal } from "@/components/whatsapp-config-modal"
 
 interface ConfigurePageProps {
     featureUid?: string
@@ -175,6 +176,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         "preview_url": "https://storage.googleapis.com/eleven-public-prod/database/workspace/f0453fa76e4e4a1e973d87b70665a591/voices/jRAAK67SEFE9m7ci5DhD/jeiEjvprTdbY76JXCluu.mp3",
         "is_default": true,
     })
+    const [showWhatsappUploaderCard, setShowWhatsappUploaderCard] = useState(false)
+    const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false)
+    const [configUid, setConfigUid] = useState("")
     const isPersistedVoiceSet = useRef(false)
 
     useEffect(() => {
@@ -273,6 +277,16 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                         if (configData) {
                             setIsUpdateMode(true)
+                            if (configData.uid) {
+                                setConfigUid(configData.uid)
+                                try {
+                                    const templateRes = await flowService.getWhatsappTemplate(configData.uid)
+                                } catch (err: any) {
+                                    if (err.response?.data?.detail === "No template configured for this call config.") {
+                                        setShowWhatsappUploaderCard(true)
+                                    }
+                                }
+                            }
 
                             setPlatformUid(configData.platform?.uid || "")
                             setPhoneNumberUid(configData.phone?.uid || "")
@@ -617,6 +631,17 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 if (configList && configList.length > 0) {
                     const configData = configList[0]
                     setIsUpdateMode(true)
+
+                    if (configData.uid) {
+                        setConfigUid(configData.uid)
+                        try {
+                            const templateRes = await flowService.getWhatsappTemplate(configData.uid)
+                        } catch (err: any) {
+                            if (err.response?.data?.detail === "No template configured for this call config.") {
+                                setShowWhatsappUploaderCard(true)
+                            }
+                        }
+                    }
 
                     setPlatformUid(configData.platform?.uid || "")
                     setPhoneNumberUid(configData.phone?.uid || "")
@@ -1261,19 +1286,34 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 </Card>
                             </div>
 
-                            <Card className="lg:col-span-2 p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Please create the following 4 statuses in your ATS/CRM under the Job Application's Status creation section (if they are not already present):
-                                </p>
-                                <ul className="mt-4 space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside">
-                                    <li>Applied</li>
-                                    <li>AI Call - No Reply</li>
-                                    <li>AI Call - Link Sent</li>
-                                    <li>Unsuccessful</li>
-                                    <li>Document Received</li>
-                                </ul>
-                            </Card>
+                            <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                {showWhatsappUploaderCard && (
+                                    <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex flex-col items-center justify-center space-y-4 min-h-[200px]">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => setIsWhatsappModalOpen(true)}
+                                            className="h-12 w-12 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group"
+                                        >
+                                            <Plus className="h-6 w-6 text-gray-400 group-hover:text-blue-500 dark:text-gray-500 dark:group-hover:text-blue-400" />
+                                        </Button>
+                                        <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Add WhatsApp Document Uploader</p>
+                                    </Card>
+                                )}
+                                <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800`}>
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                                        Please create the following 4 statuses in your ATS/CRM under the Job Application's Status creation section (if they are not already present):
+                                    </p>
+                                    <ul className="mt-4 space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside">
+                                        <li>Applied</li>
+                                        <li>AI Call - No Reply</li>
+                                        <li>AI Call - Link Sent</li>
+                                        <li>Unsuccessful</li>
+                                        <li>Document Received</li>
+                                    </ul>
+                                </Card>
+                            </div>
                         </>
 
                     )}
@@ -1469,6 +1509,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <WhatsappConfigModal
+                isOpen={isWhatsappModalOpen}
+                onClose={() => setIsWhatsappModalOpen(false)}
+                configUid={configUid}
+            />
         </div>
     )
 }
