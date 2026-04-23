@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { profileService } from "@/services/profile-service";
 import { LoaderOverlay } from "@/components/auth/loader-overlay";
-import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone, LogOut, X } from "lucide-react";
+import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone, LogOut, X, Globe } from "lucide-react";
 import { cookieUtils, authService } from '@/services/auth-service';
 import countriesData from "@/lib/countries.json";
 import { getCountryCode } from "@/app/actions";
@@ -135,6 +135,8 @@ export default function ActivationPage() {
 
     const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false);
     const [isComplianceAgreed, setIsComplianceAgreed] = useState(false);
+    const [isPhoneBillingModalOpen, setIsPhoneBillingModalOpen] = useState(false);
+    const [isPhoneBillingAgreed, setIsPhoneBillingAgreed] = useState(false);
 
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -1356,27 +1358,52 @@ export default function ActivationPage() {
                                     </div>
                                 </div>
 
-                                 <div className="flex items-center space-x-2 mb-6 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <Checkbox
-                                        id="compliance"
-                                        checked={isComplianceAgreed}
-                                        onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
-                                    />
-                                    <label
-                                        htmlFor="compliance"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                    >
-                                        I have read and agree to the{" "}
-                                        <span
-                                            className="text-primary hover:underline font-bold"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setIsComplianceModalOpen(true);
-                                            }}
+                                 <div className="space-y-4 mb-6">
+                                    <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <Checkbox
+                                            id="compliance"
+                                            checked={isComplianceAgreed}
+                                            onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
+                                        />
+                                        <label
+                                            htmlFor="compliance"
+                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                                         >
-                                            Privacy Policy and Terms
-                                        </span>.
-                                    </label>
+                                            I have read and agree to the{" "}
+                                            <span
+                                                className="text-primary hover:underline font-bold"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setIsComplianceModalOpen(true);
+                                                }}
+                                            >
+                                                Privacy Policy and Terms
+                                            </span>.
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <Checkbox
+                                            id="phone-billing"
+                                            checked={isPhoneBillingAgreed}
+                                            onCheckedChange={(checked) => setIsPhoneBillingAgreed(checked === true)}
+                                        />
+                                        <label
+                                            htmlFor="phone-billing"
+                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                        >
+                                            I understand how{" "}
+                                            <span
+                                                className="text-primary hover:underline font-bold"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setIsPhoneBillingModalOpen(true);
+                                                }}
+                                            >
+                                                CallPilot phone numbers are assigned, used, and billed
+                                            </span>
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <div className="flex justify-between pt-6">
@@ -1389,7 +1416,7 @@ export default function ActivationPage() {
                                     </Button>
                                     <Button
                                         onClick={handleSave}
-                                        disabled={isSaving || !isComplianceAgreed}
+                                        disabled={isSaving || !isComplianceAgreed || !isPhoneBillingAgreed}
                                         className="bg-primary hover:bg-primary/90 text-white px-8"
                                     >
                                         {isSaving ? "Submitting..." : "Submit Verification"}
@@ -1475,6 +1502,83 @@ export default function ActivationPage() {
                         <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
                             <p className="text-sm font-bold text-gray-900 dark:text-gray-100 text-center">
                                 By proceeding, you confirm that you have read, understood, and agree to all of the above requirements, as well as our full Terms & Conditions and Privacy Policy
+                            </p>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isPhoneBillingModalOpen} onOpenChange={setIsPhoneBillingModalOpen}>
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto dark:bg-gray-950 dark:border-gray-800 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+                    <DialogHeader className="border-b border-gray-100 dark:border-gray-800 pb-4">
+                        <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                            <Phone className="text-primary" />
+                            Phone Number Compliance
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-8 py-6">
+                        <div className="space-y-6">
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">How AI CallPilot Numbers Work</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
+                                    CallPilot assigns phone numbers based on your location and compliance requirements:
+                                </p>
+                                <ul className="list-disc pl-5 text-sm text-gray-600 dark:text-gray-400 font-medium space-y-2">
+                                    <li>
+                                        <span className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mt-4">
+                                            <img src="https://flagcdn.com/w40/us.png" alt="US Flag" className="w-5 h-3.5 object-cover rounded-sm" />
+                                            United States:
+                                        </span>
+                                        <br />A dedicated phone number is purchased and assigned immediately for compliance with US telecommunication regulations.
+                                    </li>
+                                    <li>
+                                        <span className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mt-4">
+                                            <Globe className="w-4 h-4 text-primary" />
+                                            Other Countries:
+                                        </span>
+                                        <br />A temporary number may be assigned during setup while your dedicated number is provisioned.
+                                    </li>
+                                </ul>
+                            </section>
+
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Number Pricing</h3>
+                                <ul className="list-disc pl-5 text-sm text-gray-600 dark:text-gray-400 font-medium space-y-1">
+                                    <li>Dedicated phone numbers are charged at $15 per month, per number</li>
+                                    <li>Charges begin once a permanent number is assigned to your account</li>
+                                </ul>
+                            </section>
+
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">What This Means</h3>
+                                <ul className="list-disc pl-5 text-sm text-gray-600 dark:text-gray-400 font-medium space-y-1">
+                                    <li>Your temporary number is fully functional</li>
+                                    <li>Your permanent number will be assigned shortly</li>
+                                    <li>No interruption to your service</li>
+                                    <li>All activity remains linked to your account</li>
+                                </ul>
+                            </section>
+
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Your Responsibility</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">You are responsible for ensuring that:</p>
+                                <ul className="list-disc pl-5 text-sm text-gray-600 dark:text-gray-400 font-medium space-y-1">
+                                    <li>Calls and messages comply with local telecommunication laws</li>
+                                    <li>Appropriate caller identification is used where required</li>
+                                </ul>
+                            </section>
+
+                            <section className="space-y-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Global Compliance Advantage</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
+                                    CallPilot automatically manages global phone number allocation and compliance, allowing your business to operate across multiple regions without complexity.
+                                </p>
+                            </section>
+                        </div>
+
+                        <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
+                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 text-center">
+                                By proceeding, you confirm that you understand and agree to how CallPilot handles phone number assignment and billing.
                             </p>
                         </div>
                     </div>
