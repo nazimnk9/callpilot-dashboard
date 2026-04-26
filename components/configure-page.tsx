@@ -1341,7 +1341,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <li>AI Call - No Reply</li>
                                         <li>AI Call - Link Sent</li>
                                         <li>Unsuccessful</li>
-                                        <li>Document Received</li>
+                                        <li> Documents Received</li>
                                     </ul>
                                 </Card>
                             </div>
