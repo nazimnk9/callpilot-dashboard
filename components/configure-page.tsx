@@ -179,6 +179,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [showWhatsappUploaderCard, setShowWhatsappUploaderCard] = useState(false)
     const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false)
     const [configUid, setConfigUid] = useState("")
+    const [whatsappTemplate, setWhatsappTemplate] = useState<any>(null)
     const isPersistedVoiceSet = useRef(false)
 
     useEffect(() => {
@@ -281,9 +282,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 setConfigUid(configData.uid)
                                 try {
                                     const templateRes = await flowService.getWhatsappTemplate(configData.uid)
+                                    if (templateRes.data) {
+                                        setWhatsappTemplate(templateRes.data)
+                                        setShowWhatsappUploaderCard(true)
+                                    }
                                 } catch (err: any) {
                                     if (err.response?.data?.detail === "No template configured for this call config.") {
                                         setShowWhatsappUploaderCard(true)
+                                        setWhatsappTemplate(null)
                                     }
                                 }
                             }
@@ -636,9 +642,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         setConfigUid(configData.uid)
                         try {
                             const templateRes = await flowService.getWhatsappTemplate(configData.uid)
+                            if (templateRes.data) {
+                                setWhatsappTemplate(templateRes.data)
+                                setShowWhatsappUploaderCard(true)
+                            }
                         } catch (err: any) {
                             if (err.response?.data?.detail === "No template configured for this call config.") {
                                 setShowWhatsappUploaderCard(true)
+                                setWhatsappTemplate(null)
                             }
                         }
                     }
@@ -1289,15 +1300,35 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {showWhatsappUploaderCard && (
                                     <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex flex-col items-center justify-center space-y-4 min-h-[200px]">
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            onClick={() => setIsWhatsappModalOpen(true)}
-                                            className="h-12 w-12 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group"
-                                        >
-                                            <Plus className="h-6 w-6 text-gray-400 group-hover:text-blue-500 dark:text-gray-500 dark:group-hover:text-blue-400" />
-                                        </Button>
-                                        <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Add WhatsApp Document Uploader</p>
+                                        {whatsappTemplate ? (
+                                            <div className="flex flex-col items-center space-y-3 text-center">
+                                                <div className="h-12 w-12 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                                                    <CheckCircle2 className="h-6 w-6 text-green-500 dark:text-green-400" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Already WhatsApp document uploaded</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Template: {whatsappTemplate.template_friendly_name}</p>
+                                                    <div className="flex items-center justify-center gap-1.5 mt-1">
+                                                        <div className={`h-1.5 w-1.5 rounded-full ${whatsappTemplate.is_active ? "bg-green-500" : "bg-amber-500"}`} />
+                                                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                                            {whatsappTemplate.is_active ? "Active" : "Pending Activation"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => setIsWhatsappModalOpen(true)}
+                                                    className="h-12 w-12 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group"
+                                                >
+                                                    <Plus className="h-6 w-6 text-gray-400 group-hover:text-blue-500 dark:text-gray-500 dark:group-hover:text-blue-400" />
+                                                </Button>
+                                                <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Add WhatsApp Document Uploader</p>
+                                            </>
+                                        )}
                                     </Card>
                                 )}
                                 <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800`}>
