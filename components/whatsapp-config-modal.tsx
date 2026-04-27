@@ -11,6 +11,7 @@ import { Loader2, CheckCircle2, AlertCircle, ChevronRight } from "lucide-react"
 interface WhatsappConfigModalProps {
     isOpen: boolean
     onClose: () => void
+    onSuccess?: () => void
     configUid?: string
 }
 
@@ -21,7 +22,7 @@ interface Sender {
     is_selected: boolean
 }
 
-export function WhatsappConfigModal({ isOpen, onClose, configUid }: WhatsappConfigModalProps) {
+export function WhatsappConfigModal({ isOpen, onClose, onSuccess, configUid }: WhatsappConfigModalProps) {
     const [step, setStep] = useState(1)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState("")
@@ -123,6 +124,9 @@ export function WhatsappConfigModal({ isOpen, onClose, configUid }: WhatsappConf
 
             setSuccessMessage("creation your what's app template")
             setStep(3) // Success step
+            if (onSuccess) {
+                onSuccess()
+            }
         } catch (err: any) {
             console.error("Error in Step 2:", err)
             setError(err.response?.data?.detail || "Failed to complete setup. Please try again.")

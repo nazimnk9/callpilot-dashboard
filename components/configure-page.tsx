@@ -181,6 +181,21 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [configUid, setConfigUid] = useState("")
     const [whatsappTemplate, setWhatsappTemplate] = useState<any>(null)
     const isPersistedVoiceSet = useRef(false)
+    const fetchWhatsappTemplate = useCallback(async (uid: string) => {
+        if (!uid) return
+        try {
+            const templateRes = await flowService.getWhatsappTemplate(uid)
+            if (templateRes.data) {
+                setWhatsappTemplate(templateRes.data)
+                setShowWhatsappUploaderCard(true)
+            }
+        } catch (err: any) {
+            if (err.response?.data?.detail === "No template configured for this call config.") {
+                setShowWhatsappUploaderCard(true)
+                setWhatsappTemplate(null)
+            }
+        }
+    }, [])
 
     useEffect(() => {
         const checkSelectedVoice = () => {
@@ -280,18 +295,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             setIsUpdateMode(true)
                             if (configData.uid) {
                                 setConfigUid(configData.uid)
-                                try {
-                                    const templateRes = await flowService.getWhatsappTemplate(configData.uid)
-                                    if (templateRes.data) {
-                                        setWhatsappTemplate(templateRes.data)
-                                        setShowWhatsappUploaderCard(true)
-                                    }
-                                } catch (err: any) {
-                                    if (err.response?.data?.detail === "No template configured for this call config.") {
-                                        setShowWhatsappUploaderCard(true)
-                                        setWhatsappTemplate(null)
-                                    }
-                                }
+                                    fetchWhatsappTemplate(configData.uid)
                             }
 
                             setPlatformUid(configData.platform?.uid || "")
@@ -640,18 +644,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                     if (configData.uid) {
                         setConfigUid(configData.uid)
-                        try {
-                            const templateRes = await flowService.getWhatsappTemplate(configData.uid)
-                            if (templateRes.data) {
-                                setWhatsappTemplate(templateRes.data)
-                                setShowWhatsappUploaderCard(true)
-                            }
-                        } catch (err: any) {
-                            if (err.response?.data?.detail === "No template configured for this call config.") {
-                                setShowWhatsappUploaderCard(true)
-                                setWhatsappTemplate(null)
-                            }
-                        }
+                                fetchWhatsappTemplate(configData.uid)
                     }
 
                     setPlatformUid(configData.platform?.uid || "")
@@ -1544,6 +1537,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             <WhatsappConfigModal
                 isOpen={isWhatsappModalOpen}
                 onClose={() => setIsWhatsappModalOpen(false)}
+                onSuccess={() => fetchWhatsappTemplate(configUid)}
                 configUid={configUid}
             />
         </div>
