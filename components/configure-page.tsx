@@ -1295,8 +1295,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex flex-col items-center justify-center space-y-4 min-h-[200px]">
                                         {whatsappTemplate ? (
                                             <div className="flex flex-col items-center space-y-3 text-center">
-                                                <div className="h-12 w-12 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-                                                    <CheckCircle2 className="h-6 w-6 text-green-500 dark:text-green-400" />
+                                                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${whatsappTemplate.is_active ? "bg-green-50 dark:bg-green-900/20" : "bg-amber-50 dark:bg-amber-900/20"}`}>
+                                                    {whatsappTemplate.is_active ? (
+                                                        <CheckCircle2 className="h-6 w-6 text-green-500 dark:text-green-400" />
+                                                    ) : (
+                                                        <AlertCircle className="h-6 w-6 text-amber-500 dark:text-amber-400" />
+                                                    )}
                                                 </div>
                                                 <div className="space-y-1">
                                                     <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Already WhatsApp document uploaded</p>
