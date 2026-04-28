@@ -1303,12 +1303,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                     )}
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Already WhatsApp document uploaded</p>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Template: {whatsappTemplate.template_friendly_name}</p>
+                                                    <h5 className="text-base font-semibold text-gray-700 dark:text-gray-300">WhatsApp Document Uploader</h5>
+                                                    {/* <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Template: {whatsappTemplate.template_friendly_name}</p> */}
                                                     <div className="flex items-center justify-center gap-1.5 mt-1">
                                                         <div className={`h-1.5 w-1.5 rounded-full ${whatsappTemplate.is_active ? "bg-green-500" : "bg-amber-500"}`} />
                                                         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                                                            {whatsappTemplate.is_active ? "Active" : "Pending Activation"}
+                                                            {whatsappTemplate.is_active ? "Active" : "Waiting for Activation"}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1323,7 +1323,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 >
                                                     <Plus className="h-6 w-6 text-gray-400 group-hover:text-blue-500 dark:text-gray-500 dark:group-hover:text-blue-400" />
                                                 </Button>
-                                                <p className="text-base font-semibold text-gray-700 dark:text-gray-300">Add WhatsApp Document Uploader</p>
+                                                <h5 className="text-base font-semibold text-gray-700 dark:text-gray-300">Add WhatsApp Document Uploader</h5>
                                             </>
                                         )}
                                     </Card>
