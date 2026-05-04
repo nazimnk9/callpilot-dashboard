@@ -22,7 +22,7 @@ export default function Page() {
         const verifyRes = await authService.verifyToken(accessToken);
         if (verifyRes.ok) {
           const statusRes = await profileService.getPlatformStatus();
-          if (!statusRes.data.is_given_company_details) {
+          if (statusRes.data.compliance_status === "") {
             router.push('/activation');
           } else {
             router.push('/dashboard');
@@ -35,7 +35,7 @@ export default function Page() {
             cookieUtils.set('refresh', data.refresh, 7);
 
             const statusRes = await profileService.getPlatformStatus();
-            if (!statusRes.data.is_given_company_details) {
+            if (statusRes.data.compliance_status === "") {
               router.push('/activation');
             } else {
               router.push('/dashboard');

@@ -11,6 +11,7 @@ import { LoaderOverlay } from "@/components/auth/loader-overlay";
 import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone, LogOut, X, Globe } from "lucide-react";
 import { cookieUtils, authService } from '@/services/auth-service';
 import countriesData from "@/lib/countries.json";
+import axios from "axios";
 import { getCountryCode } from "@/app/actions";
 import {
     AlertDialog,
@@ -49,7 +50,7 @@ export default function ActivationPage() {
                 const verifyRes = await authService.verifyToken(accessToken);
                 if (verifyRes.ok) {
                     const statusRes = await profileService.getPlatformStatus();
-                    if (statusRes.data.is_given_company_details) {
+                    if (statusRes.data.compliance_status !== "") {
                         router.push('/dashboard');
                         return;
                     }
@@ -62,7 +63,7 @@ export default function ActivationPage() {
                         cookieUtils.set('refresh', data.refresh, 7);
 
                         const statusRes = await profileService.getPlatformStatus();
-                        if (statusRes.data.is_given_company_details) {
+                        if (statusRes.data.compliance_status !== "") {
                             router.push('/dashboard');
                             return;
                         }
@@ -106,6 +107,25 @@ export default function ActivationPage() {
         authorize_representative_last_name: "",
         authorize_representative_email: "",
         authorize_representative_phone: ""
+    });
+    const [australiaAddress, setAustraliaAddress] = useState({
+        CustomerName: "",
+        Street: "",
+        StreetSecondary: "",
+        City: "",
+        Region: "",
+        PostalCode: "",
+        IsoCountry: "AU",
+        FriendlyName: ""
+    });
+    const [twilioDetails, setTwilioDetails] = useState<{ subaccount_sid: string, auth_token: string } | null>(null);
+    const [irelandEndUser, setIrelandEndUser] = useState({
+        business_name: "",
+        business_website: "",
+        business_registration_number: "",
+        first_name: "",
+        last_name: "",
+        email: ""
     });
     const [initialOrg, setInitialOrg] = useState({ ...org });
 
@@ -288,27 +308,197 @@ export default function ActivationPage() {
         }
     }, [currentStep, org.authorize_representative_phone]);
 
-    const handleNextStep1 = () => {
-        if (!org.business_name || !org.reg_number || !org.business_registration_authority || !org.business_website) {
+    const handleNextStep1 = async () => {
+        if (!org.country) {
             setAlertConfig({
                 open: true,
                 title: "Missing Information",
-                description: ["Please fill in all required fields."],
+                description: ["Please select your country."],
                 variant: "destructive"
             });
             return;
         }
+
+        if (["India", "Canada", "United States of America"].includes(org.country)) {
+            handleQuickSubmit();
+            return;
+        }
+
         localStorage.setItem("activation_step1", JSON.stringify({
-            business_name: org.business_name,
-            reg_number: org.reg_number,
-            business_registration_authority: org.business_registration_authority,
-            business_website: org.business_website
+            country: org.country,
+            country_iso_code: org.country_iso_code
         }));
+
+        setAustraliaAddress(prev => ({ ...prev, IsoCountry: org.country_iso_code }));
+
+        if (org.country === "Australia" || org.country === "Ireland") {
+            try {
+                setIsSaving(true);
+                const res = await profileService.getOrganization();
+                if (res.data) {
+                    setTwilioDetails({
+                        subaccount_sid: res.data.twilio_subaccount_sid,
+                        auth_token: res.data.twilio_auth_token
+                    });
+
+                    if (org.country === "Ireland") {
+                        const auth = btoa(`${res.data.twilio_subaccount_sid}:${res.data.twilio_auth_token}`);
+                        // 1. Get Regulation SID
+                        const regRes = await axios.get(
+                            "https://numbers.twilio.com/v2/RegulatoryCompliance/Regulations?IsoCountry=ie&NumberType=local&EndUserType=business",
+                            { headers: { 'Authorization': `Basic ${auth}` } }
+                        );
+                        const regSid = regRes.data.results?.[0]?.sid;
+                        if (regSid) {
+                            localStorage.setItem("regulation_sid", regSid);
+                            // 2. Post to Bundles
+                            const bundleParams = new URLSearchParams();
+                            bundleParams.append('FriendlyName', 'irelandBundle');
+                            bundleParams.append('Email', res.data.email);
+                            bundleParams.append('RegulationSid', regSid);
+                            bundleParams.append('StatusCallback', 'irelandTrue');
+
+                            const bundleRes = await axios.post(
+                                "https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles",
+                                bundleParams,
+                                {
+                                    headers: {
+                                        'Authorization': `Basic ${auth}`,
+                                        'Content-Type': 'application/x-www-form-urlencoded'
+                                    }
+                                }
+                            );
+                            if (bundleRes.data && bundleRes.data.sid) {
+                                localStorage.setItem("bundleSid", bundleRes.data.sid);
+                                localStorage.setItem("country", org.country);
+                                localStorage.setItem("country_iso_code", org.country_iso_code);
+                                setAustraliaAddress(prev => ({ ...prev, IsoCountry: org.country_iso_code }));
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching organization details or Twilio data:", err);
+            } finally {
+                setIsSaving(false);
+            }
+        }
+
         setCurrentStep(2);
     };
 
-    const handleNextStep2 = () => {
-        if (!org.country || !org.street_address || !org.city || !org.post_code) {
+    const handleQuickSubmit = async () => {
+        try {
+            setIsSaving(true);
+            await profileService.updateOrganization({
+                country: org.country,
+                country_iso_code: org.country_iso_code
+            });
+
+            setAlertConfig({
+                open: true,
+                title: "Success",
+                description: ["Country details submitted successfully."],
+                variant: "default"
+            });
+
+            router.push("/dashboard");
+        } catch (err: any) {
+            console.error("Error in quick submission:", err);
+            setAlertConfig({
+                open: true,
+                title: "Submission Failed",
+                description: ["Failed to update organization details."],
+                variant: "destructive"
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleNextStep2 = async () => {
+        if (org.country === "Australia") {
+            handleAustraliaSubmit();
+            return;
+        }
+
+        if (org.country === "Ireland") {
+            if (!irelandEndUser.business_name || !irelandEndUser.business_website || !irelandEndUser.business_registration_number || !irelandEndUser.first_name || !irelandEndUser.last_name || !irelandEndUser.email) {
+                setAlertConfig({
+                    open: true,
+                    title: "Missing Information",
+                    description: ["Please fill in all required fields."],
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            try {
+                setIsSaving(true);
+                if (!twilioDetails) return;
+                const auth = btoa(`${twilioDetails.subaccount_sid}:${twilioDetails.auth_token}`);
+
+                // 1. Post to EndUsers
+                const endUserParams = new URLSearchParams();
+                endUserParams.append('FriendlyName', 'irelandEndUsers');
+                endUserParams.append('Type', 'business');
+                endUserParams.append('Attributes', JSON.stringify({
+                    business_name: irelandEndUser.business_name,
+                    business_website: irelandEndUser.business_website,
+                    business_registration_number: irelandEndUser.business_registration_number,
+                    first_name: irelandEndUser.first_name,
+                    last_name: irelandEndUser.last_name,
+                    email: irelandEndUser.email
+                }));
+
+                const endUserRes = await axios.post(
+                    "https://numbers.twilio.com/v2/RegulatoryCompliance/EndUsers",
+                    endUserParams,
+                    {
+                        headers: {
+                            'Authorization': `Basic ${auth}`,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    }
+                );
+
+                if (endUserRes.data && endUserRes.data.sid) {
+                    const endUserSid = endUserRes.data.sid;
+                    localStorage.setItem("endUserSid", endUserSid);
+
+                    // 2. Post ItemAssignment
+                    const bundleSid = localStorage.getItem("bundleSid");
+                    if (bundleSid) {
+                        const assignmentParams = new URLSearchParams();
+                        assignmentParams.append('ObjectSid', endUserSid);
+                        await axios.post(
+                            `https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles/${bundleSid}/ItemAssignments`,
+                            assignmentParams,
+                            {
+                                headers: {
+                                    'Authorization': `Basic ${auth}`,
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                }
+                            }
+                        );
+                    }
+                    setCurrentStep(3);
+                }
+            } catch (err: any) {
+                console.error("Error in Ireland Step 2:", err);
+                setAlertConfig({
+                    open: true,
+                    title: "Submission Failed",
+                    description: [err.response?.data?.message || "Failed to submit end user details."],
+                    variant: "destructive"
+                });
+            } finally {
+                setIsSaving(false);
+            }
+            return;
+        }
+
+        if (!org.business_name || !org.reg_number || !org.business_registration_authority || !org.business_website || !org.street_address || !org.city || !org.post_code) {
             setAlertConfig({
                 open: true,
                 title: "Missing Information",
@@ -318,7 +508,10 @@ export default function ActivationPage() {
             return;
         }
         localStorage.setItem("activation_step2", JSON.stringify({
-            country: org.country,
+            business_name: org.business_name,
+            reg_number: org.reg_number,
+            business_registration_authority: org.business_registration_authority,
+            business_website: org.business_website,
             street_address: org.street_address,
             apt_or_suite: org.apt_or_suite,
             city: org.city,
@@ -326,6 +519,206 @@ export default function ActivationPage() {
             province: org.province
         }));
         setCurrentStep(3);
+    };
+
+    const handleIrelandSubmit = async () => {
+        if (!australiaAddress.CustomerName || !australiaAddress.Street || !australiaAddress.City || !australiaAddress.Region || !australiaAddress.PostalCode || !australiaAddress.FriendlyName) {
+            setAlertConfig({
+                open: true,
+                title: "Missing Information",
+                description: ["Please fill in all required fields for the address."],
+                variant: "destructive"
+            });
+            return;
+        }
+
+        if (!twilioDetails?.subaccount_sid || !twilioDetails?.auth_token) {
+            setAlertConfig({
+                open: true,
+                title: "Error",
+                description: ["Twilio account details not found."],
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            const auth = btoa(`${twilioDetails.subaccount_sid}:${twilioDetails.auth_token}`);
+
+            // 1. Post to Addresses
+            const addressParams = new URLSearchParams();
+            Object.entries(australiaAddress).forEach(([key, value]) => {
+                addressParams.append(key, value);
+            });
+
+            const addressRes = await axios.post(
+                `https://api.twilio.com/2010-04-01/Accounts/${twilioDetails.subaccount_sid}/Addresses.json`,
+                addressParams,
+                {
+                    headers: {
+                        'Authorization': `Basic ${auth}`,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }
+            );
+
+            if (addressRes.data && addressRes.data.sid) {
+                const addressSid = addressRes.data.sid;
+                const bundleSid = localStorage.getItem("bundleSid");
+
+                // 2. Post to SupportingDocuments
+                const supportParams = new URLSearchParams();
+                supportParams.append('FriendlyName', 'irelandSupportingDocuments');
+                supportParams.append('Type', 'business_address');
+                supportParams.append('Attributes', JSON.stringify({
+                    address_sids: [addressSid]
+                }));
+
+                const supportRes = await axios.post(
+                    "https://numbers.twilio.com/v2/RegulatoryCompliance/SupportingDocuments",
+                    supportParams,
+                    {
+                        headers: {
+                            'Authorization': `Basic ${auth}`,
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    }
+                );
+
+                if (supportRes.data && supportRes.data.sid) {
+                    const supportSid = supportRes.data.sid;
+
+                    // 3. Post ItemAssignment (Supporting Doc)
+                    if (bundleSid) {
+                        const assignmentParams = new URLSearchParams();
+                        assignmentParams.append('ObjectSid', supportSid);
+                        await axios.post(
+                            `https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles/${bundleSid}/ItemAssignments`,
+                            assignmentParams,
+                            {
+                                headers: {
+                                    'Authorization': `Basic ${auth}`,
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                }
+                            }
+                        );
+
+                        // 4. Update Bundle Status
+                        const statusParams = new URLSearchParams();
+                        statusParams.append('Status', 'pending-review');
+                        await axios.post(
+                            `https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles/${bundleSid}`,
+                            statusParams,
+                            {
+                                headers: {
+                                    'Authorization': `Basic ${auth}`,
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                }
+                            }
+                        );
+                    }
+
+                    // Success!
+                    await profileService.updateOrganization({
+                        country: "Ireland",
+                        country_iso_code: "IE",
+                        address_sid: addressSid,
+                        bundle_sid: bundleSid
+                    });
+
+                    setAlertConfig({
+                        open: true,
+                        title: "Success",
+                        description: ["Ireland business details submitted for review."],
+                        variant: "default"
+                    });
+                    router.push("/dashboard");
+                }
+            }
+        } catch (err: any) {
+            console.error("Error in Ireland final submission:", err);
+            setAlertConfig({
+                open: true,
+                title: "Submission Failed",
+                description: [err.response?.data?.message || "Failed to complete Ireland regulatory submission."],
+                variant: "destructive"
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleAustraliaSubmit = async () => {
+        if (!australiaAddress.CustomerName || !australiaAddress.Street || !australiaAddress.City || !australiaAddress.Region || !australiaAddress.PostalCode || !australiaAddress.FriendlyName) {
+            setAlertConfig({
+                open: true,
+                title: "Missing Information",
+                description: ["Please fill in all required fields for the address."],
+                variant: "destructive"
+            });
+            return;
+        }
+
+        if (!twilioDetails?.subaccount_sid || !twilioDetails?.auth_token) {
+            setAlertConfig({
+                open: true,
+                title: "Error",
+                description: ["Twilio account details not found. Please try again."],
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            const auth = btoa(`${twilioDetails.subaccount_sid}:${twilioDetails.auth_token}`);
+            const params = new URLSearchParams();
+            Object.entries(australiaAddress).forEach(([key, value]) => {
+                params.append(key, value);
+            });
+
+            const twilioRes = await axios.post(
+                `https://api.twilio.com/2010-04-01/Accounts/${twilioDetails.subaccount_sid}/Addresses.json`,
+                params,
+                {
+                    headers: {
+                        'Authorization': `Basic ${auth}`,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }
+            );
+
+            if (twilioRes.data && twilioRes.data.sid) {
+                const address_sid = twilioRes.data.sid;
+                const country = localStorage.getItem("activation_step1") ? JSON.parse(localStorage.getItem("activation_step1")!).country : org.country;
+                const country_iso_code = localStorage.getItem("activation_step1") ? JSON.parse(localStorage.getItem("activation_step1")!).country_iso_code : org.country_iso_code;
+
+                await profileService.updateOrganization({
+                    country,
+                    country_iso_code,
+                    address_sid
+                });
+
+                setAlertConfig({
+                    open: true,
+                    title: "Success",
+                    description: ["Address verified and saved successfully."],
+                    variant: "default"
+                });
+                router.push("/dashboard");
+            }
+        } catch (err: any) {
+            console.error("Error in Australia address submission:", err);
+            setAlertConfig({
+                open: true,
+                title: "Submission Failed",
+                description: [err.response?.data?.message || "Failed to submit address to Twilio."],
+                variant: "destructive"
+            });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleNextStep3 = () => {
@@ -581,15 +974,15 @@ export default function ActivationPage() {
             </AlertDialog>
 
             <AlertDialog open={alertConfig.open} onOpenChange={(open) => setAlertConfig(prev => ({ ...prev, open }))}>
-                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800">
+                <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-800 max-w-xl">
                     <AlertDialogHeader>
                         <AlertDialogTitle className={alertConfig.variant === "destructive" ? "text-destructive dark:text-red-400" : "dark:text-gray-100"}>
                             {alertConfig.title}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="space-y-2 dark:text-gray-400" asChild>
-                            <div className="space-y-2">
+                            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
                                 {alertConfig.description.map((error, index) => (
-                                    <div key={index} className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                    <div key={index} className="text-sm font-medium text-gray-900 dark:text-gray-100 break-all leading-relaxed">
                                         {error}
                                     </div>
                                 ))}
@@ -678,7 +1071,7 @@ export default function ActivationPage() {
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verify Business Details</h2>
                         <div className="flex items-center gap-2">
-                            {[1, 2, 3, 4, 5].map((step) => (
+                            {(org.country === "Australia" ? [1, 2] : org.country === "Ireland" ? [1, 2, 3] : ["India", "Canada", "United States of America"].includes(org.country) ? [1] : [1, 2, 3, 4, 5]).map((step) => (
                                 <div
                                     key={step}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${currentStep === step
@@ -698,156 +1091,10 @@ export default function ActivationPage() {
                         {currentStep === 1 && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Information</h3>
-                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Please provide your basic business details.</p> */}
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Select Country</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="business_name" className="text-sm font-semibold">Registered Business Name <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="business_name"
-                                            placeholder="Enter business name"
-                                            value={org.business_name}
-                                            onChange={(e) => setOrg({ ...org, business_name: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="reg_number" className="text-sm font-semibold">Business Registration Number <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="reg_number"
-                                            placeholder="Enter registration number"
-                                            value={org.reg_number}
-                                            onChange={(e) => setOrg({ ...org, reg_number: e.target.value })}
-                                            required
-                                        />
-                                    </div>
                                     <div className="space-y-2 md:col-span-2">
-                                        <Label htmlFor="business_registration_authority" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Business Registration Authority <span className="text-red-500">*</span></Label>
-                                        <div className="relative" ref={authorityDropdownRef}>
-                                            <div
-                                                onClick={() => setIsAuthorityOpen(!isAuthorityOpen)}
-                                                className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-                                            >
-                                                <span className={org.business_registration_authority ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
-                                                    {org.business_registration_authority || "Select Authority"}
-                                                </span>
-                                                <ChevronsUpDown size={16} className="text-gray-400" />
-                                            </div>
-
-                                            {isAuthorityOpen && (
-                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                    <div className="max-h-[200px] overflow-y-auto font-sans">
-                                                        {["UK:CRN", "US:EIN", "CA:CBN", "AU:ACN", "OTHER"].map((option) => (
-                                                            <div
-                                                                key={option}
-                                                                onClick={() => {
-                                                                    setOrg({ ...org, business_registration_authority: option });
-                                                                    setIsAuthorityOpen(false);
-                                                                }}
-                                                                className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
-                                                            >
-                                                                <span>{option}</span>
-                                                                {org.business_registration_authority === option && (
-                                                                    <Check size={14} className="text-primary" />
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2">
-                                        <Label htmlFor="business_website" className="text-sm font-semibold">Business Website <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="business_website"
-                                            placeholder="https://example.com"
-                                            value={org.business_website}
-                                            onChange={(e) => setOrg({ ...org, business_website: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex justify-end pt-6">
-                                    <Button
-                                        onClick={handleNextStep1}
-                                        className="bg-primary hover:bg-primary/90 text-white px-8"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {currentStep === 2 && (
-                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Registered Business Address</h3>
-                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Where is your business located?</p> */}
-                                </div>
-
-                                {/* Preview Section from Step 1 */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="street_address" className="text-sm font-semibold">Street Address <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="street_address"
-                                            placeholder="Enter street address"
-                                            value={org.street_address}
-                                            onChange={(e) => setOrg({ ...org, street_address: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="city" className="text-sm font-semibold">Town / City <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="city"
-                                            placeholder="Enter city"
-                                            value={org.city}
-                                            onChange={(e) => setOrg({ ...org, city: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="province" className="text-sm font-semibold">State</Label>
-                                        <Input
-                                            id="province"
-                                            placeholder="Enter province"
-                                            value={org.province}
-                                            onChange={(e) => setOrg({ ...org, province: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="post_code" className="text-sm font-semibold">Postcode / ZIP {org.country === "United Kingdom" && <span className="text-red-500">*</span>}</Label>
-                                        <Input
-                                            id="post_code"
-                                            placeholder="Enter post code"
-                                            value={org.post_code}
-                                            onChange={(e) => setOrg({ ...org, post_code: e.target.value })}
-                                            required={org.country === "United Kingdom"}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
                                         <Label className="text-sm font-semibold">Country</Label>
                                         <div className="relative" ref={dropdownRef}>
                                             <div
@@ -906,50 +1153,464 @@ export default function ActivationPage() {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="apt_or_suite" className="text-sm font-semibold">APT/Suite</Label>
-                                        <Input
-                                            id="apt_or_suite"
-                                            placeholder="Enter apartment or suite"
-                                            value={org.apt_or_suite}
-                                            onChange={(e) => setOrg({ ...org, apt_or_suite: e.target.value })}
-                                        />
-                                    </div>
                                 </div>
-                                <div className="flex justify-between pt-6">
+                                <div className="flex justify-end pt-6">
                                     <Button
-                                        variant="outline"
-                                        onClick={() => setCurrentStep(1)}
-                                        className="px-8"
-                                    >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        onClick={handleNextStep2}
+                                        onClick={handleNextStep1}
                                         className="bg-primary hover:bg-primary/90 text-white px-8"
                                     >
-                                        Next
+                                        {["India", "Canada", "United States of America"].includes(org.country) ? "Submit" : "Next"}
                                     </Button>
                                 </div>
                             </div>
                         )}
 
+                        {currentStep === 2 && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {org.country === "Australia" ? (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Australia Address Verification</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="CustomerName" className="text-sm font-semibold">Customer Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="CustomerName"
+                                                    placeholder="Enter customer name"
+                                                    value={australiaAddress.CustomerName}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, CustomerName: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="FriendlyName" className="text-sm font-semibold">Friendly Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="FriendlyName"
+                                                    placeholder="e.g. My Australia Address"
+                                                    value={australiaAddress.FriendlyName}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, FriendlyName: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label htmlFor="Street" className="text-sm font-semibold">Street <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="Street"
+                                                    placeholder="Enter street address"
+                                                    value={australiaAddress.Street}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, Street: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label htmlFor="StreetSecondary" className="text-sm font-semibold">Street Secondary</Label>
+                                                <Input
+                                                    id="StreetSecondary"
+                                                    placeholder="Apartment, suite, unit, etc."
+                                                    value={australiaAddress.StreetSecondary}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, StreetSecondary: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="City" className="text-sm font-semibold">City <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="City"
+                                                    placeholder="Enter city"
+                                                    value={australiaAddress.City}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, City: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="Region" className="text-sm font-semibold">Region / State <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="Region"
+                                                    placeholder="Enter region"
+                                                    value={australiaAddress.Region}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, Region: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="PostalCode" className="text-sm font-semibold">Postal Code <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="PostalCode"
+                                                    placeholder="Enter postal code"
+                                                    value={australiaAddress.PostalCode}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, PostalCode: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
+                                                <Input
+                                                    id="IsoCountry"
+                                                    value={australiaAddress.IsoCountry}
+                                                    disabled
+                                                    className="bg-gray-50 cursor-not-allowed"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(1)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleNextStep2}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                Submit
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : org.country === "Ireland" ? (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Ireland Business Information</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-semibold">Business Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    placeholder="Enter business name"
+                                                    value={irelandEndUser.business_name}
+                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, business_name: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-semibold">Business Website <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    placeholder="https://example.com"
+                                                    value={irelandEndUser.business_website}
+                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, business_website: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label className="text-sm font-semibold">Business Registration Number <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    placeholder="Enter registration number"
+                                                    value={irelandEndUser.business_registration_number}
+                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, business_registration_number: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-semibold">Representative First Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    placeholder="Enter first name"
+                                                    value={irelandEndUser.first_name}
+                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, first_name: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-semibold">Representative Last Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    placeholder="Enter last name"
+                                                    value={irelandEndUser.last_name}
+                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, last_name: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label className="text-sm font-semibold">Contact Email <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    type="email"
+                                                    placeholder="enter@email.com"
+                                                    value={irelandEndUser.email}
+                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, email: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(1)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleNextStep2}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Details & Address</h3>
+                                            {/* <p className="text-sm text-gray-500 dark:text-gray-400">Please provide your business registration and address details.</p> */}
+                                        </div>
+
+                                        {/* Business Info Section moved from Step 1 */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="business_name" className="text-sm font-semibold">Registered Business Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="business_name"
+                                                    placeholder="Enter business name"
+                                                    value={org.business_name}
+                                                    onChange={(e) => setOrg({ ...org, business_name: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="reg_number" className="text-sm font-semibold">Business Registration Number <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="reg_number"
+                                                    placeholder="Enter registration number"
+                                                    value={org.reg_number}
+                                                    onChange={(e) => setOrg({ ...org, reg_number: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label htmlFor="business_registration_authority" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Business Registration Authority <span className="text-red-500">*</span></Label>
+                                                <div className="relative" ref={authorityDropdownRef}>
+                                                    <div
+                                                        onClick={() => setIsAuthorityOpen(!isAuthorityOpen)}
+                                                        className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                                                    >
+                                                        <span className={org.business_registration_authority ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
+                                                            {org.business_registration_authority || "Select Authority"}
+                                                        </span>
+                                                        <ChevronsUpDown size={16} className="text-gray-400" />
+                                                    </div>
+
+                                                    {isAuthorityOpen && (
+                                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                            <div className="max-h-[200px] overflow-y-auto font-sans">
+                                                                {["UK:CRN", "US:EIN", "CA:CBN", "AU:ACN", "OTHER"].map((option) => (
+                                                                    <div
+                                                                        key={option}
+                                                                        onClick={() => {
+                                                                            setOrg({ ...org, business_registration_authority: option });
+                                                                            setIsAuthorityOpen(false);
+                                                                        }}
+                                                                        className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                                                    >
+                                                                        <span>{option}</span>
+                                                                        {org.business_registration_authority === option && (
+                                                                            <Check size={14} className="text-primary" />
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label htmlFor="business_website" className="text-sm font-semibold">Business Website <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="business_website"
+                                                    placeholder="https://example.com"
+                                                    value={org.business_website}
+                                                    onChange={(e) => setOrg({ ...org, business_website: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+
+                                            {/* Address Section */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="street_address" className="text-sm font-semibold">Street Address <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="street_address"
+                                                    placeholder="Enter street address"
+                                                    value={org.street_address}
+                                                    onChange={(e) => setOrg({ ...org, street_address: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="city" className="text-sm font-semibold">Town / City <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="city"
+                                                    placeholder="Enter city"
+                                                    value={org.city}
+                                                    onChange={(e) => setOrg({ ...org, city: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="province" className="text-sm font-semibold">State</Label>
+                                                <Input
+                                                    id="province"
+                                                    placeholder="Enter province"
+                                                    value={org.province}
+                                                    onChange={(e) => setOrg({ ...org, province: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="post_code" className="text-sm font-semibold">Postcode / ZIP {org.country === "United Kingdom" && <span className="text-red-500">*</span>}</Label>
+                                                <Input
+                                                    id="post_code"
+                                                    placeholder="Enter post code"
+                                                    value={org.post_code}
+                                                    onChange={(e) => setOrg({ ...org, post_code: e.target.value })}
+                                                    required={org.country === "United Kingdom"}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="apt_or_suite" className="text-sm font-semibold">APT/Suite</Label>
+                                                <Input
+                                                    id="apt_or_suite"
+                                                    placeholder="Enter apartment or suite"
+                                                    value={org.apt_or_suite}
+                                                    onChange={(e) => setOrg({ ...org, apt_or_suite: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(1)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleNextStep2}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
                         {currentStep === 3 && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Authorize Representative Information</h3>
-                                </div>
+                                {org.country === "Ireland" ? (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Ireland Address Verification</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="CustomerName" className="text-sm font-semibold">Customer Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="CustomerName"
+                                                    placeholder="Enter customer name"
+                                                    value={australiaAddress.CustomerName}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, CustomerName: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="FriendlyName" className="text-sm font-semibold">Friendly Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="FriendlyName"
+                                                    placeholder="e.g. My Ireland Address"
+                                                    value={australiaAddress.FriendlyName}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, FriendlyName: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label htmlFor="Street" className="text-sm font-semibold">Street <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="Street"
+                                                    placeholder="Enter street address"
+                                                    value={australiaAddress.Street}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, Street: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label htmlFor="StreetSecondary" className="text-sm font-semibold">Street Secondary</Label>
+                                                <Input
+                                                    id="StreetSecondary"
+                                                    placeholder="Apartment, suite, unit, etc."
+                                                    value={australiaAddress.StreetSecondary}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, StreetSecondary: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="City" className="text-sm font-semibold">City <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="City"
+                                                    placeholder="Enter city"
+                                                    value={australiaAddress.City}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, City: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="Region" className="text-sm font-semibold">Region / State <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="Region"
+                                                    placeholder="Enter region"
+                                                    value={australiaAddress.Region}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, Region: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="PostalCode" className="text-sm font-semibold">Postal Code <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="PostalCode"
+                                                    placeholder="Enter postal code"
+                                                    value={australiaAddress.PostalCode}
+                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, PostalCode: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
+                                                <Input
+                                                    id="IsoCountry"
+                                                    value={australiaAddress.IsoCountry}
+                                                    disabled
+                                                    className="bg-gray-50 cursor-not-allowed"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(2)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleIrelandSubmit}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                Submit
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Authorize Representative Information</h3>
+                                        </div>
 
-                                {/* Preview Section for Step 1 & 2 */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
-                                    </div>
+                                        {/* Preview Section for Step 1 & 2 */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
+                                            </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
@@ -1103,6 +1764,8 @@ export default function ActivationPage() {
                                         Next
                                     </Button>
                                 </div>
+                            </>
+                        )}
                             </div>
                         )}
 
@@ -1358,7 +2021,7 @@ export default function ActivationPage() {
                                     </div>
                                 </div>
 
-                                 <div className="space-y-4 mb-6">
+                                <div className="space-y-4 mb-6">
                                     <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                         <Checkbox
                                             id="compliance"

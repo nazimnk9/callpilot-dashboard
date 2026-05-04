@@ -62,7 +62,7 @@ export default function AICallFlowDetailsPage({ params }: { params: Promise<{ ui
                 }
 
                 const statusRes = await profileService.getPlatformStatus();
-                if (!statusRes.data.is_given_company_details) {
+                if (statusRes.data.compliance_status === "") {
                     router.push("/activation");
                     return;
                 }

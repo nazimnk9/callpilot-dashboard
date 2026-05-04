@@ -73,7 +73,7 @@ export const profileService = {
     },
 
     async getPlatformStatus() {
-        return api.get("/organizations/platform-status");
+        return api.get("/organizations/me");
     },
 
     async getOrganizationUsers() {
