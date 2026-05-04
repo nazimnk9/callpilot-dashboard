@@ -448,7 +448,10 @@ export default function ActivationPage() {
                     business_registration_number: irelandEndUser.business_registration_number,
                     first_name: irelandEndUser.first_name,
                     last_name: irelandEndUser.last_name,
-                    email: irelandEndUser.email
+                    email: irelandEndUser.email,
+                    business_identity: "DIRECT_CUSTOMER",
+                    is_subassigned: "NO",
+                    comments: ""
                 }));
 
                 const endUserRes = await axios.post(
