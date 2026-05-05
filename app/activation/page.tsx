@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { profileService } from "@/services/profile-service";
 import { LoaderOverlay } from "@/components/auth/loader-overlay";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ChevronsUpDown, Check, Lock, CheckCircle2, Building2, ClipboardCheck, Phone, LogOut, X, Globe } from "lucide-react";
 import { cookieUtils, authService } from '@/services/auth-service';
 import countriesData from "@/lib/countries.json";
@@ -125,9 +126,30 @@ export default function ActivationPage() {
         business_registration_number: "",
         first_name: "",
         last_name: "",
-        email: ""
+        email: "",
+        business_registration_identifier: "UK:CRN",
+        phone_number: ""
     });
     const [initialOrg, setInitialOrg] = useState({ ...org });
+    const [singaporeBusinessName, setSingaporeBusinessName] = useState("");
+    
+    const clearActivationData = () => {
+        const keys = [
+            "activation_step1",
+            "activation_step2",
+            "activation_step3",
+            "activation_step4",
+            "regulation_sid",
+            "bundleSid",
+            "endUserSid",
+            "country",
+            "country_iso_code",
+            "twilio_subaccount_sid",
+            "nz_business_name",
+            "nz_address_sid"
+        ];
+        keys.forEach(key => localStorage.removeItem(key));
+    };
 
     const [alertConfig, setAlertConfig] = useState<{
         open: boolean;
@@ -148,9 +170,13 @@ export default function ActivationPage() {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const authorityDropdownRef = useRef<HTMLDivElement>(null);
     const [countries] = useState<{ country: string, country_code: string, phone_code: string }[]>(countriesData);
+    const [isUKPhoneCodeOpen, setIsUKPhoneCodeOpen] = useState(false);
+    const [ukPhoneCodeSearch, setUkPhoneCodeSearch] = useState("");
+    const [ukSelectedPhoneCode, setUkSelectedPhoneCode] = useState("");
     const [isPhoneCodeOpen, setIsPhoneCodeOpen] = useState(false);
     const [phoneCodeSearch, setPhoneCodeSearch] = useState("");
     const [selectedPhoneCode, setSelectedPhoneCode] = useState("");
+    const ukPhoneCodeDropdownRef = useRef<HTMLDivElement>(null);
     const phoneCodeDropdownRef = useRef<HTMLDivElement>(null);
 
     const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false);
@@ -221,6 +247,37 @@ export default function ActivationPage() {
             }
         };
         initCountryCode();
+        // Initialize UK phone code
+        const initUKPhoneCode = async () => {
+            if (ukSelectedPhoneCode) return;
+            const country = countriesData.find(c => c.country === "United Kingdom");
+            if (country) {
+                const phoneCode = country.phone_code.startsWith("+") ? country.phone_code : `+${country.phone_code}`;
+                setUkSelectedPhoneCode(phoneCode);
+            } else {
+                setUkSelectedPhoneCode("+44");
+            }
+        };
+        initUKPhoneCode();
+    }, []);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsCountryOpen(false);
+            }
+            if (authorityDropdownRef.current && !authorityDropdownRef.current.contains(event.target as Node)) {
+                setIsAuthorityOpen(false);
+            }
+            if (phoneCodeDropdownRef.current && !phoneCodeDropdownRef.current.contains(event.target as Node)) {
+                setIsPhoneCodeOpen(false);
+            }
+            if (ukPhoneCodeDropdownRef.current && !ukPhoneCodeDropdownRef.current.contains(event.target as Node)) {
+                setIsUKPhoneCodeOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const fetchOrganization = async () => {
@@ -331,7 +388,7 @@ export default function ActivationPage() {
 
         setAustraliaAddress(prev => ({ ...prev, IsoCountry: org.country_iso_code }));
 
-        if (org.country === "Australia" || org.country === "Ireland") {
+        if (org.country === "Australia" || org.country === "Ireland" || org.country === "Singapore" || org.country === "United Kingdom" || org.country === "New Zealand") {
             try {
                 setIsSaving(true);
                 const res = await profileService.getOrganization();
@@ -341,11 +398,12 @@ export default function ActivationPage() {
                         auth_token: res.data.twilio_auth_token
                     });
 
-                    if (org.country === "Ireland") {
+                    if (org.country === "Singapore") {
+                        localStorage.setItem("twilio_subaccount_sid", res.data.twilio_subaccount_sid);
                         const auth = btoa(`${res.data.twilio_subaccount_sid}:${res.data.twilio_auth_token}`);
                         // 1. Get Regulation SID
                         const regRes = await axios.get(
-                            "https://numbers.twilio.com/v2/RegulatoryCompliance/Regulations?IsoCountry=ie&NumberType=local&EndUserType=business",
+                            "https://numbers.twilio.com/v2/RegulatoryCompliance/Regulations?IsoCountry=sg&NumberType=local&EndUserType=business",
                             { headers: { 'Authorization': `Basic ${auth}` } }
                         );
                         const regSid = regRes.data.results?.[0]?.sid;
@@ -353,10 +411,49 @@ export default function ActivationPage() {
                             localStorage.setItem("regulation_sid", regSid);
                             // 2. Post to Bundles
                             const bundleParams = new URLSearchParams();
-                            bundleParams.append('FriendlyName', 'irelandBundle');
+                            bundleParams.append('FriendlyName', `${res.data.business_name}Bundle`);
                             bundleParams.append('Email', res.data.email);
                             bundleParams.append('RegulationSid', regSid);
-                            bundleParams.append('StatusCallback', 'irelandTrue');
+                            bundleParams.append('StatusCallback', 'singaporeTrue');
+
+                            const bundleRes = await axios.post(
+                                "https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles",
+                                bundleParams,
+                                {
+                                    headers: {
+                                        'Authorization': `Basic ${auth}`,
+                                        'Content-Type': 'application/x-www-form-urlencoded'
+                                    }
+                                }
+                            );
+                            if (bundleRes.data && bundleRes.data.sid) {
+                                localStorage.setItem("bundleSid", bundleRes.data.sid);
+                                localStorage.setItem("country", org.country);
+                                localStorage.setItem("country_iso_code", org.country_iso_code);
+                                setCurrentStep(2);
+                                return;
+                            }
+                        }
+                    }
+
+                    if (org.country === "Ireland" || org.country === "United Kingdom" || org.country === "New Zealand") {
+                        const iso = org.country === "Ireland" ? "ie" : org.country === "United Kingdom" ? "gb" : "nz";
+                        const callback = org.country === "Ireland" ? "irelandTrue" : org.country === "United Kingdom" ? "unitedkingdomTrue" : "newzealandTrue";
+                        const auth = btoa(`${res.data.twilio_subaccount_sid}:${res.data.twilio_auth_token}`);
+                        // 1. Get Regulation SID
+                        const regRes = await axios.get(
+                            `https://numbers.twilio.com/v2/RegulatoryCompliance/Regulations?IsoCountry=${iso}&NumberType=local&EndUserType=business`,
+                            { headers: { 'Authorization': `Basic ${auth}` } }
+                        );
+                        const regSid = regRes.data.results?.[0]?.sid;
+                        if (regSid) {
+                            localStorage.setItem("regulation_sid", regSid);
+                            // 2. Post to Bundles
+                            const bundleParams = new URLSearchParams();
+                            bundleParams.append('FriendlyName', `${org.business_name}Bundle`);
+                            bundleParams.append('Email', res.data.email);
+                            bundleParams.append('RegulationSid', regSid);
+                            bundleParams.append('StatusCallback', callback);
 
                             const bundleRes = await axios.post(
                                 "https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles",
@@ -402,6 +499,7 @@ export default function ActivationPage() {
                 variant: "default"
             });
 
+            clearActivationData();
             router.push("/dashboard");
         } catch (err: any) {
             console.error("Error in quick submission:", err);
@@ -422,8 +520,13 @@ export default function ActivationPage() {
             return;
         }
 
-        if (org.country === "Ireland") {
-            if (!irelandEndUser.business_name || !irelandEndUser.business_website || !irelandEndUser.business_registration_number || !irelandEndUser.first_name || !irelandEndUser.last_name || !irelandEndUser.email) {
+        if (org.country === "Ireland" || org.country === "United Kingdom" || org.country === "New Zealand") {
+            const isNZ = org.country === "New Zealand";
+            const isValid = isNZ 
+                ? !!irelandEndUser.business_name 
+                : (!!irelandEndUser.business_name && !!irelandEndUser.business_website && !!irelandEndUser.business_registration_number && !!irelandEndUser.first_name && !!irelandEndUser.last_name && !!irelandEndUser.email);
+
+            if (!isValid) {
                 setAlertConfig({
                     open: true,
                     title: "Missing Information",
@@ -440,19 +543,37 @@ export default function ActivationPage() {
 
                 // 1. Post to EndUsers
                 const endUserParams = new URLSearchParams();
-                endUserParams.append('FriendlyName', 'irelandEndUsers');
+                endUserParams.append('FriendlyName', `${org.business_name}EndUsers`);
                 endUserParams.append('Type', 'business');
-                endUserParams.append('Attributes', JSON.stringify({
-                    business_name: irelandEndUser.business_name,
-                    business_website: irelandEndUser.business_website,
-                    business_registration_number: irelandEndUser.business_registration_number,
-                    first_name: irelandEndUser.first_name,
-                    last_name: irelandEndUser.last_name,
-                    email: irelandEndUser.email,
-                    business_identity: "DIRECT_CUSTOMER",
-                    is_subassigned: "NO",
-                    comments: ""
-                }));
+                const attributes: any = org.country === "New Zealand" 
+                    ? { business_name: irelandEndUser.business_name }
+                    : {
+                        business_name: irelandEndUser.business_name,
+                        business_website: irelandEndUser.business_website,
+                        business_registration_number: irelandEndUser.business_registration_number,
+                        first_name: irelandEndUser.first_name,
+                        last_name: irelandEndUser.last_name,
+                        email: irelandEndUser.email,
+                        business_identity: "DIRECT_CUSTOMER",
+                        is_subassigned: "NO",
+                        comments: ""
+                    };
+
+                if (org.country === "United Kingdom") {
+                    attributes.business_registration_identifier = irelandEndUser.business_registration_identifier;
+                    attributes.comments = "UK test";
+                    
+                    let phone = irelandEndUser.phone_number;
+                    if (phone.startsWith('0')) {
+                        phone = phone.substring(1);
+                    }
+                    const fullPhone = phone.startsWith("+")
+                        ? phone
+                        : `${ukSelectedPhoneCode}${phone}`;
+                    attributes.phone_number = fullPhone;
+                }
+
+                endUserParams.append('Attributes', JSON.stringify(attributes));
 
                 const endUserRes = await axios.post(
                     "https://numbers.twilio.com/v2/RegulatoryCompliance/EndUsers",
@@ -485,14 +606,17 @@ export default function ActivationPage() {
                             }
                         );
                     }
+                    if (org.country === "New Zealand") {
+                        localStorage.setItem("nz_business_name", irelandEndUser.business_name);
+                    }
                     setCurrentStep(3);
                 }
             } catch (err: any) {
-                console.error("Error in Ireland Step 2:", err);
+                console.error(`Error in ${org.country} Step 2:`, err);
                 setAlertConfig({
                     open: true,
                     title: "Submission Failed",
-                    description: [err.response?.data?.message || "Failed to submit end user details."],
+                    description: [err.response?.data?.message || `Failed to submit ${org.country} end user details.`],
                     variant: "destructive"
                 });
             } finally {
@@ -570,9 +694,16 @@ export default function ActivationPage() {
                 const addressSid = addressRes.data.sid;
                 const bundleSid = localStorage.getItem("bundleSid");
 
+                if (org.country === "New Zealand") {
+                    localStorage.setItem("nz_address_sid", addressSid);
+                    setCurrentStep(4);
+                    setIsSaving(false);
+                    return;
+                }
+
                 // 2. Post to SupportingDocuments
                 const supportParams = new URLSearchParams();
-                supportParams.append('FriendlyName', 'irelandSupportingDocuments');
+                supportParams.append('FriendlyName', `${org.business_name}SupportingDocuments`);
                 supportParams.append('Type', 'business_address');
                 supportParams.append('Attributes', JSON.stringify({
                     address_sids: [addressSid]
@@ -624,8 +755,8 @@ export default function ActivationPage() {
 
                     // Success!
                     await profileService.updateOrganization({
-                        country: "Ireland",
-                        country_iso_code: "IE",
+                        country: org.country,
+                        country_iso_code: org.country_iso_code,
                         address_sid: addressSid,
                         bundle_sid: bundleSid
                     });
@@ -633,18 +764,131 @@ export default function ActivationPage() {
                     setAlertConfig({
                         open: true,
                         title: "Success",
-                        description: ["Ireland business details submitted for review."],
+                        description: [`${org.country} business details submitted for review.`],
                         variant: "default"
                     });
+                    clearActivationData();
                     router.push("/dashboard");
                 }
             }
         } catch (err: any) {
-            console.error("Error in Ireland final submission:", err);
+            console.error(`Error in ${org.country} final submission:`, err);
             setAlertConfig({
                 open: true,
                 title: "Submission Failed",
-                description: [err.response?.data?.message || "Failed to complete Ireland regulatory submission."],
+                description: [err.response?.data?.message || `Failed to complete ${org.country} regulatory submission.`],
+                variant: "destructive"
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleNZFinalSubmit = async () => {
+        if (!org.business_registration_certificate) {
+            setAlertConfig({
+                open: true,
+                title: "Missing Document",
+                description: ["Please upload the required document."],
+                variant: "destructive"
+            });
+            return;
+        }
+
+        if (!twilioDetails?.subaccount_sid || !twilioDetails?.auth_token) {
+            setAlertConfig({
+                open: true,
+                title: "Error",
+                description: ["Twilio account details not found."],
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            const auth = btoa(`${twilioDetails.subaccount_sid}:${twilioDetails.auth_token}`);
+            const bundleSid = localStorage.getItem("bundleSid");
+            const business_name = localStorage.getItem("nz_business_name");
+            const address_sid = localStorage.getItem("nz_address_sid");
+
+            // 1. Post to SupportingDocuments
+            const formData = new FormData();
+            formData.append('FriendlyName', `${business_name}SupportingDocuments`);
+            formData.append('Type', 'business_registration');
+            formData.append('Attributes', JSON.stringify({
+                business_name: business_name,
+                address_sids: [address_sid]
+            }));
+            formData.append('File', org.business_registration_certificate);
+
+            const supportRes = await axios.post(
+                "https://numbers.twilio.com/v2/RegulatoryCompliance/SupportingDocuments",
+                formData,
+                {
+                    headers: {
+                        'Authorization': `Basic ${auth}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
+
+            if (supportRes.data && supportRes.data.sid) {
+                const supportSid = supportRes.data.sid;
+
+                // 2. Post ItemAssignment
+                if (bundleSid) {
+                    const assignmentParams = new URLSearchParams();
+                    assignmentParams.append('ObjectSid', supportSid);
+                    await axios.post(
+                        `https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles/${bundleSid}/ItemAssignments`,
+                        assignmentParams,
+                        {
+                            headers: {
+                                'Authorization': `Basic ${auth}`,
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        }
+                    );
+
+                    // 3. Update Bundle Status
+                    const statusParams = new URLSearchParams();
+                    statusParams.append('Status', 'pending-review');
+                    await axios.post(
+                        `https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles/${bundleSid}`,
+                        statusParams,
+                        {
+                            headers: {
+                                'Authorization': `Basic ${auth}`,
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        }
+                    );
+                }
+
+                // Success!
+                await profileService.updateOrganization({
+                    country: org.country,
+                    country_iso_code: org.country_iso_code,
+                    address_sid: address_sid,
+                    bundle_sid: bundleSid
+                });
+
+                setAlertConfig({
+                    open: true,
+                    title: "Success",
+                    description: ["New Zealand business details submitted for review."],
+                    variant: "default"
+                });
+                clearActivationData();
+                router.push("/dashboard");
+            }
+        } catch (err: any) {
+            console.error("Error in NZ final submission:", err);
+            setAlertConfig({
+                open: true,
+                title: "Submission Failed",
+                description: [err.response?.data?.message || "Failed to complete New Zealand regulatory submission."],
                 variant: "destructive"
             });
         } finally {
@@ -709,6 +953,7 @@ export default function ActivationPage() {
                     description: ["Address verified and saved successfully."],
                     variant: "default"
                 });
+                clearActivationData();
                 router.push("/dashboard");
             }
         } catch (err: any) {
@@ -717,6 +962,119 @@ export default function ActivationPage() {
                 open: true,
                 title: "Submission Failed",
                 description: [err.response?.data?.message || "Failed to submit address to Twilio."],
+                variant: "destructive"
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSingaporeSubmit = async () => {
+        if (!singaporeBusinessName) {
+            setAlertConfig({
+                open: true,
+                title: "Missing Information",
+                description: ["Please enter your business name."],
+                variant: "destructive"
+            });
+            return;
+        }
+
+        const subaccount_sid = localStorage.getItem("twilio_subaccount_sid");
+        const bundleSid = localStorage.getItem("bundleSid");
+
+        if (!subaccount_sid || !twilioDetails?.auth_token) {
+            setAlertConfig({
+                open: true,
+                title: "Error",
+                description: ["Twilio account details not found."],
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            const auth = btoa(`${subaccount_sid}:${twilioDetails.auth_token}`);
+
+            // 1. Post to EndUsers
+            const endUserParams = new URLSearchParams();
+            endUserParams.append('FriendlyName', `${org.business_name}EndUsers`);
+            endUserParams.append('Type', 'business');
+            endUserParams.append('Attributes', JSON.stringify({
+                business_name: singaporeBusinessName
+            }));
+
+            const endUserRes = await axios.post(
+                "https://numbers.twilio.com/v2/RegulatoryCompliance/EndUsers",
+                endUserParams,
+                {
+                    headers: {
+                        'Authorization': `Basic ${auth}`,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }
+            );
+
+            if (endUserRes.data && endUserRes.data.sid) {
+                const endUserSid = endUserRes.data.sid;
+                localStorage.setItem("endUserSid", endUserSid);
+
+                // 2. Post ItemAssignment
+                if (bundleSid) {
+                    const assignmentParams = new URLSearchParams();
+                    assignmentParams.append('ObjectSid', endUserSid);
+                    await axios.post(
+                        `https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles/${bundleSid}/ItemAssignments`,
+                        assignmentParams,
+                        {
+                            headers: {
+                                'Authorization': `Basic ${auth}`,
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        }
+                    );
+
+                    // 3. Update Bundle Status
+                    const statusParams = new URLSearchParams();
+                    statusParams.append('Status', 'pending-review');
+                    await axios.post(
+                        `https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles/${bundleSid}`,
+                        statusParams,
+                        {
+                            headers: {
+                                'Authorization': `Basic ${auth}`,
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        }
+                    );
+
+                    // 4. Update Organization
+                    const country = localStorage.getItem("country");
+                    const country_iso_code = localStorage.getItem("country_iso_code");
+
+                    await profileService.updateOrganization({
+                        country: country,
+                        country_iso_code: country_iso_code,
+                        bundle_sid: bundleSid
+                    });
+
+                    setAlertConfig({
+                        open: true,
+                        title: "Success",
+                        description: ["Singapore business details submitted successfully."],
+                        variant: "default"
+                    });
+                    clearActivationData();
+                    router.push("/dashboard");
+                }
+            }
+        } catch (err: any) {
+            console.error("Error in Singapore final submission:", err);
+            setAlertConfig({
+                open: true,
+                title: "Submission Failed",
+                description: [err.response?.data?.message || "Failed to complete Singapore regulatory submission."],
                 variant: "destructive"
             });
         } finally {
@@ -825,10 +1183,7 @@ export default function ActivationPage() {
             await profileService.updateOrganization(formData);
 
             // Clear local storage
-            localStorage.removeItem("activation_step1");
-            localStorage.removeItem("activation_step2");
-            localStorage.removeItem("activation_step3");
-            localStorage.removeItem("activation_step4");
+            clearActivationData();
 
             setAlertConfig({
                 open: true,
@@ -1074,7 +1429,7 @@ export default function ActivationPage() {
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verify Business Details</h2>
                         <div className="flex items-center gap-2">
-                            {(org.country === "Australia" ? [1, 2] : org.country === "Ireland" ? [1, 2, 3] : ["India", "Canada", "United States of America"].includes(org.country) ? [1] : [1, 2, 3, 4, 5]).map((step) => (
+                            {(org.country === "Australia" || org.country === "Singapore" ? [1, 2] : (org.country === "Ireland" || org.country === "United Kingdom") ? [1, 2, 3] : org.country === "New Zealand" ? [1, 2, 3, 4] : ["India", "Canada", "United States of America"].includes(org.country) ? [1] : [1, 2, 3, 4, 5]).map((step) => (
                                 <div
                                     key={step}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${currentStep === step
@@ -1271,10 +1626,84 @@ export default function ActivationPage() {
                                             </Button>
                                         </div>
                                     </>
-                                ) : org.country === "Ireland" ? (
+                                ) : org.country === "Singapore" ? (
                                     <>
                                         <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Ireland Business Information</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Singapore Verification</h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Please provide your business name to complete the regulatory compliance process.</p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="singapore_business_name" className="text-sm font-semibold">Registered Business Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="singapore_business_name"
+                                                    placeholder="Enter registered business name"
+                                                    value={singaporeBusinessName}
+                                                    onChange={(e) => setSingaporeBusinessName(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(1)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleSingaporeSubmit}
+                                                disabled={isSaving || !singaporeBusinessName}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                {isSaving ? "Submitting..." : "Submit"}
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : org.country === "New Zealand" ? (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">New Zealand Verification</h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Please provide your business name to complete the regulatory compliance process.</p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="nz_business_name" className="text-sm font-semibold">Registered Business Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="nz_business_name"
+                                                    placeholder="Enter registered business name"
+                                                    value={irelandEndUser.business_name}
+                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, business_name: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(1)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleNextStep2}
+                                                disabled={isSaving || !irelandEndUser.business_name}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                {isSaving ? "Submitting..." : "Next"}
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (org.country === "Ireland" || org.country === "United Kingdom") ? (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{org.country} Business Information</h3>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
@@ -1304,6 +1733,104 @@ export default function ActivationPage() {
                                                     required
                                                 />
                                             </div>
+                                            {org.country === "United Kingdom" && (
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <Label className="text-sm font-semibold">Registration Authority <span className="text-red-500">*</span></Label>
+                                                    <Select
+                                                        value={irelandEndUser.business_registration_identifier}
+                                                        onValueChange={(value) => setIrelandEndUser({ ...irelandEndUser, business_registration_identifier: value })}
+                                                    >
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select Registration Authority" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="UK:CRN">UK:CRN</SelectItem>
+                                                            <SelectItem value="US:EIN">US:EIN</SelectItem>
+                                                            <SelectItem value="CA:CBN">CA:CBN</SelectItem>
+                                                            <SelectItem value="AU:ACN">AU:ACN</SelectItem>
+                                                            <SelectItem value="OTHER">OTHER</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            )}
+                                            {org.country === "United Kingdom" && (
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <Label htmlFor="uk_phone" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
+                                                    <div className="flex gap-2">
+                                                        <div className="relative" ref={ukPhoneCodeDropdownRef}>
+                                                            <div
+                                                                onClick={() => setIsUKPhoneCodeOpen(!isUKPhoneCodeOpen)}
+                                                                className="w-[120px] bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                                                            >
+                                                                <span className="text-gray-900 dark:text-gray-100 text-[14px] font-bold">
+                                                                    {ukSelectedPhoneCode}
+                                                                </span>
+                                                                <ChevronsUpDown size={14} className="text-gray-400" />
+                                                            </div>
+
+                                                            {isUKPhoneCodeOpen && (
+                                                                <div className="absolute top-[calc(100%+4px)] left-0 w-[250px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                                    <div className="p-2 border-b border-gray-100 dark:border-gray-800">
+                                                                        <div className="relative">
+                                                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                                                            <input
+                                                                                autoFocus
+                                                                                type="text"
+                                                                                placeholder="Search code..."
+                                                                                value={ukPhoneCodeSearch}
+                                                                                onChange={(e) => setUkPhoneCodeSearch(e.target.value)}
+                                                                                className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+                                                                        {countries.filter(c => 
+                                                                            c.country.toLowerCase().includes(ukPhoneCodeSearch.toLowerCase()) || 
+                                                                            c.phone_code.includes(ukPhoneCodeSearch)
+                                                                        ).length > 0 ? (
+                                                                            countries.filter(c => 
+                                                                                c.country.toLowerCase().includes(ukPhoneCodeSearch.toLowerCase()) || 
+                                                                                c.phone_code.includes(ukPhoneCodeSearch)
+                                                                            ).map((c, index) => (
+                                                                                <div
+                                                                                    key={`uk-${c.country_code}-${index}`}
+                                                                                    onClick={() => {
+                                                                                        const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                                                                                        setUkSelectedPhoneCode(code);
+                                                                                        setIsUKPhoneCodeOpen(false);
+                                                                                        setUkPhoneCodeSearch("");
+                                                                                    }}
+                                                                                    className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                                                                >
+                                                                                    <div className="flex items-center justify-between gap-2 w-full truncate">
+                                                                                        <span className="text-primary font-bold w-12">{c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`}</span>
+                                                                                        <span className="text-gray-500 dark:text-gray-400 text-xs truncate">{c.country}</span>
+                                                                                    </div>
+                                                                                    {ukSelectedPhoneCode === (c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`) && (
+                                                                                        <Check size={14} className="text-primary shrink-0" />
+                                                                                    )}
+                                                                                </div>
+                                                                            ))
+                                                                        ) : (
+                                                                            <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
+                                                                                No results
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <Input
+                                                            id="uk_phone"
+                                                            placeholder="Enter phone number"
+                                                            value={irelandEndUser.phone_number}
+                                                            onChange={(e) => setIrelandEndUser({ ...irelandEndUser, phone_number: e.target.value })}
+                                                            required
+                                                            className="flex-1"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                             <div className="space-y-2">
                                                 <Label className="text-sm font-semibold">Representative First Name <span className="text-red-500">*</span></Label>
                                                 <Input
@@ -1497,10 +2024,10 @@ export default function ActivationPage() {
 
                         {currentStep === 3 && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {org.country === "Ireland" ? (
+                                {(org.country === "Ireland" || org.country === "United Kingdom" || org.country === "New Zealand") ? (
                                     <>
                                         <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Ireland Address Verification</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{org.country} Address Verification</h3>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
@@ -1517,7 +2044,7 @@ export default function ActivationPage() {
                                                 <Label htmlFor="FriendlyName" className="text-sm font-semibold">Friendly Name <span className="text-red-500">*</span></Label>
                                                 <Input
                                                     id="FriendlyName"
-                                                    placeholder="e.g. My Ireland Address"
+                                                    placeholder={`e.g. My ${org.country} Address`}
                                                     value={australiaAddress.FriendlyName}
                                                     onChange={(e) => setAustraliaAddress({ ...australiaAddress, FriendlyName: e.target.value })}
                                                     required
@@ -1594,7 +2121,7 @@ export default function ActivationPage() {
                                                 onClick={handleIrelandSubmit}
                                                 className="bg-primary hover:bg-primary/90 text-white px-8"
                                             >
-                                                Submit
+                                                {isSaving ? "Submitting..." : (org.country === "New Zealand" ? "Next" : "Submit")}
                                             </Button>
                                         </div>
                                     </>
@@ -1774,10 +2301,57 @@ export default function ActivationPage() {
 
                         {currentStep === 4 && (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
-                                    {/* <p className="text-sm text-gray-500 dark:text-gray-400">Upload required documents for verification.</p> */}
-                                </div>
+                                {org.country === "New Zealand" ? (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Please upload your business registration document to complete the process.</p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="nz_cert" className="text-sm font-semibold">Business Registration Document <span className="text-red-500">*</span></Label>
+                                                <div className="flex flex-col gap-2">
+                                                    <Input
+                                                        id="nz_cert"
+                                                        type="file"
+                                                        accept="image/*,.pdf,.doc,.docx"
+                                                        onChange={(e) => setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null })}
+                                                        className="cursor-pointer"
+                                                        required
+                                                    />
+                                                    {org.business_registration_certificate && (
+                                                        <p className="text-xs text-green-500 flex items-center gap-1">
+                                                            <Check size={12} /> {(org.business_registration_certificate as File).name}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(3)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleNZFinalSubmit}
+                                                disabled={isSaving || !org.business_registration_certificate}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                {isSaving ? "Submitting..." : "Submit"}
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
+                                            {/* <p className="text-sm text-gray-500 dark:text-gray-400">Upload required documents for verification.</p> */}
+                                        </div>
 
                                 {/* Preview Section */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -1882,6 +2456,8 @@ export default function ActivationPage() {
                                         Next
                                     </Button>
                                 </div>
+                                </>
+                                )}
                             </div>
                         )}
 
