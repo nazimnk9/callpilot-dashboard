@@ -414,7 +414,7 @@ export default function ActivationPage() {
                             bundleParams.append('FriendlyName', `${res.data.business_name}Bundle`);
                             bundleParams.append('Email', res.data.email);
                             bundleParams.append('RegulationSid', regSid);
-                            bundleParams.append('StatusCallback', 'singaporeTrue');
+                            bundleParams.append('StatusCallback', 'https://api.callpilot.pro/api/v1/organizations/twilio/verification');
 
                             const bundleRes = await axios.post(
                                 "https://numbers.twilio.com/v2/RegulatoryCompliance/Bundles",
@@ -438,7 +438,7 @@ export default function ActivationPage() {
 
                     if (org.country === "Ireland" || org.country === "United Kingdom" || org.country === "New Zealand") {
                         const iso = org.country === "Ireland" ? "ie" : org.country === "United Kingdom" ? "gb" : "nz";
-                        const callback = org.country === "Ireland" ? "irelandTrue" : org.country === "United Kingdom" ? "unitedkingdomTrue" : "newzealandTrue";
+                        const callback = "https://api.callpilot.pro/api/v1/organizations/twilio/verification";
                         const auth = btoa(`${res.data.twilio_subaccount_sid}:${res.data.twilio_auth_token}`);
                         // 1. Get Regulation SID
                         const regRes = await axios.get(
@@ -489,7 +489,8 @@ export default function ActivationPage() {
             setIsSaving(true);
             await profileService.updateOrganization({
                 country: org.country,
-                country_iso_code: org.country_iso_code
+                country_iso_code: org.country_iso_code,
+                compliance_status: "approved"
             });
 
             setAlertConfig({
@@ -758,7 +759,8 @@ export default function ActivationPage() {
                         country: org.country,
                         country_iso_code: org.country_iso_code,
                         address_sid: addressSid,
-                        bundle_sid: bundleSid
+                        bundle_sid: bundleSid,
+                        compliance_status: "pending"
                     });
 
                     setAlertConfig({
@@ -871,7 +873,8 @@ export default function ActivationPage() {
                     country: org.country,
                     country_iso_code: org.country_iso_code,
                     address_sid: address_sid,
-                    bundle_sid: bundleSid
+                    bundle_sid: bundleSid,
+                    compliance_status: "pending"
                 });
 
                 setAlertConfig({
@@ -944,7 +947,8 @@ export default function ActivationPage() {
                 await profileService.updateOrganization({
                     country,
                     country_iso_code,
-                    address_sid
+                    address_sid,
+                    compliance_status: "pending"
                 });
 
                 setAlertConfig({
@@ -1056,7 +1060,8 @@ export default function ActivationPage() {
                     await profileService.updateOrganization({
                         country: country,
                         country_iso_code: country_iso_code,
-                        bundle_sid: bundleSid
+                        bundle_sid: bundleSid,
+                        compliance_status: "pending"
                     });
 
                     setAlertConfig({
