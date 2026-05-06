@@ -385,8 +385,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             newQuestions[index].isSaved = true
             setQuestions(newQuestions)
 
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error saving question:", err)
+            setResultTitle("Error")
+            const errorData = err.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || "Failed to save question."
+            setResultMessage(errorMessage)
+            setShowResultDialog(true)
         }
     }
 
@@ -432,7 +437,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         } catch (error: any) {
             console.error("Error adding question:", error)
             setResultTitle("Error")
-            setResultMessage(error.response?.data?.message || "Failed to add question. Please try again.")
+            const errorData = error.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || "Failed to add question. Please try again."
+            setResultMessage(errorMessage)
             setShowResultDialog(true)
         } finally {
             setAddingQuestionIdx(null)
@@ -487,7 +494,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         } catch (error: any) {
             console.error("Error deleting question:", error)
             setResultTitle("Error")
-            setResultMessage(error.response?.data?.detail || error.response?.data?.message || "Failed to delete question.")
+            const errorData = error.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || "Failed to delete question."
+            setResultMessage(errorMessage)
             setShowResultDialog(true)
         } finally {
             setIsSaving(false)
@@ -562,14 +571,20 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 const errorData = err.response?.data
                 let errorMessage = "Failed to save configuration"
 
-                if (errorData && typeof errorData === "object" && !Array.isArray(errorData)) {
+                if (errorData?.details) {
+                    errorMessage = errorData.details
+                } else if (errorData && typeof errorData === "object" && !Array.isArray(errorData) && !errorData.detail && !errorData.message && !errorData.error) {
                     setFieldErrors(errorData)
                     scrollToFirstError(errorData)
                     return
+                } else if (errorData?.detail) {
+                    errorMessage = errorData.detail
                 } else if (Array.isArray(errorData) && errorData.length > 0) {
                     errorMessage = errorData[0]
                 } else if (typeof errorData === "string") {
                     errorMessage = errorData
+                } else if (errorData?.message) {
+                    errorMessage = errorData.message
                 } else if (errorData?.error) {
                     errorMessage = errorData.error
                 } else if (err.message) {
@@ -693,14 +708,20 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             const errorData = err.response?.data
             let errorMessage = "Failed to save configuration"
 
-            if (errorData && typeof errorData === "object" && !Array.isArray(errorData)) {
+            if (errorData?.details) {
+                errorMessage = errorData.details
+            } else if (errorData && typeof errorData === "object" && !Array.isArray(errorData) && !errorData.detail && !errorData.message && !errorData.error) {
                 setFieldErrors(errorData)
                 scrollToFirstError(errorData)
                 return
+            } else if (errorData?.detail) {
+                errorMessage = errorData.detail
             } else if (Array.isArray(errorData) && errorData.length > 0) {
                 errorMessage = errorData[0]
             } else if (typeof errorData === "string") {
                 errorMessage = errorData
+            } else if (errorData?.message) {
+                errorMessage = errorData.message
             } else if (errorData?.error) {
                 errorMessage = errorData.error
             } else if (err.message) {
@@ -733,7 +754,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             // After clicking OK on Success, it will redirect via handleDialogClose update
         } catch (err: any) {
             console.error("Error releasing flow:", err)
-            setError(err.response?.data?.message || err.message || "Failed to release flow")
+            const errorData = err.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || err.message || "Failed to release flow"
+            setError(errorMessage)
+            setResultTitle("Error")
+            setResultMessage(errorMessage)
+            setShowResultDialog(true)
         } finally {
             setIsSaving(false)
             setShowReleaseDialog(false)
