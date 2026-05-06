@@ -132,7 +132,7 @@ export default function ActivationPage() {
     });
     const [initialOrg, setInitialOrg] = useState({ ...org });
     const [singaporeBusinessName, setSingaporeBusinessName] = useState("");
-    
+
     const clearActivationData = () => {
         const keys = [
             "activation_step1",
@@ -523,8 +523,8 @@ export default function ActivationPage() {
 
         if (org.country === "Ireland" || org.country === "United Kingdom" || org.country === "New Zealand") {
             const isNZ = org.country === "New Zealand";
-            const isValid = isNZ 
-                ? !!irelandEndUser.business_name 
+            const isValid = isNZ
+                ? !!irelandEndUser.business_name
                 : (!!irelandEndUser.business_name && !!irelandEndUser.business_website && !!irelandEndUser.business_registration_number && !!irelandEndUser.first_name && !!irelandEndUser.last_name && !!irelandEndUser.email);
 
             if (!isValid) {
@@ -546,7 +546,7 @@ export default function ActivationPage() {
                 const endUserParams = new URLSearchParams();
                 endUserParams.append('FriendlyName', `${org.business_name}EndUsers`);
                 endUserParams.append('Type', 'business');
-                const attributes: any = org.country === "New Zealand" 
+                const attributes: any = org.country === "New Zealand"
                     ? { business_name: irelandEndUser.business_name }
                     : {
                         business_name: irelandEndUser.business_name,
@@ -563,7 +563,7 @@ export default function ActivationPage() {
                 if (org.country === "United Kingdom") {
                     attributes.business_registration_identifier = irelandEndUser.business_registration_identifier;
                     attributes.comments = "UK test";
-                    
+
                     let phone = irelandEndUser.phone_number;
                     if (phone.startsWith('0')) {
                         phone = phone.substring(1);
@@ -1229,11 +1229,13 @@ export default function ActivationPage() {
         router.push('/login');
     };
 
-    const filteredCountries = countries.filter(c =>
-        c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-        c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
-        c.phone_code.includes(countrySearch)
-    );
+    const filteredCountries = countries
+        .filter(c => ["India", "Canada", "United States of America", "Australia", "Singapore", "Ireland", "United Kingdom", "New Zealand"].includes(c.country))
+        .filter(c =>
+            c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
+            c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
+            c.phone_code.includes(countrySearch)
+        );
 
     const filteredPhoneCountries = countries.filter(c =>
         c.country.toLowerCase().includes(phoneCodeSearch.toLowerCase()) ||
@@ -1789,12 +1791,12 @@ export default function ActivationPage() {
                                                                         </div>
                                                                     </div>
                                                                     <div className="max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
-                                                                        {countries.filter(c => 
-                                                                            c.country.toLowerCase().includes(ukPhoneCodeSearch.toLowerCase()) || 
+                                                                        {countries.filter(c =>
+                                                                            c.country.toLowerCase().includes(ukPhoneCodeSearch.toLowerCase()) ||
                                                                             c.phone_code.includes(ukPhoneCodeSearch)
                                                                         ).length > 0 ? (
-                                                                            countries.filter(c => 
-                                                                                c.country.toLowerCase().includes(ukPhoneCodeSearch.toLowerCase()) || 
+                                                                            countries.filter(c =>
+                                                                                c.country.toLowerCase().includes(ukPhoneCodeSearch.toLowerCase()) ||
                                                                                 c.phone_code.includes(ukPhoneCodeSearch)
                                                                             ).map((c, index) => (
                                                                                 <div
@@ -2146,161 +2148,161 @@ export default function ActivationPage() {
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
                                             </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rep_first_name" className="text-sm font-semibold">First Name <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="rep_first_name"
-                                            placeholder="Enter first name"
-                                            value={org.authorize_representative_first_name}
-                                            onChange={(e) => setOrg({ ...org, authorize_representative_first_name: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rep_last_name" className="text-sm font-semibold">Last Name <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="rep_last_name"
-                                            placeholder="Enter last name"
-                                            value={org.authorize_representative_last_name}
-                                            onChange={(e) => setOrg({ ...org, authorize_representative_last_name: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rep_email" className="text-sm font-semibold">Email <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="rep_email"
-                                            type="email"
-                                            placeholder="Enter email address"
-                                            value={org.authorize_representative_email}
-                                            onChange={(e) => setOrg({ ...org, authorize_representative_email: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rep_phone" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
-                                        <div className="flex gap-2">
-                                            <div className="relative w-[140px]" ref={phoneCodeDropdownRef}>
-                                                <div
-                                                    onClick={() => setIsPhoneCodeOpen(!isPhoneCodeOpen)}
-                                                    className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
-                                                >
-                                                    <span className="text-gray-900 dark:text-gray-100 text-[14px] truncate">
-                                                        {selectedPhoneCode || "Code"}
-                                                    </span>
-                                                    <ChevronsUpDown size={16} className="text-gray-400 shrink-0" />
-                                                </div>
-
-                                                {isPhoneCodeOpen && (
-                                                    <div className="absolute bottom-[calc(100%+4px)] left-0 w-[390px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                        <div className="p-2 border-b border-gray-100 dark:border-gray-800">
-                                                            <div className="relative">
-                                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                                                <input
-                                                                    autoFocus
-                                                                    type="text"
-                                                                    placeholder="Search code..."
-                                                                    value={phoneCodeSearch}
-                                                                    onChange={(e) => setPhoneCodeSearch(e.target.value)}
-                                                                    className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="max-h-[200px] overflow-y-auto font-sans">
-                                                            {filteredPhoneCountries.length > 0 ? (
-                                                                filteredPhoneCountries.map((c, index) => (
-                                                                    <div
-                                                                        key={`${c.country_code}-${index}`}
-                                                                        onClick={() => {
-                                                                            const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
-                                                                            setSelectedPhoneCode(code);
-                                                                            setIsPhoneCodeOpen(false);
-                                                                            setPhoneCodeSearch("");
-                                                                        }}
-                                                                        className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
-                                                                    >
-                                                                        <div className="flex items-center justify-between gap-2 w-full truncate">
-                                                                            <span className="text-primary font-bold w-12">{c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`}</span>
-                                                                            <span className="text-gray-500 dark:text-gray-400 text-xs truncate">{c.country}</span>
-                                                                        </div>
-                                                                        {selectedPhoneCode === (c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`) && (
-                                                                            <Check size={14} className="text-primary shrink-0" />
-                                                                        )}
-                                                                    </div>
-                                                                ))
-                                                            ) : (
-                                                                <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
-                                                                    No results
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Authority</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_registration_authority || "N/A"}</p>
                                             </div>
-                                            <Input
-                                                id="rep_phone"
-                                                placeholder="Enter phone number"
-                                                value={org.authorize_representative_phone}
-                                                onChange={(e) => setOrg({ ...org, authorize_representative_phone: e.target.value })}
-                                                required
-                                                className="flex-1"
-                                            />
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Website</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_website || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div className="flex justify-between pt-6">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setCurrentStep(2)}
-                                        className="px-8"
-                                    >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        onClick={handleNextStep3}
-                                        className="bg-primary hover:bg-primary/90 text-white px-8"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                            </>
-                        )}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rep_first_name" className="text-sm font-semibold">First Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="rep_first_name"
+                                                    placeholder="Enter first name"
+                                                    value={org.authorize_representative_first_name}
+                                                    onChange={(e) => setOrg({ ...org, authorize_representative_first_name: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rep_last_name" className="text-sm font-semibold">Last Name <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="rep_last_name"
+                                                    placeholder="Enter last name"
+                                                    value={org.authorize_representative_last_name}
+                                                    onChange={(e) => setOrg({ ...org, authorize_representative_last_name: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rep_email" className="text-sm font-semibold">Email <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    id="rep_email"
+                                                    type="email"
+                                                    placeholder="Enter email address"
+                                                    value={org.authorize_representative_email}
+                                                    onChange={(e) => setOrg({ ...org, authorize_representative_email: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rep_phone" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
+                                                <div className="flex gap-2">
+                                                    <div className="relative w-[140px]" ref={phoneCodeDropdownRef}>
+                                                        <div
+                                                            onClick={() => setIsPhoneCodeOpen(!isPhoneCodeOpen)}
+                                                            className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                                                        >
+                                                            <span className="text-gray-900 dark:text-gray-100 text-[14px] truncate">
+                                                                {selectedPhoneCode || "Code"}
+                                                            </span>
+                                                            <ChevronsUpDown size={16} className="text-gray-400 shrink-0" />
+                                                        </div>
+
+                                                        {isPhoneCodeOpen && (
+                                                            <div className="absolute bottom-[calc(100%+4px)] left-0 w-[390px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                                <div className="p-2 border-b border-gray-100 dark:border-gray-800">
+                                                                    <div className="relative">
+                                                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                                                        <input
+                                                                            autoFocus
+                                                                            type="text"
+                                                                            placeholder="Search code..."
+                                                                            value={phoneCodeSearch}
+                                                                            onChange={(e) => setPhoneCodeSearch(e.target.value)}
+                                                                            className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="max-h-[200px] overflow-y-auto font-sans">
+                                                                    {filteredPhoneCountries.length > 0 ? (
+                                                                        filteredPhoneCountries.map((c, index) => (
+                                                                            <div
+                                                                                key={`${c.country_code}-${index}`}
+                                                                                onClick={() => {
+                                                                                    const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                                                                                    setSelectedPhoneCode(code);
+                                                                                    setIsPhoneCodeOpen(false);
+                                                                                    setPhoneCodeSearch("");
+                                                                                }}
+                                                                                className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                                                            >
+                                                                                <div className="flex items-center justify-between gap-2 w-full truncate">
+                                                                                    <span className="text-primary font-bold w-12">{c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`}</span>
+                                                                                    <span className="text-gray-500 dark:text-gray-400 text-xs truncate">{c.country}</span>
+                                                                                </div>
+                                                                                {selectedPhoneCode === (c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`) && (
+                                                                                    <Check size={14} className="text-primary shrink-0" />
+                                                                                )}
+                                                                            </div>
+                                                                        ))
+                                                                    ) : (
+                                                                        <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
+                                                                            No results
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <Input
+                                                        id="rep_phone"
+                                                        placeholder="Enter phone number"
+                                                        value={org.authorize_representative_phone}
+                                                        onChange={(e) => setOrg({ ...org, authorize_representative_phone: e.target.value })}
+                                                        required
+                                                        className="flex-1"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(2)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleNextStep3}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
 
@@ -2358,110 +2360,110 @@ export default function ActivationPage() {
                                             {/* <p className="text-sm text-gray-500 dark:text-gray-400">Upload required documents for verification.</p> */}
                                         </div>
 
-                                {/* Preview Section */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Name</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_first_name} {org.authorize_representative_last_name}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Email</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_email}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Phone</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_phone}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="cert" className="text-sm font-semibold">Business Registration Certificate <span className="text-red-500">*</span></Label>
-                                        <div className="flex flex-col gap-2">
-                                            <Input
-                                                id="cert"
-                                                type="file"
-                                                accept="image/*,.pdf"
-                                                onChange={(e) => setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null })}
-                                                className="cursor-pointer"
-                                                required
-                                            />
-                                            {org.business_registration_certificate && (
-                                                <p className="text-xs text-green-500 flex items-center gap-1">
-                                                    <Check size={12} /> {(org.business_registration_certificate as File).name}
-                                                </p>
-                                            )}
+                                        {/* Preview Section */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Number</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.reg_number || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Name</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_first_name} {org.authorize_representative_last_name}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Email</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_email}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Phone</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_phone}</p>
+                                            </div>
+                                            <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Town / City</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.city || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">State</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.province || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Postcode / ZIP</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.post_code || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Country</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.country || "N/A"}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">APT/Suite</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.apt_or_suite || "N/A"}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="proof" className="text-sm font-semibold">Proof of Address <span className="text-red-500">*</span></Label>
-                                        <div className="flex flex-col gap-2">
-                                            <Input
-                                                id="proof"
-                                                type="file"
-                                                accept="image/*,.pdf"
-                                                onChange={(e) => setOrg({ ...org, proof_of_address: e.target.files?.[0] || null })}
-                                                className="cursor-pointer"
-                                                required
-                                            />
-                                            <p className="text-[10px] text-gray-500 italic">Utility Bill or Tax Notice Or Rent</p>
-                                            {org.proof_of_address && (
-                                                <p className="text-xs text-green-500 flex items-center gap-1">
-                                                    <Check size={12} /> {(org.proof_of_address as File).name}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div className="flex justify-between pt-6">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setCurrentStep(3)}
-                                        className="px-8"
-                                    >
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        onClick={handleNextStep4}
-                                        className="bg-primary hover:bg-primary/90 text-white px-8"
-                                    >
-                                        Next
-                                    </Button>
-                                </div>
-                                </>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="cert" className="text-sm font-semibold">Business Registration Certificate <span className="text-red-500">*</span></Label>
+                                                <div className="flex flex-col gap-2">
+                                                    <Input
+                                                        id="cert"
+                                                        type="file"
+                                                        accept="image/*,.pdf"
+                                                        onChange={(e) => setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null })}
+                                                        className="cursor-pointer"
+                                                        required
+                                                    />
+                                                    {org.business_registration_certificate && (
+                                                        <p className="text-xs text-green-500 flex items-center gap-1">
+                                                            <Check size={12} /> {(org.business_registration_certificate as File).name}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="proof" className="text-sm font-semibold">Proof of Address <span className="text-red-500">*</span></Label>
+                                                <div className="flex flex-col gap-2">
+                                                    <Input
+                                                        id="proof"
+                                                        type="file"
+                                                        accept="image/*,.pdf"
+                                                        onChange={(e) => setOrg({ ...org, proof_of_address: e.target.files?.[0] || null })}
+                                                        className="cursor-pointer"
+                                                        required
+                                                    />
+                                                    <p className="text-[10px] text-gray-500 italic">Utility Bill or Tax Notice Or Rent</p>
+                                                    {org.proof_of_address && (
+                                                        <p className="text-xs text-green-500 flex items-center gap-1">
+                                                            <Check size={12} /> {(org.proof_of_address as File).name}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between pt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentStep(3)}
+                                                className="px-8"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <Button
+                                                onClick={handleNextStep4}
+                                                className="bg-primary hover:bg-primary/90 text-white px-8"
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         )}
