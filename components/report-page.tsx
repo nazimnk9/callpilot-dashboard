@@ -299,14 +299,14 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                         {isDiner ? `View reservation records for the ${featureName}.` : `View automation interview records for the ${featureName}.`}
                     </p>
                 </div>
-                {!isDiner && (
+                {/* {!isDiner && (
                     <Button
                         onClick={() => setIsRecallModalOpen(true)}
                         className="bg-primary hover:bg-primary/90 cursor-pointer"
                     >
                         Retry Call Interview
                     </Button>
-                )}
+                )} */}
             </div>
 
             <div className="border rounded-lg bg-card overflow-hidden mb-8">
@@ -401,15 +401,17 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                         </Button>
                                     </TableCell>
                                     <TableCell className="text-sm">
-                                        <Button
-                                            size="sm"
-                                            variant="default"
-                                            className="cursor-pointer"
-                                            onClick={() => handleSingleRecall(row.reports_uid)}
-                                            disabled={isRecalling}
-                                        >
-                                            Recall
-                                        </Button>
+                                        {!(row.status === "COMPLETED" && row.ai_decision === "successful") && (
+                                            <Button
+                                                size="sm"
+                                                variant="default"
+                                                className="cursor-pointer"
+                                                onClick={() => handleSingleRecall(row.reports_uid)}
+                                                disabled={isRecalling}
+                                            >
+                                                Recall
+                                            </Button>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))
