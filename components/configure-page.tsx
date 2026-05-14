@@ -97,12 +97,15 @@ const CALLING_TIME_OPTIONS = [
     { label: "60 min", value: 60 },
 ]
 
-const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
-    const hours = Math.floor(i / 2)
-    const minutes = i % 2 === 0 ? "00" : "30"
-    const time = `${String(hours).padStart(2, '0')}:${minutes}:00`
-    return { label: time.slice(0, 5), value: time }
-})
+const TIME_OPTIONS = [
+    ...Array.from({ length: 48 }, (_, i) => {
+        const hours = Math.floor(i / 2)
+        const minutes = i % 2 === 0 ? "00" : "30"
+        const time = `${String(hours).padStart(2, '0')}:${minutes}:00`
+        return { label: time.slice(0, 5), value: time }
+    }),
+    { label: "23:59", value: "23:59:00" }
+]
 
 export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const router = useRouter()
