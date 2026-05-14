@@ -44,6 +44,7 @@ interface DisplayReportItem {
     status: string
     updated_at: string
     conversation_json: ChatMessage[]
+    is_retry: boolean
 }
 
 interface DinerReportItem {
@@ -138,7 +139,8 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                         status: item.status,
                         ai_decision: item.ai_decision,
                         updated_at: item.updated_at,
-                        conversation_json: item.interview_data?.conversation_json || []
+                        conversation_json: item.interview_data?.conversation_json || [],
+                        is_retry: item.is_retry
                     }))
                     setReports(normalized)
                 }
@@ -329,6 +331,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                 <TableHead className="font-semibold text-foreground">Candidate Name</TableHead>
                                 <TableHead className="font-semibold text-foreground">Candidate Email</TableHead>
                                 <TableHead className="font-semibold text-foreground">Candidate Mobile</TableHead>
+                                <TableHead className="font-semibold text-foreground">Recall</TableHead>
                                 {/* <TableHead className="font-semibold text-foreground">First Message Sent At</TableHead> */}
                                 {/* <TableHead className="font-semibold text-foreground">Status</TableHead> */}
                                 <TableHead className="font-semibold text-foreground">Ai Decision</TableHead>
@@ -341,11 +344,11 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={isDiner ? 7 : 7} className="text-center h-24">Loading records...</TableCell>
+                                <TableCell colSpan={isDiner ? 7 : 8} className="text-center h-24">Loading records...</TableCell>
                             </TableRow>
                         ) : (isDiner ? dinerReports.length === 0 : reports.length === 0) ? (
                             <TableRow>
-                                <TableCell colSpan={isDiner ? 7 : 7} className="text-center h-24">No records found.</TableCell>
+                                <TableCell colSpan={isDiner ? 7 : 8} className="text-center h-24">No records found.</TableCell>
                             </TableRow>
                         ) : isDiner ? (
                             dinerReports.map((row) => (
@@ -387,6 +390,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                     <TableCell className="text-sm">{row.candidate_name}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_email}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_phone}</TableCell>
+                                    <TableCell className="text-sm">{row.is_retry ? "Yes" : "No"}</TableCell>
                                     {/* <TableCell className="text-sm">{formatDate(row.started_at)}</TableCell> */}
                                     {/* <TableCell className="text-sm">{row.status}</TableCell> */}
                                     <TableCell className="text-sm">{row.ai_decision === "user_disconnect" ? "Incomplete" : row.ai_decision}</TableCell>
