@@ -329,23 +329,23 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                 <TableHead className="font-semibold text-foreground">Candidate Name</TableHead>
                                 <TableHead className="font-semibold text-foreground">Candidate Email</TableHead>
                                 <TableHead className="font-semibold text-foreground">Candidate Mobile</TableHead>
-                                <TableHead className="font-semibold text-foreground">First Message Sent At</TableHead>
-                                <TableHead className="font-semibold text-foreground">Status</TableHead>
+                                {/* <TableHead className="font-semibold text-foreground">First Message Sent At</TableHead> */}
+                                {/* <TableHead className="font-semibold text-foreground">Status</TableHead> */}
                                 <TableHead className="font-semibold text-foreground">Ai Decision</TableHead>
                                 <TableHead className="font-semibold text-foreground">Updated At</TableHead>
                                 <TableHead className="font-semibold text-foreground">Chat History</TableHead>
-                                <TableHead className="font-semibold text-foreground">Retry call Interview</TableHead>
+                                {/* <TableHead className="font-semibold text-foreground">Retry call Interview</TableHead> */}
                             </TableRow>
                         )}
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={isDiner ? 7 : 11} className="text-center h-24">Loading records...</TableCell>
+                                <TableCell colSpan={isDiner ? 7 : 7} className="text-center h-24">Loading records...</TableCell>
                             </TableRow>
                         ) : (isDiner ? dinerReports.length === 0 : reports.length === 0) ? (
                             <TableRow>
-                                <TableCell colSpan={isDiner ? 7 : 11} className="text-center h-24">No records found.</TableCell>
+                                <TableCell colSpan={isDiner ? 7 : 7} className="text-center h-24">No records found.</TableCell>
                             </TableRow>
                         ) : isDiner ? (
                             dinerReports.map((row) => (
@@ -387,9 +387,9 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                     <TableCell className="text-sm">{row.candidate_name}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_email}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_phone}</TableCell>
-                                    <TableCell className="text-sm">{formatDate(row.started_at)}</TableCell>
-                                    <TableCell className="text-sm">{row.status}</TableCell>
-                                    <TableCell className="text-sm">{row.ai_decision}</TableCell>
+                                    {/* <TableCell className="text-sm">{formatDate(row.started_at)}</TableCell> */}
+                                    {/* <TableCell className="text-sm">{row.status}</TableCell> */}
+                                    <TableCell className="text-sm">{row.ai_decision === "user_disconnect" ? "Incomplete" : row.ai_decision}</TableCell>
                                     <TableCell className="text-sm">{formatDate(row.updated_at)}</TableCell>
                                     <TableCell className="text-sm">
                                         <Button
@@ -400,7 +400,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                             View
                                         </Button>
                                     </TableCell>
-                                    <TableCell className="text-sm">
+                                    {/* <TableCell className="text-sm">
                                         {!(row.status === "COMPLETED" && row.ai_decision === "successful") && (
                                             <Button
                                                 size="sm"
@@ -412,7 +412,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                                 Recall
                                             </Button>
                                         )}
-                                    </TableCell>
+                                    </TableCell> */}
                                 </TableRow>
                             ))
                         )}
