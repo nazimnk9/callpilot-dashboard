@@ -980,10 +980,6 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         <SelectValue placeholder="Select Time" />
                                                     </SelectTrigger>
                                                     <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                        <SelectItem value="5" className="dark:text-gray-100">5 min</SelectItem>
-                                                        <SelectItem value="10" className="dark:text-gray-100">10 min</SelectItem>
-                                                        <SelectItem value="15" className="dark:text-gray-100">15 min</SelectItem>
-                                                        <SelectItem value="20" className="dark:text-gray-100">20 min</SelectItem>
                                                         <SelectItem value="fastest" className="dark:text-gray-100">Fastest Time Possible</SelectItem>
                                                     </SelectContent>
                                                 </Select>
