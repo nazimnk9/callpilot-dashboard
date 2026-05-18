@@ -1305,11 +1305,27 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-lg sm:text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 border-b border-gray-50 dark:border-gray-700">Job Description Requirement</h2>
                                     <div className="space-y-4">
-                                        <p className="text-[#475569] dark:text-gray-400 font-medium">Advert must include a section titled:</p>
+                                        <p className="text-[#475569] dark:text-gray-400 font-medium">The advert must include a section titled:</p>
                                         <p className="text-lg font-semibold text-[#1e293b] dark:text-gray-100 -mt-4">Job Requirements</p>
-                                        <div className="space-y-2">
-                                            <p className="text-[#475569] dark:text-gray-400 font-medium">Each requirement must start with:</p>
-                                            <p className="text-lg font-semibold text-[#1e293b] dark:text-gray-100">* Must have</p>
+                                        <div className="space-y-3">
+                                            <p className="text-[#475569] dark:text-gray-400 font-medium">Each requirement must:</p>
+                                            <ul className="list-disc list-inside space-y-1.5 pl-2 text-sm text-[#475569] dark:text-gray-400 font-medium">
+                                                <li>Be written as a question</li>
+                                                <li>
+                                                    Start with either:
+                                                    <ul className="list-[circle] list-inside pl-6 mt-1 space-y-1">
+                                                        <li className="font-semibold text-[#1e293b] dark:text-gray-200">Must have</li>
+                                                        <li className="font-semibold text-[#1e293b] dark:text-gray-200">Do you</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50">
+                                                <p className="text-[#475569] dark:text-gray-400 font-semibold mb-1">Example:</p>
+                                                <ul className="list-disc list-inside space-y-1 pl-2 text-xs text-gray-500 dark:text-gray-400 italic">
+                                                    <li>Must have a valid CSCS card?</li>
+                                                    <li>Do you have previous warehouse experience?</li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 </Card>
@@ -1354,17 +1370,25 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     </Card>
                                 )}
                                 <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800`}>
-                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                                        Please create the following 5 statuses in your ATS/CRM under the Job Application's Status creation section (if they are not already present):
-                                    </p>
-                                    <ul className="mt-4 space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside">
-                                        <li>Applied</li>
-                                        <li>AI Call - No Reply</li>
-                                        <li>AI Call - Link Sent</li>
-                                        <li>Unsuccessful</li>
-                                        <li> Documents Received</li>
-                                    </ul>
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">ATS/CRM Application Status Setup</h2>
+                                    <div className="space-y-4">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                            Please create the following Job Application Statuses within your ATS/CRM under:
+                                        </p>
+                                        <p className="text-sm sm:text-base font-semibold text-[#1e293b] dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                                            Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
+                                        </p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                            If these statuses do not already exist, please add:
+                                        </p>
+                                        <ul className="space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside pl-2">
+                                            <li>Applied</li>
+                                            <li>AI Call - No Reply</li>
+                                            <li>AI Call - Link Sent</li>
+                                            <li>Unsuccessful</li>
+                                            <li>Documents Received</li>
+                                        </ul>
+                                    </div>
                                 </Card>
                             </div>
                         </>
