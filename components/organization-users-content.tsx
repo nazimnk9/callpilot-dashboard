@@ -452,12 +452,8 @@ export function OrganizationUsersContent() {
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
                                         <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem>
-                                        {/* <SelectItem value="ADMIN" className="rounded-lg">Admin</SelectItem>
-                                        <SelectItem value="MANAGER" className="rounded-lg">Manager</SelectItem>
-                                        <SelectItem value="RECRUITER" className="rounded-lg">Recruiter</SelectItem> */}
-                                        <SelectItem value="CONSULTANT" className="rounded-lg">Consultant</SelectItem>
-                                        <SelectItem value="ACCOUNTS" className="rounded-lg">Accounts</SelectItem>
-                                        {/* <SelectItem value="VIEWER" className="rounded-lg">Viewer</SelectItem> */}
+                                        <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
+                                        <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
