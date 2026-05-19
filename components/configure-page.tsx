@@ -97,12 +97,15 @@ const CALLING_TIME_OPTIONS = [
     { label: "60 min", value: 60 },
 ]
 
-const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
-    const hours = Math.floor(i / 2)
-    const minutes = i % 2 === 0 ? "00" : "30"
-    const time = `${String(hours).padStart(2, '0')}:${minutes}:00`
-    return { label: time.slice(0, 5), value: time }
-})
+const TIME_OPTIONS = [
+    ...Array.from({ length: 48 }, (_, i) => {
+        const hours = Math.floor(i / 2)
+        const minutes = i % 2 === 0 ? "00" : "30"
+        const time = `${String(hours).padStart(2, '0')}:${minutes}:00`
+        return { label: time.slice(0, 5), value: time }
+    }),
+    { label: "23:59", value: "23:59:00" }
+]
 
 export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const router = useRouter()
@@ -385,8 +388,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             newQuestions[index].isSaved = true
             setQuestions(newQuestions)
 
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error saving question:", err)
+            setResultTitle("Error")
+            const errorData = err.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || "Failed to save question."
+            setResultMessage(errorMessage)
+            setShowResultDialog(true)
         }
     }
 
@@ -432,7 +440,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         } catch (error: any) {
             console.error("Error adding question:", error)
             setResultTitle("Error")
-            setResultMessage(error.response?.data?.message || "Failed to add question. Please try again.")
+            const errorData = error.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || "Failed to add question. Please try again."
+            setResultMessage(errorMessage)
             setShowResultDialog(true)
         } finally {
             setAddingQuestionIdx(null)
@@ -487,7 +497,9 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         } catch (error: any) {
             console.error("Error deleting question:", error)
             setResultTitle("Error")
-            setResultMessage(error.response?.data?.detail || error.response?.data?.message || "Failed to delete question.")
+            const errorData = error.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || "Failed to delete question."
+            setResultMessage(errorMessage)
             setShowResultDialog(true)
         } finally {
             setIsSaving(false)
@@ -562,14 +574,20 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 const errorData = err.response?.data
                 let errorMessage = "Failed to save configuration"
 
-                if (errorData && typeof errorData === "object" && !Array.isArray(errorData)) {
+                if (errorData?.details) {
+                    errorMessage = errorData.details
+                } else if (errorData && typeof errorData === "object" && !Array.isArray(errorData) && !errorData.detail && !errorData.message && !errorData.error) {
                     setFieldErrors(errorData)
                     scrollToFirstError(errorData)
                     return
+                } else if (errorData?.detail) {
+                    errorMessage = errorData.detail
                 } else if (Array.isArray(errorData) && errorData.length > 0) {
                     errorMessage = errorData[0]
                 } else if (typeof errorData === "string") {
                     errorMessage = errorData
+                } else if (errorData?.message) {
+                    errorMessage = errorData.message
                 } else if (errorData?.error) {
                     errorMessage = errorData.error
                 } else if (err.message) {
@@ -693,14 +711,20 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             const errorData = err.response?.data
             let errorMessage = "Failed to save configuration"
 
-            if (errorData && typeof errorData === "object" && !Array.isArray(errorData)) {
+            if (errorData?.details) {
+                errorMessage = errorData.details
+            } else if (errorData && typeof errorData === "object" && !Array.isArray(errorData) && !errorData.detail && !errorData.message && !errorData.error) {
                 setFieldErrors(errorData)
                 scrollToFirstError(errorData)
                 return
+            } else if (errorData?.detail) {
+                errorMessage = errorData.detail
             } else if (Array.isArray(errorData) && errorData.length > 0) {
                 errorMessage = errorData[0]
             } else if (typeof errorData === "string") {
                 errorMessage = errorData
+            } else if (errorData?.message) {
+                errorMessage = errorData.message
             } else if (errorData?.error) {
                 errorMessage = errorData.error
             } else if (err.message) {
@@ -733,7 +757,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             // After clicking OK on Success, it will redirect via handleDialogClose update
         } catch (err: any) {
             console.error("Error releasing flow:", err)
-            setError(err.response?.data?.message || err.message || "Failed to release flow")
+            const errorData = err.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || err.message || "Failed to release flow"
+            setError(errorMessage)
+            setResultTitle("Error")
+            setResultMessage(errorMessage)
+            setShowResultDialog(true)
         } finally {
             setIsSaving(false)
             setShowReleaseDialog(false)
@@ -951,10 +980,6 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         <SelectValue placeholder="Select Time" />
                                                     </SelectTrigger>
                                                     <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                                                        <SelectItem value="5" className="dark:text-gray-100">5 min</SelectItem>
-                                                        <SelectItem value="10" className="dark:text-gray-100">10 min</SelectItem>
-                                                        <SelectItem value="15" className="dark:text-gray-100">15 min</SelectItem>
-                                                        <SelectItem value="20" className="dark:text-gray-100">20 min</SelectItem>
                                                         <SelectItem value="fastest" className="dark:text-gray-100">Fastest Time Possible</SelectItem>
                                                     </SelectContent>
                                                 </Select>
@@ -1280,11 +1305,27 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-lg sm:text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 border-b border-gray-50 dark:border-gray-700">Job Description Requirement</h2>
                                     <div className="space-y-4">
-                                        <p className="text-[#475569] dark:text-gray-400 font-medium">Advert must include a section titled:</p>
+                                        <p className="text-[#475569] dark:text-gray-400 font-medium">The advert must include a section titled:</p>
                                         <p className="text-lg font-semibold text-[#1e293b] dark:text-gray-100 -mt-4">Job Requirements</p>
-                                        <div className="space-y-2">
-                                            <p className="text-[#475569] dark:text-gray-400 font-medium">Each requirement must start with:</p>
-                                            <p className="text-lg font-semibold text-[#1e293b] dark:text-gray-100">* Must have</p>
+                                        <div className="space-y-3">
+                                            <p className="text-[#475569] dark:text-gray-400 font-medium">Each requirement must:</p>
+                                            <ul className="list-disc list-inside space-y-1.5 pl-2 text-sm text-[#475569] dark:text-gray-400 font-medium">
+                                                <li>Be written as a question</li>
+                                                <li>
+                                                    Start with either:
+                                                    <ul className="list-[circle] list-inside pl-6 mt-1 space-y-1">
+                                                        <li className="font-semibold text-[#1e293b] dark:text-gray-200">Must have</li>
+                                                        <li className="font-semibold text-[#1e293b] dark:text-gray-200">Do you</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50">
+                                                <p className="text-[#475569] dark:text-gray-400 font-semibold mb-1">Example:</p>
+                                                <ul className="list-disc list-inside space-y-1 pl-2 text-xs text-gray-500 dark:text-gray-400 italic">
+                                                    <li>Must have a valid CSCS card?</li>
+                                                    <li>Do you have previous warehouse experience?</li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 </Card>
@@ -1329,17 +1370,25 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     </Card>
                                 )}
                                 <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800`}>
-                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Application Status</h2>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                                        Please create the following 4 statuses in your ATS/CRM under the Job Application's Status creation section (if they are not already present):
-                                    </p>
-                                    <ul className="mt-4 space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside">
-                                        <li>Applied</li>
-                                        <li>AI Call - No Reply</li>
-                                        <li>AI Call - Link Sent</li>
-                                        <li>Unsuccessful</li>
-                                        <li> Documents Received</li>
-                                    </ul>
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">ATS/CRM Application Status Setup</h2>
+                                    <div className="space-y-4">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                            Please create the following Job Application Statuses within your ATS/CRM under:
+                                        </p>
+                                        <p className="text-sm sm:text-base font-semibold text-[#1e293b] dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                                            Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
+                                        </p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                            If these statuses do not already exist, please add:
+                                        </p>
+                                        <ul className="space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside pl-2">
+                                            <li>Applied</li>
+                                            <li>AI Call - No Reply</li>
+                                            <li>AI Call - Link Sent</li>
+                                            <li>Unsuccessful</li>
+                                            <li>Documents Received</li>
+                                        </ul>
+                                    </div>
                                 </Card>
                             </div>
                         </>
