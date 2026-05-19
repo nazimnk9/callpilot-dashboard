@@ -1323,7 +1323,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 <p className="text-[#475569] dark:text-gray-400 font-semibold mb-1">Example:</p>
                                                 <ul className="list-disc list-inside space-y-1 pl-2 text-xs text-gray-500 dark:text-gray-400 italic">
                                                     <li>Must have a valid CSCS card?</li>
-                                                    <li>Do you have previous warehouse experience?</li>
+                                                    {/* <li>Do you have previous warehouse experience?</li> */}
                                                 </ul>
                                             </div>
                                         </div>
