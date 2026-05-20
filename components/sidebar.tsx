@@ -35,6 +35,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserProfilePanel } from './user-profile-panel';
+import { profileService } from '@/services/profile-service';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -49,6 +50,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [isSettingsView, setIsSettingsView] = useState(isSettingsPage);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('');
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const response = await profileService.getOrganization();
+        if (response.data && response.data.role) {
+          setCurrentUserRole(response.data.role);
+        }
+      } catch (err) {
+        console.error('Error fetching organization in sidebar:', err);
+      }
+    };
+    fetchUserRole();
+  }, []);
 
   // Sync state if navigating to a settings page specifically
   useEffect(() => {
@@ -76,7 +92,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { label: 'Organization', isHeader: true },
     { icon: FileText, label: 'Business Details', href: '/dashboard/organization', isBold: true },
     { icon: CreditCard, label: 'Billing', href: '/dashboard/billing', isBold: true },
-    { icon: Users, label: 'Users', href: '/dashboard/users', isBold: true },
+    ...(currentUserRole !== 'STAFF' ? [{ icon: Users, label: 'Users', href: '/dashboard/users', isBold: true }] : []),
     { label: 'Support Ticket', isHeader: true },
     { icon: MessageSquare, label: 'Support Ticket', href: '/dashboard/help/support-tickets', isBold: true },
   ];

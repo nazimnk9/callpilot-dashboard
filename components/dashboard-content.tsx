@@ -1057,7 +1057,7 @@ export function DashboardContent() {
                                                             {card.value}
                                                         </p>
 
-                                                        {card.title === 'Minutes Remaining' && (
+                                                        {card.title === 'Minutes Remaining' && orgData?.role !== "STAFF" && (
                                                             <div className="mt-4">
                                                                 <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                                                     <DialogTrigger asChild>
@@ -1233,7 +1233,7 @@ export function DashboardContent() {
                                                         )}
                                                     </div>
                                                 </div>
-                                                {card.title === 'Current Plan' && (
+                                                {card.title === 'Current Plan' && orgData?.role !== "STAFF" && (
                                                     <div className="flex flex-row gap-2 mt-4">
                                                         <button
                                                             onClick={(e) => {

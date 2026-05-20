@@ -10,6 +10,7 @@ import { TimezoneSelect } from "@/components/timezone-select"
 import Link from "next/link"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { flowService } from "@/services/flow-service"
+import { profileService } from "@/services/profile-service"
 import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock, Volume2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
@@ -163,6 +164,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [isSaving, setIsSaving] = useState(false)
     const [error, setError] = useState("")
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+    const [currentUserRole, setCurrentUserRole] = useState("")
 
     const [showResultDialog, setShowResultDialog] = useState(false)
     const [resultMessage, setResultMessage] = useState("")
@@ -252,6 +254,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
         const fetchData = async () => {
             try {
+                const response = await profileService.getOrganization();
+                if (response && response.data) {
+                    console.log("orgRes.data.role:", response.data.role)
+                    setCurrentUserRole(response.data.role || "")
+                }
+
                 const [statusRes, platformRes, phoneRes, questionsRes] = await Promise.all([
                     flowService.getInterviewStatus(),
                     flowService.getMyPlatforms(),
@@ -298,7 +306,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             setIsUpdateMode(true)
                             if (configData.uid) {
                                 setConfigUid(configData.uid)
-                                    fetchWhatsappTemplate(configData.uid)
+                                fetchWhatsappTemplate(configData.uid)
                             }
 
                             setPlatformUid(configData.platform?.uid || "")
@@ -662,7 +670,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                     if (configData.uid) {
                         setConfigUid(configData.uid)
-                                fetchWhatsappTemplate(configData.uid)
+                        fetchWhatsappTemplate(configData.uid)
                     }
 
                     setPlatformUid(configData.platform?.uid || "")
@@ -1323,7 +1331,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 <p className="text-[#475569] dark:text-gray-400 font-semibold mb-1">Example:</p>
                                                 <ul className="list-disc list-inside space-y-1 pl-2 text-xs text-gray-500 dark:text-gray-400 italic">
                                                     <li>Must have a valid CSCS card?</li>
-                                                    <li>Do you have previous warehouse experience?</li>
+                                                    {/* <li>Do you have previous warehouse experience?</li> */}
                                                 </ul>
                                             </div>
                                         </div>
@@ -1408,7 +1416,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             >
                                 {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
                             </Button>
-                            {isUpdateMode && (
+                            {isUpdateMode && currentUserRole !== "STAFF" && (
                                 <Button
                                     size="lg"
                                     variant="outline"
@@ -1431,14 +1439,16 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     >
                                         {isSaving ? "Activating..." : "Activate AI Call"}
                                     </Button>
-                                    <Button
-                                        size="lg"
-                                        variant="outline"
-                                        onClick={() => setShowReleaseDialog(true)}
-                                        className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
-                                    >
-                                        Release Flow
-                                    </Button>
+                                    {currentUserRole !== "STAFF" && (
+                                        <Button
+                                            size="lg"
+                                            variant="outline"
+                                            onClick={() => setShowReleaseDialog(true)}
+                                            className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
+                                        >
+                                            Release Flow
+                                        </Button>
+                                    )}
                                 </div>
                             ) : (
                                 <>
@@ -1461,14 +1471,16 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 {isSaving ? "Updating..." : "Update AI Call"}
                                             </Button>
                                         )}
-                                        <Button
-                                            size="lg"
-                                            variant="outline"
-                                            onClick={() => setShowReleaseDialog(true)}
-                                            className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
-                                        >
-                                            Release Flow
-                                        </Button>
+                                        {currentUserRole !== "STAFF" && (
+                                            <Button
+                                                size="lg"
+                                                variant="outline"
+                                                onClick={() => setShowReleaseDialog(true)}
+                                                className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
+                                            >
+                                                Release Flow
+                                            </Button>
+                                        )}
                                     </div>
                                 </>
                             )}

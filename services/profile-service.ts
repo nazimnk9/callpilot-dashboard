@@ -80,6 +80,14 @@ export const profileService = {
         return api.get("/organizations/users/");
     },
 
+    async updateOrganizationUser(uid: string, data: { role?: string; email?: string; password?: string }) {
+        return api.patch(`/organizations/users/${uid}`, data);
+    },
+
+    async deleteOrganizationUser(uid: string) {
+        return api.delete(`/organizations/users/${uid}`);
+    },
+
     async inviteUser(data: { role: string; email: string; password?: string }) {
         return api.post("/organizations/invite/", data);
     },
