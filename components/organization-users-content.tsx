@@ -78,6 +78,148 @@ export function OrganizationUsersContent() {
     const [invitePassword, setInvitePassword] = useState("")
     const [isInviting, setIsInviting] = useState(false)
 
+    // Edit Modal States
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+    const [selectedUser, setSelectedUser] = useState<OrgUser | null>(null)
+    const [editRole, setEditRole] = useState("")
+    const [editEmail, setEditEmail] = useState("")
+    const [editPassword, setEditPassword] = useState("")
+    const [isUpdating, setIsUpdating] = useState(false)
+
+    // Delete Modal States
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [userToDelete, setUserToDelete] = useState<OrgUser | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+
+    // Organization Role States
+    const [currentUserRole, setCurrentUserRole] = useState<string>("")
+    const [currentOrg, setCurrentOrg] = useState<any>(null)
+
+    const handleOpenEditModal = (user: OrgUser) => {
+        setSelectedUser(user)
+        setEditEmail(user.user.email || "")
+        setEditRole(user.role || "")
+        setEditPassword("")
+        setIsEditModalOpen(true)
+    }
+
+    const handleUpdateUser = async () => {
+        if (!selectedUser) return
+
+        if (!editRole || !editEmail) {
+            setToast({
+                title: "Error",
+                description: "Email and Role are required fields",
+                variant: "destructive",
+            })
+            return
+        }
+
+        try {
+            setIsUpdating(true)
+            const payload: { role?: string; email?: string; password?: string } = {
+                role: editRole,
+                email: editEmail,
+            }
+            if (editPassword) {
+                payload.password = editPassword
+            }
+
+            await profileService.updateOrganizationUser(selectedUser.uid, payload)
+
+            setToast({
+                title: "Success",
+                description: `User ${editEmail} updated successfully`,
+                variant: "default",
+            })
+            setIsEditModalOpen(false)
+            fetchUsers()
+        } catch (err: any) {
+            console.error("Error updating user:", err)
+
+            // Extract error message from API response
+            const responseData = err.response?.data
+            let errorMessage = "Failed to update user"
+
+            if (responseData) {
+                if (responseData.email && Array.isArray(responseData.email) && responseData.email.length > 0) {
+                    errorMessage = responseData.email[0]
+                } else if (responseData.detail) {
+                    errorMessage = responseData.detail
+                } else if (responseData.error) {
+                    errorMessage = responseData.error
+                }
+            }
+
+            setToast({
+                title: "Error",
+                description: errorMessage,
+                variant: "destructive",
+            })
+        } finally {
+            setIsUpdating(false)
+        }
+    }
+
+    const handleOpenDeleteModal = (user: OrgUser) => {
+        setUserToDelete(user)
+        setIsDeleteModalOpen(true)
+    }
+
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return
+
+        try {
+            setIsDeleting(true)
+            await profileService.deleteOrganizationUser(userToDelete.uid)
+
+            setToast({
+                title: "Success",
+                description: `User ${userToDelete.user.email} removed successfully`,
+                variant: "default",
+            })
+            setIsDeleteModalOpen(false)
+            fetchUsers()
+        } catch (err: any) {
+            console.error("Error deleting user:", err)
+
+            // Extract error message from API response
+            const responseData = err.response?.data
+            let errorMessage = "Failed to remove user"
+
+            if (responseData) {
+                if (responseData.detail) {
+                    errorMessage = responseData.detail
+                } else if (responseData.error) {
+                    errorMessage = responseData.error
+                }
+            }
+
+            setToast({
+                title: "Error",
+                description: errorMessage,
+                variant: "destructive",
+            })
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
+    useEffect(() => {
+        const fetchRole = async () => {
+            try {
+                const response = await profileService.getOrganization()
+                if (response.data) {
+                    setCurrentOrg(response.data)
+                    setCurrentUserRole(response.data.role || "")
+                }
+            } catch (err) {
+                console.error("Error fetching current user organization profile:", err)
+            }
+        }
+        fetchRole()
+    }, [])
+
     useEffect(() => {
         if (activeTab === "users") {
             fetchUsers()
@@ -325,16 +467,30 @@ export function OrganizationUsersContent() {
                                                             {formatTimestamp(item.joined_at)}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="py-4 px-6 text-right">
-                                                        {/* <div className="flex justify-end gap-2">
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-all">
-                                                                <Edit2 className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all">
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div> */}
-                                                    </TableCell>
+                                                     <TableCell className="py-4 px-6 text-right">
+                                                         <div className="flex justify-end gap-2">
+                                                             {(currentUserRole === "ADMINISTRATOR" || currentUserRole === "OWNER") && (
+                                                                 <Button
+                                                                     onClick={() => handleOpenEditModal(item)}
+                                                                     variant="ghost"
+                                                                     size="icon"
+                                                                     className="h-9 w-9 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-all"
+                                                                 >
+                                                                     <Edit2 className="h-4 w-4" />
+                                                                 </Button>
+                                                             )}
+                                                             {currentUserRole === "ADMINISTRATOR" && (
+                                                                 <Button
+                                                                     onClick={() => handleOpenDeleteModal(item)}
+                                                                     variant="ghost"
+                                                                     size="icon"
+                                                                     className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all"
+                                                                 >
+                                                                     <Trash2 className="h-4 w-4" />
+                                                                 </Button>
+                                                             )}
+                                                         </div>
+                                                     </TableCell>
                                                 </TableRow>
                                             ))
                                         )
@@ -480,6 +636,150 @@ export function OrganizationUsersContent() {
                                 </>
                             ) : (
                                 "Add User"
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Update User Modal */}
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+                <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
+                    <DialogHeader className="p-6 pb-0">
+                        <div className="flex items-center justify-between">
+                            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                <span className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                                    <Edit2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                </span>
+                                Update Team Member
+                            </DialogTitle>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="p-6 space-y-6">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Email Address <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="edit-email"
+                                    type="email"
+                                    placeholder="Enter colleague's email"
+                                    value={editEmail}
+                                    onChange={(e) => setEditEmail(e.target.value)}
+                                    required
+                                    className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-password" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Password <span className="text-gray-400 text-xs font-normal">(Leave blank to keep unchanged)</span>
+                                </Label>
+                                <Input
+                                    id="edit-password"
+                                    type="password"
+                                    placeholder="Enter new password"
+                                    value={editPassword}
+                                    onChange={(e) => setEditPassword(e.target.value)}
+                                    className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Assign Role <span className="text-red-500">*</span>
+                                </Label>
+                                <Select value={editRole} onValueChange={setEditRole}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                        <SelectValue placeholder="Select a role" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
+                                        <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem>
+                                        <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
+                                        <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="p-6 pt-2 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleUpdateUser}
+                            disabled={isUpdating || !editEmail || !editRole}
+                            className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
+                        >
+                            {isUpdating ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Updating...
+                                </>
+                            ) : (
+                                "Update"
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
+                    <DialogHeader className="p-6 pb-0">
+                        <div className="flex items-center justify-between">
+                            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                <span className="p-2 bg-red-50 dark:bg-red-950/30 rounded-lg">
+                                    <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                                </span>
+                                Remove Team Member
+                            </DialogTitle>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="p-6 space-y-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                            Are you sure you want to remove{" "}
+                            <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                {userToDelete?.user?.first_name || userToDelete?.user?.last_name
+                                    ? `${userToDelete.user.first_name} ${userToDelete.user.last_name}`.trim()
+                                    : "this member"}
+                            </span>{" "}
+                            ({userToDelete?.user?.email}) from this organization?
+                        </p>
+                        <p className="text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/30 p-3 rounded-xl border border-red-100 dark:border-red-900/30">
+                            Warning: This action cannot be undone and they will immediately lose access to the organization's dashboard.
+                        </p>
+                    </div>
+
+                    <DialogFooter className="p-6 pt-2 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleDeleteUser}
+                            disabled={isDeleting}
+                            className="h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20 flex-1 gap-2"
+                        >
+                            {isDeleting ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Removing...
+                                </>
+                            ) : (
+                                "Remove User"
                             )}
                         </Button>
                     </DialogFooter>
