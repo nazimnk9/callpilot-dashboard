@@ -94,5 +94,9 @@ export const profileService = {
 
     async getSentInvitations() {
         return api.get("/organizations/invite/");
+    },
+
+    async checkEmail(email: string) {
+        return api.post("/organizations/users/check-email", { email });
     }
 };
