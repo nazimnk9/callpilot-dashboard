@@ -47,5 +47,9 @@ export const interviewService = {
 
     async retrySingleInterview(uid: string) {
         return api.post(`/interview/retry/${uid}`);
+    },
+
+    async getInterviewAnalytics() {
+        return api.get("/interview/analytics");
     }
 };
