@@ -93,6 +93,12 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
     const [featureName, setFeatureName] = useState("Reports")
     const [selectedInterview, setSelectedInterview] = useState<DisplayReportItem | null>(null)
     const [selectedDinerReport, setSelectedDinerReport] = useState<DinerReportItem | null>(null)
+    const [analytics, setAnalytics] = useState<any>({
+        total_calls: 0,
+        screening_calls_completed: 0,
+        green_candidates: 0,
+        consultant_hours_saved: 0
+    })
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -106,19 +112,6 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                     setIsDiner(true)
                     setFeatureName("AI Diner Ordering Assistant")
                 }
-
-                // Fetch Feature Name if UID is provided
-                // if (featureUid) {
-                //     const featuresRes = await flowService.getFlows()
-                //     const currentFeature = featuresRes.data.results.find((f: any) => f.uid === featureUid)
-                //     if (currentFeature) {
-                //         setFeatureName(currentFeature.name)
-                //         currentFlowCode = currentFeature.code || ""
-                //         if (currentFlowCode === "AICALL191") {
-                //             setIsDiner(true)
-                //         }
-                //     }
-                // }
 
                 if (currentFlowCode === "AICALL191") {
                     const res = await flowService.getDinerReports()
@@ -143,6 +136,15 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                         is_retry: item.is_retry
                     }))
                     setReports(normalized)
+
+                    try {
+                        const analyticsRes = await interviewService.getInterviewAnalytics()
+                        if (analyticsRes.data) {
+                            setAnalytics(analyticsRes.data)
+                        }
+                    } catch (analyticsError) {
+                        console.error("Error fetching analytics:", analyticsError)
+                    }
                 }
 
             } catch (error) {
@@ -218,28 +220,28 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
     const statCards = [
         {
             title: "Total AI Calls",
-            value: "56",
+            value: String(analytics?.total_calls ?? 0),
             icon: Phone,
             iconColor: "text-blue-600 dark:text-blue-400",
             bgColor: "bg-blue-50 dark:bg-blue-900/20",
         },
         {
             title: "Screening Calls Completed",
-            value: "52",
+            value: String(analytics?.screening_calls_completed ?? 0),
             icon: CheckCircle2,
             iconColor: "text-green-600 dark:text-green-400",
             bgColor: "bg-green-50 dark:bg-green-900/20",
         },
         {
             title: "Green Applicants",
-            value: "35",
+            value: String(analytics?.green_candidates ?? 0),
             icon: Users,
             iconColor: "text-purple-600 dark:text-purple-400",
             bgColor: "bg-purple-50 dark:bg-purple-900/20",
         },
         {
             title: "Consultant hours Saved",
-            value: "4.3 hours",
+            value: `${analytics?.consultant_hours_saved ?? 0} hours`,
             icon: Clock,
             iconColor: "text-orange-600 dark:text-orange-400",
             bgColor: "bg-orange-50 dark:bg-orange-900/20",

@@ -326,6 +326,29 @@ export function OrganizationUsersContent() {
         return new Date(timestamp).toLocaleDateString()
     }
 
+    const canEditUser = (item: OrgUser) => {
+        if (currentUserRole === "OWNER") {
+            return true
+        }
+        if (currentUserRole === "ADMINISTRATOR") {
+            return item.role !== "OWNER"
+        }
+        return false
+    }
+
+    const canDeleteUser = (item: OrgUser) => {
+        if (item.user.email === currentOrg?.email) {
+            return false
+        }
+        if (currentUserRole === "OWNER") {
+            return item.role !== "OWNER"
+        }
+        if (currentUserRole === "ADMINISTRATOR") {
+            return item.role !== "OWNER" && item.role !== "ADMINISTRATOR"
+        }
+        return false
+    }
+
     return (
         <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950">
             <LoaderOverlay isLoading={isLoading} />
@@ -469,7 +492,7 @@ export function OrganizationUsersContent() {
                                                     </TableCell>
                                                      <TableCell className="py-4 px-6 text-right">
                                                          <div className="flex justify-end gap-2">
-                                                             {(currentUserRole === "ADMINISTRATOR" || currentUserRole === "OWNER") && (
+                                                             {canEditUser(item) ? (
                                                                  <Button
                                                                      onClick={() => handleOpenEditModal(item)}
                                                                      variant="ghost"
@@ -478,8 +501,8 @@ export function OrganizationUsersContent() {
                                                                  >
                                                                      <Edit2 className="h-4 w-4" />
                                                                  </Button>
-                                                             )}
-                                                             {currentUserRole === "ADMINISTRATOR" && (
+                                                             ) : (<div className="h-9 w-9" />)}
+                                                             {canDeleteUser(item) ? (
                                                                  <Button
                                                                      onClick={() => handleOpenDeleteModal(item)}
                                                                      variant="ghost"
@@ -488,7 +511,7 @@ export function OrganizationUsersContent() {
                                                                  >
                                                                      <Trash2 className="h-4 w-4" />
                                                                  </Button>
-                                                             )}
+                                                             ) : (<div className="h-9 w-9" />)}
                                                          </div>
                                                      </TableCell>
                                                 </TableRow>
