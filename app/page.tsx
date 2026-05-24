@@ -22,7 +22,8 @@ export default function Page() {
         const verifyRes = await authService.verifyToken(accessToken);
         if (verifyRes.ok) {
           const statusRes = await profileService.getPlatformStatus();
-          if (statusRes.data.compliance_status === "") {
+          const complianceStatus = statusRes.data.compliance_status;
+          if (complianceStatus === "" || complianceStatus === null || complianceStatus === "rejected") {
             router.push('/activation');
           } else {
             router.push('/dashboard');
@@ -35,7 +36,8 @@ export default function Page() {
             cookieUtils.set('refresh', data.refresh, 7);
 
             const statusRes = await profileService.getPlatformStatus();
-            if (statusRes.data.compliance_status === "") {
+            const complianceStatus = statusRes.data.compliance_status;
+            if (complianceStatus === "" || complianceStatus === null || complianceStatus === "rejected") {
               router.push('/activation');
             } else {
               router.push('/dashboard');
