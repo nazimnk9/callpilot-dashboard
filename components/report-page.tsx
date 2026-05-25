@@ -91,6 +91,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
     const [isDiner, setIsDiner] = useState(false)
     const [loading, setLoading] = useState(true)
     const [featureName, setFeatureName] = useState("Reports")
+    const [totalCount, setTotalCount] = useState(0)
     const [selectedInterview, setSelectedInterview] = useState<DisplayReportItem | null>(null)
     const [selectedDinerReport, setSelectedDinerReport] = useState<DinerReportItem | null>(null)
     const [analytics, setAnalytics] = useState<any>({
@@ -101,6 +102,48 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
     })
     const router = useRouter()
     const searchParams = useSearchParams()
+
+    const pageParam = searchParams.get("page")
+    const currentPage = pageParam ? Number(pageParam) : 1
+    const pageSize = 20
+    const totalPages = Math.ceil(totalCount / pageSize)
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage < 1 || newPage > totalPages) return
+        const params = new URLSearchParams(searchParams.toString())
+        params.set("page", String(newPage))
+        router.push(`?${params.toString()}`)
+    }
+
+    const renderPageNumbers = () => {
+        const pages = []
+        const maxVisible = 5
+        let startPage = Math.max(1, currentPage - 2)
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1)
+
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1)
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <Button
+                    key={i}
+                    variant={currentPage === i ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 w-9 rounded-xl font-semibold transition-all duration-200 cursor-pointer ${
+                        currentPage === i
+                            ? "bg-primary text-white shadow-md shadow-primary/20 scale-105"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
+                    }`}
+                    onClick={() => handlePageChange(i)}
+                >
+                    {i}
+                </Button>
+            )
+        }
+        return pages
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -118,7 +161,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                     setDinerReports(res.data.results)
                 } else {
                     // Fetch Call Interview Data
-                    const reportsRes = await interviewService.getInterviews()
+                    const reportsRes = await interviewService.getInterviews(currentPage)
 
                     const normalized = reportsRes.data.results.map((item: any) => ({
                         id: item.id,
@@ -136,6 +179,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                         is_retry: item.is_retry
                     }))
                     setReports(normalized)
+                    setTotalCount(reportsRes.data.count || 0)
 
                     try {
                         const analyticsRes = await interviewService.getInterviewAnalytics()
@@ -155,7 +199,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
         }
 
         fetchData()
-    }, [featureUid])
+    }, [featureUid, searchParams, currentPage])
 
     const handleViewChat = (item: DisplayReportItem | DinerReportItem) => {
         if ("candidate_name" in item) {
@@ -425,6 +469,45 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                     </TableBody>
                 </Table>
             </div>
+
+            {!isDiner && totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 mb-8 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm animate-in fade-in duration-300">
+                    <div className="text-sm font-medium text-muted-foreground">
+                        Showing{" "}
+                        <span className="font-semibold text-foreground">
+                            {Math.min(totalCount, (currentPage - 1) * pageSize + 1)}
+                        </span>{" "}
+                        to{" "}
+                        <span className="font-semibold text-foreground">
+                            {Math.min(totalCount, currentPage * pageSize)}
+                        </span>{" "}
+                        of <span className="font-semibold text-foreground">{totalCount}</span> entries
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3 rounded-xl font-semibold border-gray-200 dark:border-gray-700 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                            disabled={currentPage === 1}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                        >
+                            Previous
+                        </Button>
+                        <div className="flex items-center gap-1">
+                            {renderPageNumbers()}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3 rounded-xl font-semibold border-gray-200 dark:border-gray-700 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                            disabled={currentPage === totalPages}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <Button
                 variant="ghost"
