@@ -77,6 +77,9 @@ export function OrganizationUsersContent() {
     const [inviteEmail, setInviteEmail] = useState("")
     const [invitePassword, setInvitePassword] = useState("")
     const [isInviting, setIsInviting] = useState(false)
+    const [inviteStep, setInviteStep] = useState<1 | 2>(1)
+    const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+    const [emailExists, setEmailExists] = useState<boolean | null>(null)
 
     // Edit Modal States
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -262,8 +265,51 @@ export function OrganizationUsersContent() {
         }
     }
 
+    const handleNextStep = async () => {
+        if (!inviteEmail) {
+            setToast({
+                title: "Error",
+                description: "Please enter an email address",
+                variant: "destructive",
+            })
+            return
+        }
+
+        try {
+            setIsCheckingEmail(true)
+            const response = await profileService.checkEmail(inviteEmail)
+            const exists = response.data?.exists ?? false
+            setEmailExists(exists)
+            setInviteStep(2)
+        } catch (err: any) {
+            console.error("Error checking email:", err)
+            const responseData = err.response?.data
+            let errorMessage = "Failed to check email"
+
+            if (responseData) {
+                if (responseData.email && Array.isArray(responseData.email) && responseData.email.length > 0) {
+                    errorMessage = responseData.email[0]
+                } else if (responseData.email && typeof responseData.email === "string") {
+                    errorMessage = responseData.email
+                } else if (responseData.detail) {
+                    errorMessage = responseData.detail
+                } else if (responseData.error) {
+                    errorMessage = responseData.error
+                }
+            }
+
+            setToast({
+                title: "Error",
+                description: errorMessage,
+                variant: "destructive",
+            })
+        } finally {
+            setIsCheckingEmail(false)
+        }
+    }
+
     const handleInviteUser = async () => {
-        if (!inviteRole || !inviteEmail || !invitePassword) {
+        if (!inviteRole || !inviteEmail || (emailExists === false && !invitePassword)) {
             setToast({
                 title: "Error",
                 description: "Please fill in all fields",
@@ -274,11 +320,15 @@ export function OrganizationUsersContent() {
 
         try {
             setIsInviting(true)
-            await profileService.inviteUser({
+            const payload: { role: string; email: string; password?: string } = {
                 role: inviteRole,
                 email: inviteEmail,
-                password: invitePassword
-            })
+            }
+            if (emailExists === false && invitePassword) {
+                payload.password = invitePassword
+            }
+
+            await profileService.inviteUser(payload)
             setToast({
                 title: "Success",
                 description: `Invitation sent to ${inviteEmail}`,
@@ -288,6 +338,8 @@ export function OrganizationUsersContent() {
             setInviteRole("")
             setInviteEmail("")
             setInvitePassword("")
+            setInviteStep(1)
+            setEmailExists(null)
 
             if (activeTab === "invites") {
                 fetchInvites()
@@ -398,7 +450,14 @@ export function OrganizationUsersContent() {
                         </div> */}
                     </div>
                     <Button
-                        onClick={() => setIsInviteModalOpen(true)}
+                        onClick={() => {
+                            setInviteStep(1)
+                            setInviteEmail("")
+                            setInvitePassword("")
+                            setInviteRole("")
+                            setEmailExists(null)
+                            setIsInviteModalOpen(true)
+                        }}
                         className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-blue-500/20 transition-all font-semibold"
                     >
                         <UserPlus className="h-5 w-5" />
@@ -576,7 +635,19 @@ export function OrganizationUsersContent() {
             </div>
 
             {/* Invite User Modal */}
-            <Dialog open={isInviteModalOpen} onOpenChange={setIsInviteModalOpen}>
+            <Dialog 
+                open={isInviteModalOpen} 
+                onOpenChange={(open) => {
+                    setIsInviteModalOpen(open)
+                    if (!open) {
+                        setInviteStep(1)
+                        setInviteEmail("")
+                        setInvitePassword("")
+                        setInviteRole("")
+                        setEmailExists(null)
+                    }
+                }}
+            >
                 <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
                     <DialogHeader className="p-6 pb-0">
                         <div className="flex items-center justify-between">
@@ -589,79 +660,115 @@ export function OrganizationUsersContent() {
                         </div>
                     </DialogHeader>
 
-                    <div className="p-6 space-y-6">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                    Email Address <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="Enter colleague's email"
-                                    value={inviteEmail}
-                                    onChange={(e) => setInviteEmail(e.target.value)}
-                                    required
-                                    className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
-                                />
+                    {inviteStep === 1 ? (
+                        <>
+                            <div className="p-6 space-y-6">
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            Email Address <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder="Enter colleague's email"
+                                            value={inviteEmail}
+                                            onChange={(e) => setInviteEmail(e.target.value)}
+                                            required
+                                            className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="password" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                    Password <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="Enter password"
-                                    value={invitePassword}
-                                    onChange={(e) => setInvitePassword(e.target.value)}
-                                    required
-                                    className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
-                                />
+                            <DialogFooter className="p-6 pt-2 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsInviteModalOpen(false)}
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleNextStep}
+                                    disabled={isCheckingEmail || !inviteEmail}
+                                    className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
+                                >
+                                    {isCheckingEmail ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Checking...
+                                        </>
+                                    ) : (
+                                        "Next"
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </>
+                    ) : (
+                        <>
+                            <div className="p-6 space-y-6">
+                                <div className="space-y-4">
+                                    {emailExists === false && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="password" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                                Password <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Input
+                                                id="password"
+                                                type="password"
+                                                placeholder="Enter password"
+                                                value={invitePassword}
+                                                onChange={(e) => setInvitePassword(e.target.value)}
+                                                required
+                                                className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            Assign Role <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Select value={inviteRole} onValueChange={setInviteRole}>
+                                            <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                                <SelectValue placeholder="Select a role" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
+                                                <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem>
+                                                <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
+                                                <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                    Assign Role <span className="text-red-500">*</span>
-                                </Label>
-                                <Select value={inviteRole} onValueChange={setInviteRole}>
-                                    <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                                        <SelectValue placeholder="Select a role" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
-                                        <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem>
-                                        <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
-                                        <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <DialogFooter className="p-6 pt-2 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsInviteModalOpen(false)}
-                            className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleInviteUser}
-                            disabled={isInviting || !inviteEmail || !inviteRole || !invitePassword}
-                            className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
-                        >
-                            {isInviting ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Adding...
-                                </>
-                            ) : (
-                                "Add User"
-                            )}
-                        </Button>
-                    </DialogFooter>
+                            <DialogFooter className="p-6 pt-2 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsInviteModalOpen(false)}
+                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleInviteUser}
+                                    disabled={isInviting || !inviteEmail || !inviteRole || (emailExists === false && !invitePassword)}
+                                    className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
+                                >
+                                    {isInviting ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Adding...
+                                        </>
+                                    ) : (
+                                        "Add User"
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </>
+                    )}
                 </DialogContent>
             </Dialog>
 
