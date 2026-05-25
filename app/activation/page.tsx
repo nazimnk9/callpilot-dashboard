@@ -84,6 +84,34 @@ export default function ActivationPage() {
     }, [router]);
     const [isSaving, setIsSaving] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+    const [isCustomerNameModified, setIsCustomerNameModified] = useState(false);
+    const [isFriendlyNameModified, setIsFriendlyNameModified] = useState(false);
+
+    const clearValidationError = (key: string) => {
+        if (validationErrors[key]) {
+            setValidationErrors(prev => {
+                const next = { ...prev };
+                delete next[key];
+                return next;
+            });
+        }
+    };
+
+    const scrollToFirstError = (errors: Record<string, string>) => {
+        const firstErrorKey = Object.keys(errors)[0];
+        if (firstErrorKey) {
+            const element = document.getElementById(firstErrorKey);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+                element.focus();
+            }
+        }
+    };
+
+    useEffect(() => {
+        setValidationErrors({});
+    }, [currentStep]);
     const [org, setOrg] = useState({
         name: "",
         uid: "",
@@ -134,6 +162,13 @@ export default function ActivationPage() {
     });
     const [initialOrg, setInitialOrg] = useState({ ...org });
     const [singaporeBusinessName, setSingaporeBusinessName] = useState("");
+
+    useEffect(() => {
+        if (org.country !== "United Kingdom") {
+            setIsCustomerNameModified(false);
+        }
+        setIsFriendlyNameModified(false);
+    }, [org.country]);
 
     const clearActivationData = () => {
         const keys = [
@@ -333,6 +368,16 @@ export default function ActivationPage() {
             };
             setOrg(orgData);
             setInitialOrg(orgData);
+            // setIrelandEndUser({
+            //     business_name: data.business_name || data.name || "",
+            //     business_website: data.business_website || "",
+            //     business_registration_number: data.reg_number || "",
+            //     first_name: data.authorize_representative_first_name || "",
+            //     last_name: data.authorize_representative_last_name || "",
+            //     email: data.authorize_representative_email || "",
+            //     business_registration_identifier: data.business_registration_authority || "UK:CRN",
+            //     phone_number: phoneVal
+            // });
         } catch (err: any) {
             console.error("Error fetching organization:", err);
             setAlertConfig({
@@ -369,12 +414,9 @@ export default function ActivationPage() {
 
     const handleNextStep1 = async () => {
         if (!org.country) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please select your country."],
-                variant: "destructive"
-            });
+            const newErrors = { country: "Please select your country." };
+            setValidationErrors(newErrors);
+            scrollToFirstError(newErrors);
             return;
         }
 
@@ -388,7 +430,13 @@ export default function ActivationPage() {
             country_iso_code: org.country_iso_code
         }));
 
-        setAustraliaAddress(prev => ({ ...prev, IsoCountry: org.country_iso_code }));
+        setAustraliaAddress(prev => ({
+            ...prev,
+            IsoCountry: org.country_iso_code,
+            FriendlyName: org.country === "Australia" && (!isFriendlyNameModified || !prev.FriendlyName)
+                ? `My ${org.country} Address In last stage of Business Verification`
+                : prev.FriendlyName
+        }));
 
         if (org.country === "Australia" || org.country === "Ireland" || org.country === "Singapore" || org.country === "United Kingdom" || org.country === "New Zealand") {
             try {
@@ -525,17 +573,26 @@ export default function ActivationPage() {
 
         if (org.country === "Ireland" || org.country === "United Kingdom" || org.country === "New Zealand") {
             const isNZ = org.country === "New Zealand";
-            const isValid = isNZ
-                ? !!irelandEndUser.business_name
-                : (!!irelandEndUser.business_name && !!irelandEndUser.business_website && !!irelandEndUser.business_registration_number && !!irelandEndUser.first_name && !!irelandEndUser.last_name && !!irelandEndUser.email);
+            const newErrors: Record<string, string> = {};
+            if (!irelandEndUser.business_name) {
+                if (isNZ) {
+                    newErrors.nz_business_name = "Business Name is required.";
+                } else {
+                    newErrors.ie_gb_business_name = "Business Name is required.";
+                }
+            }
+            if (!isNZ) {
+                if (!irelandEndUser.business_website) newErrors.ie_gb_business_website = "Business Website is required.";
+                if (!irelandEndUser.business_registration_number) newErrors.ie_gb_business_reg_number = "Business Registration Number is required.";
+                if (org.country === "United Kingdom" && !irelandEndUser.phone_number) newErrors.uk_phone = "Phone Number is required.";
+                if (!irelandEndUser.first_name) newErrors.ie_gb_first_name = "Representative First Name is required.";
+                if (!irelandEndUser.last_name) newErrors.ie_gb_last_name = "Representative Last Name is required.";
+                if (!irelandEndUser.email) newErrors.ie_gb_email = "Contact Email is required.";
+            }
 
-            if (!isValid) {
-                setAlertConfig({
-                    open: true,
-                    title: "Missing Information",
-                    description: ["Please fill in all required fields."],
-                    variant: "destructive"
-                });
+            if (Object.keys(newErrors).length > 0) {
+                setValidationErrors(newErrors);
+                scrollToFirstError(newErrors);
                 return;
             }
 
@@ -612,6 +669,20 @@ export default function ActivationPage() {
                     if (org.country === "New Zealand") {
                         localStorage.setItem("nz_business_name", irelandEndUser.business_name);
                     }
+                    if (org.country === "Ireland" || org.country === "United Kingdom" || org.country === "New Zealand") {
+                        setAustraliaAddress(prev => {
+                            const updated = { ...prev };
+                            if (org.country === "United Kingdom") {
+                                updated.CustomerName = !isCustomerNameModified || !prev.CustomerName
+                                    ? `${irelandEndUser.first_name} ${irelandEndUser.last_name}`.trim()
+                                    : prev.CustomerName;
+                            }
+                            updated.FriendlyName = !isFriendlyNameModified || !prev.FriendlyName
+                                ? `My ${org.country} Address In last stage of Business Verification`
+                                : prev.FriendlyName;
+                            return updated;
+                        });
+                    }
                     setCurrentStep(3);
                 }
             } catch (err: any) {
@@ -628,13 +699,18 @@ export default function ActivationPage() {
             return;
         }
 
-        if (!org.business_name || !org.reg_number || !org.business_registration_authority || !org.business_website || !org.street_address || !org.city || !org.post_code) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please fill in all required fields."],
-                variant: "destructive"
-            });
+        const newErrors: Record<string, string> = {};
+        if (!org.business_name) newErrors.business_name = "Business Name is required.";
+        if (!org.reg_number) newErrors.reg_number = "Registration Number is required.";
+        if (!org.business_registration_authority) newErrors.business_registration_authority = "Registration Authority is required.";
+        if (!org.business_website) newErrors.business_website = "Business Website is required.";
+        if (!org.street_address) newErrors.street_address = "Street Address is required.";
+        if (!org.city) newErrors.city = "Town / City is required.";
+        if (!org.post_code) newErrors.post_code = "Postcode / ZIP is required.";
+
+        if (Object.keys(newErrors).length > 0) {
+            setValidationErrors(newErrors);
+            scrollToFirstError(newErrors);
             return;
         }
         localStorage.setItem("activation_step2", JSON.stringify({
@@ -652,13 +728,17 @@ export default function ActivationPage() {
     };
 
     const handleIrelandSubmit = async () => {
-        if (!australiaAddress.CustomerName || !australiaAddress.Street || !australiaAddress.City || !australiaAddress.Region || !australiaAddress.PostalCode || !australiaAddress.FriendlyName) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please fill in all required fields for the address."],
-                variant: "destructive"
-            });
+        const newErrors: Record<string, string> = {};
+        if (!australiaAddress.CustomerName) newErrors.CustomerName = "Customer Name is required.";
+        if (!australiaAddress.FriendlyName) newErrors.FriendlyName = "Friendly Name is required.";
+        if (!australiaAddress.Street) newErrors.Street = "Street is required.";
+        if (!australiaAddress.City) newErrors.City = "City is required.";
+        if (!australiaAddress.Region) newErrors.Region = "Region / State is required.";
+        if (!australiaAddress.PostalCode) newErrors.PostalCode = "Postal Code is required.";
+
+        if (Object.keys(newErrors).length > 0) {
+            setValidationErrors(newErrors);
+            scrollToFirstError(newErrors);
             return;
         }
 
@@ -790,12 +870,9 @@ export default function ActivationPage() {
 
     const handleNZFinalSubmit = async () => {
         if (!org.business_registration_certificate) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Document",
-                description: ["Please upload the required document."],
-                variant: "destructive"
-            });
+            const newErrors = { nz_cert: "Business Registration Document is required." };
+            setValidationErrors(newErrors);
+            scrollToFirstError(newErrors);
             return;
         }
 
@@ -902,13 +979,17 @@ export default function ActivationPage() {
     };
 
     const handleAustraliaSubmit = async () => {
-        if (!australiaAddress.CustomerName || !australiaAddress.Street || !australiaAddress.City || !australiaAddress.Region || !australiaAddress.PostalCode || !australiaAddress.FriendlyName) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please fill in all required fields for the address."],
-                variant: "destructive"
-            });
+        const newErrors: Record<string, string> = {};
+        if (!australiaAddress.CustomerName) newErrors.CustomerName = "Customer Name is required.";
+        if (!australiaAddress.FriendlyName) newErrors.FriendlyName = "Friendly Name is required.";
+        if (!australiaAddress.Street) newErrors.Street = "Street is required.";
+        if (!australiaAddress.City) newErrors.City = "City is required.";
+        if (!australiaAddress.Region) newErrors.Region = "Region / State is required.";
+        if (!australiaAddress.PostalCode) newErrors.PostalCode = "Postal Code is required.";
+
+        if (Object.keys(newErrors).length > 0) {
+            setValidationErrors(newErrors);
+            scrollToFirstError(newErrors);
             return;
         }
 
@@ -977,12 +1058,9 @@ export default function ActivationPage() {
 
     const handleSingaporeSubmit = async () => {
         if (!singaporeBusinessName) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please enter your business name."],
-                variant: "destructive"
-            });
+            const newErrors = { singapore_business_name: "Business Name is required." };
+            setValidationErrors(newErrors);
+            scrollToFirstError(newErrors);
             return;
         }
 
@@ -1090,13 +1168,15 @@ export default function ActivationPage() {
     };
 
     const handleNextStep3 = () => {
-        if (!org.authorize_representative_first_name || !org.authorize_representative_last_name || !org.authorize_representative_email || !org.authorize_representative_phone) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Information",
-                description: ["Please fill in all required fields."],
-                variant: "destructive"
-            });
+        const newErrors: Record<string, string> = {};
+        if (!org.authorize_representative_first_name) newErrors.rep_first_name = "First Name is required.";
+        if (!org.authorize_representative_last_name) newErrors.rep_last_name = "Last Name is required.";
+        if (!org.authorize_representative_email) newErrors.rep_email = "Email is required.";
+        if (!org.authorize_representative_phone) newErrors.rep_phone = "Phone Number is required.";
+
+        if (Object.keys(newErrors).length > 0) {
+            setValidationErrors(newErrors);
+            scrollToFirstError(newErrors);
             return;
         }
 
@@ -1121,13 +1201,13 @@ export default function ActivationPage() {
     };
 
     const handleNextStep4 = () => {
-        if (!org.business_registration_certificate || !org.proof_of_address) {
-            setAlertConfig({
-                open: true,
-                title: "Missing Documents",
-                description: ["You are required to provide the following documents to verify your business."],
-                variant: "destructive"
-            });
+        const newErrors: Record<string, string> = {};
+        if (!org.business_registration_certificate) newErrors.cert = "Business Registration Certificate is required.";
+        if (!org.proof_of_address) newErrors.proof = "Proof of Address is required.";
+
+        if (Object.keys(newErrors).length > 0) {
+            setValidationErrors(newErrors);
+            scrollToFirstError(newErrors);
             return;
         }
 
@@ -1465,14 +1545,19 @@ export default function ActivationPage() {
                                         <Label className="text-sm font-semibold">Country</Label>
                                         <div className="relative" ref={dropdownRef}>
                                             <div
+                                                id="country"
+                                                tabIndex={0}
                                                 onClick={() => setIsCountryOpen(!isCountryOpen)}
-                                                className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                                                className={`w-full bg-white dark:bg-gray-800 border ${validationErrors.country ? "border-red-500 focus-visible:ring-red-500" : "border-input"} rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors`}
                                             >
                                                 <span className={org.country ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
                                                     {org.country ? `${org.country_iso_code ? `(${org.country_iso_code}) ` : ""}${org.country}` : "Select country"}
                                                 </span>
                                                 <ChevronsUpDown size={16} className="text-gray-400" />
                                             </div>
+                                            {validationErrors.country && (
+                                                <p className="text-xs text-red-500 mt-1">{validationErrors.country}</p>
+                                            )}
 
                                             {isCountryOpen && (
                                                 <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
@@ -1498,6 +1583,7 @@ export default function ActivationPage() {
                                                                         setOrg({ ...org, country: c.country, country_iso_code: c.country_code });
                                                                         setIsCountryOpen(false);
                                                                         setCountrySearch("");
+                                                                        clearValidationError("country");
                                                                     }}
                                                                     className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
                                                                 >
@@ -1546,9 +1632,16 @@ export default function ActivationPage() {
                                                     id="CustomerName"
                                                     placeholder="Enter customer name"
                                                     value={australiaAddress.CustomerName}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, CustomerName: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, CustomerName: e.target.value });
+                                                        clearValidationError("CustomerName");
+                                                    }}
+                                                    className={validationErrors.CustomerName ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.CustomerName && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.CustomerName}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="FriendlyName" className="text-sm font-semibold">Friendly Name <span className="text-red-500">*</span></Label>
@@ -1556,9 +1649,17 @@ export default function ActivationPage() {
                                                     id="FriendlyName"
                                                     placeholder="e.g. My Australia Address"
                                                     value={australiaAddress.FriendlyName}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, FriendlyName: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, FriendlyName: e.target.value });
+                                                        clearValidationError("FriendlyName");
+                                                        setIsFriendlyNameModified(true);
+                                                    }}
+                                                    className={validationErrors.FriendlyName ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.FriendlyName && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.FriendlyName}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
                                                 <Label htmlFor="Street" className="text-sm font-semibold">Street <span className="text-red-500">*</span></Label>
@@ -1566,9 +1667,16 @@ export default function ActivationPage() {
                                                     id="Street"
                                                     placeholder="Enter street address"
                                                     value={australiaAddress.Street}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, Street: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, Street: e.target.value });
+                                                        clearValidationError("Street");
+                                                    }}
+                                                    className={validationErrors.Street ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.Street && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.Street}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
                                                 <Label htmlFor="StreetSecondary" className="text-sm font-semibold">Street Secondary</Label>
@@ -1585,9 +1693,16 @@ export default function ActivationPage() {
                                                     id="City"
                                                     placeholder="Enter city"
                                                     value={australiaAddress.City}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, City: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, City: e.target.value });
+                                                        clearValidationError("City");
+                                                    }}
+                                                    className={validationErrors.City ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.City && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.City}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="Region" className="text-sm font-semibold">Region / State <span className="text-red-500">*</span></Label>
@@ -1595,9 +1710,16 @@ export default function ActivationPage() {
                                                     id="Region"
                                                     placeholder="Enter region"
                                                     value={australiaAddress.Region}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, Region: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, Region: e.target.value });
+                                                        clearValidationError("Region");
+                                                    }}
+                                                    className={validationErrors.Region ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.Region && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.Region}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="PostalCode" className="text-sm font-semibold">Postal Code <span className="text-red-500">*</span></Label>
@@ -1605,9 +1727,16 @@ export default function ActivationPage() {
                                                     id="PostalCode"
                                                     placeholder="Enter postal code"
                                                     value={australiaAddress.PostalCode}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, PostalCode: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, PostalCode: e.target.value });
+                                                        clearValidationError("PostalCode");
+                                                    }}
+                                                    className={validationErrors.PostalCode ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.PostalCode && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.PostalCode}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
@@ -1649,9 +1778,16 @@ export default function ActivationPage() {
                                                     id="singapore_business_name"
                                                     placeholder="Enter registered business name"
                                                     value={singaporeBusinessName}
-                                                    onChange={(e) => setSingaporeBusinessName(e.target.value)}
+                                                    onChange={(e) => {
+                                                        setSingaporeBusinessName(e.target.value);
+                                                        clearValidationError("singapore_business_name");
+                                                    }}
+                                                    className={validationErrors.singapore_business_name ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.singapore_business_name && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.singapore_business_name}</p>
+                                                )}
                                             </div>
                                         </div>
 
@@ -1665,7 +1801,7 @@ export default function ActivationPage() {
                                             </Button>
                                             <Button
                                                 onClick={handleSingaporeSubmit}
-                                                disabled={isSaving || !singaporeBusinessName}
+                                                disabled={isSaving}
                                                 className="bg-primary hover:bg-primary/90 text-white px-8"
                                             >
                                                 {isSaving ? "Submitting..." : "Submit"}
@@ -1686,9 +1822,16 @@ export default function ActivationPage() {
                                                     id="nz_business_name"
                                                     placeholder="Enter registered business name"
                                                     value={irelandEndUser.business_name}
-                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, business_name: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setIrelandEndUser({ ...irelandEndUser, business_name: e.target.value });
+                                                        clearValidationError("nz_business_name");
+                                                    }}
+                                                    className={validationErrors.nz_business_name ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.nz_business_name && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.nz_business_name}</p>
+                                                )}
                                             </div>
                                         </div>
 
@@ -1702,7 +1845,7 @@ export default function ActivationPage() {
                                             </Button>
                                             <Button
                                                 onClick={handleNextStep2}
-                                                disabled={isSaving || !irelandEndUser.business_name}
+                                                disabled={isSaving}
                                                 className="bg-primary hover:bg-primary/90 text-white px-8"
                                             >
                                                 {isSaving ? "Submitting..." : "Next"}
@@ -1716,31 +1859,55 @@ export default function ActivationPage() {
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-semibold">Business Name <span className="text-red-500">*</span></Label>
+                                                <Label htmlFor="ie_gb_business_name" className="text-sm font-semibold">Business Name <span className="text-red-500">*</span></Label>
                                                 <Input
+                                                    id="ie_gb_business_name"
                                                     placeholder="Enter business name"
                                                     value={irelandEndUser.business_name}
-                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, business_name: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setIrelandEndUser({ ...irelandEndUser, business_name: e.target.value });
+                                                        clearValidationError("ie_gb_business_name");
+                                                    }}
+                                                    className={validationErrors.ie_gb_business_name ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.ie_gb_business_name && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.ie_gb_business_name}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-semibold">Business Website <span className="text-red-500">*</span></Label>
+                                                <Label htmlFor="ie_gb_business_website" className="text-sm font-semibold">Business Website <span className="text-red-500">*</span></Label>
                                                 <Input
+                                                    id="ie_gb_business_website"
                                                     placeholder="https://example.com"
                                                     value={irelandEndUser.business_website}
-                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, business_website: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setIrelandEndUser({ ...irelandEndUser, business_website: e.target.value });
+                                                        clearValidationError("ie_gb_business_website");
+                                                    }}
+                                                    className={validationErrors.ie_gb_business_website ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.ie_gb_business_website && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.ie_gb_business_website}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
-                                                <Label className="text-sm font-semibold">Business Registration Number <span className="text-red-500">*</span></Label>
+                                                <Label htmlFor="ie_gb_business_reg_number" className="text-sm font-semibold">Business Registration Number <span className="text-red-500">*</span></Label>
                                                 <Input
+                                                    id="ie_gb_business_reg_number"
                                                     placeholder="Enter registration number"
                                                     value={irelandEndUser.business_registration_number}
-                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, business_registration_number: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setIrelandEndUser({ ...irelandEndUser, business_registration_number: e.target.value });
+                                                        clearValidationError("ie_gb_business_reg_number");
+                                                    }}
+                                                    className={validationErrors.ie_gb_business_reg_number ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.ie_gb_business_reg_number && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.ie_gb_business_reg_number}</p>
+                                                )}
                                             </div>
                                             {org.country === "United Kingdom" && (
                                                 <div className="space-y-2 md:col-span-2">
@@ -1829,44 +1996,76 @@ export default function ActivationPage() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <Input
-                                                            id="uk_phone"
-                                                            placeholder="Enter phone number"
-                                                            value={irelandEndUser.phone_number}
-                                                            onChange={(e) => setIrelandEndUser({ ...irelandEndUser, phone_number: e.target.value })}
-                                                            required
-                                                            className="flex-1"
-                                                        />
+                                                        <div className="flex-1 flex flex-col">
+                                                            <Input
+                                                                id="uk_phone"
+                                                                placeholder="Enter phone number"
+                                                                value={irelandEndUser.phone_number}
+                                                                onChange={(e) => {
+                                                                    setIrelandEndUser({ ...irelandEndUser, phone_number: e.target.value });
+                                                                    clearValidationError("uk_phone");
+                                                                }}
+                                                                className={`flex-1 ${validationErrors.uk_phone ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                                                                required
+                                                            />
+                                                            {validationErrors.uk_phone && (
+                                                                <p className="text-xs text-red-500 mt-1">{validationErrors.uk_phone}</p>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-semibold">Representative First Name <span className="text-red-500">*</span></Label>
+                                                <Label htmlFor="ie_gb_first_name" className="text-sm font-semibold">Representative First Name <span className="text-red-500">*</span></Label>
                                                 <Input
+                                                    id="ie_gb_first_name"
                                                     placeholder="Enter first name"
                                                     value={irelandEndUser.first_name}
-                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, first_name: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setIrelandEndUser({ ...irelandEndUser, first_name: e.target.value });
+                                                        clearValidationError("ie_gb_first_name");
+                                                    }}
+                                                    className={validationErrors.ie_gb_first_name ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.ie_gb_first_name && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.ie_gb_first_name}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-semibold">Representative Last Name <span className="text-red-500">*</span></Label>
+                                                <Label htmlFor="ie_gb_last_name" className="text-sm font-semibold">Representative Last Name <span className="text-red-500">*</span></Label>
                                                 <Input
+                                                    id="ie_gb_last_name"
                                                     placeholder="Enter last name"
                                                     value={irelandEndUser.last_name}
-                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, last_name: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setIrelandEndUser({ ...irelandEndUser, last_name: e.target.value });
+                                                        clearValidationError("ie_gb_last_name");
+                                                    }}
+                                                    className={validationErrors.ie_gb_last_name ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.ie_gb_last_name && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.ie_gb_last_name}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
-                                                <Label className="text-sm font-semibold">Contact Email <span className="text-red-500">*</span></Label>
+                                                <Label htmlFor="ie_gb_email" className="text-sm font-semibold">Contact Email <span className="text-red-500">*</span></Label>
                                                 <Input
+                                                    id="ie_gb_email"
                                                     type="email"
                                                     placeholder="enter@email.com"
                                                     value={irelandEndUser.email}
-                                                    onChange={(e) => setIrelandEndUser({ ...irelandEndUser, email: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setIrelandEndUser({ ...irelandEndUser, email: e.target.value });
+                                                        clearValidationError("ie_gb_email");
+                                                    }}
+                                                    className={validationErrors.ie_gb_email ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.ie_gb_email && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.ie_gb_email}</p>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex justify-between pt-6">
@@ -1900,9 +2099,16 @@ export default function ActivationPage() {
                                                     id="business_name"
                                                     placeholder="Enter business name"
                                                     value={org.business_name}
-                                                    onChange={(e) => setOrg({ ...org, business_name: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, business_name: e.target.value });
+                                                        clearValidationError("business_name");
+                                                    }}
+                                                    className={validationErrors.business_name ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.business_name && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.business_name}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="reg_number" className="text-sm font-semibold">Business Registration Number <span className="text-red-500">*</span></Label>
@@ -1910,22 +2116,34 @@ export default function ActivationPage() {
                                                     id="reg_number"
                                                     placeholder="Enter registration number"
                                                     value={org.reg_number}
-                                                    onChange={(e) => setOrg({ ...org, reg_number: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, reg_number: e.target.value });
+                                                        clearValidationError("reg_number");
+                                                    }}
+                                                    className={validationErrors.reg_number ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.reg_number && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.reg_number}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
                                                 <Label htmlFor="business_registration_authority" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Business Registration Authority <span className="text-red-500">*</span></Label>
                                                 <div className="relative" ref={authorityDropdownRef}>
                                                     <div
+                                                        id="business_registration_authority"
+                                                        tabIndex={0}
                                                         onClick={() => setIsAuthorityOpen(!isAuthorityOpen)}
-                                                        className="w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                                                        className={`w-full bg-white dark:bg-gray-800 border ${validationErrors.business_registration_authority ? "border-red-500 focus-visible:ring-red-500" : "border-input"} rounded-md h-10 px-3 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors`}
                                                     >
                                                         <span className={org.business_registration_authority ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
                                                             {org.business_registration_authority || "Select Authority"}
                                                         </span>
                                                         <ChevronsUpDown size={16} className="text-gray-400" />
                                                     </div>
+                                                    {validationErrors.business_registration_authority && (
+                                                        <p className="text-xs text-red-500 mt-1">{validationErrors.business_registration_authority}</p>
+                                                    )}
 
                                                     {isAuthorityOpen && (
                                                         <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
@@ -1936,6 +2154,7 @@ export default function ActivationPage() {
                                                                         onClick={() => {
                                                                             setOrg({ ...org, business_registration_authority: option });
                                                                             setIsAuthorityOpen(false);
+                                                                            clearValidationError("business_registration_authority");
                                                                         }}
                                                                         className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
                                                                     >
@@ -1956,9 +2175,16 @@ export default function ActivationPage() {
                                                     id="business_website"
                                                     placeholder="https://example.com"
                                                     value={org.business_website}
-                                                    onChange={(e) => setOrg({ ...org, business_website: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, business_website: e.target.value });
+                                                        clearValidationError("business_website");
+                                                    }}
+                                                    className={validationErrors.business_website ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.business_website && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.business_website}</p>
+                                                )}
                                             </div>
 
                                             {/* Address Section */}
@@ -1968,9 +2194,16 @@ export default function ActivationPage() {
                                                     id="street_address"
                                                     placeholder="Enter street address"
                                                     value={org.street_address}
-                                                    onChange={(e) => setOrg({ ...org, street_address: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, street_address: e.target.value });
+                                                        clearValidationError("street_address");
+                                                    }}
+                                                    className={validationErrors.street_address ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.street_address && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.street_address}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="city" className="text-sm font-semibold">Town / City <span className="text-red-500">*</span></Label>
@@ -1978,9 +2211,16 @@ export default function ActivationPage() {
                                                     id="city"
                                                     placeholder="Enter city"
                                                     value={org.city}
-                                                    onChange={(e) => setOrg({ ...org, city: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, city: e.target.value });
+                                                        clearValidationError("city");
+                                                    }}
+                                                    className={validationErrors.city ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.city && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.city}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="province" className="text-sm font-semibold">State</Label>
@@ -1997,9 +2237,16 @@ export default function ActivationPage() {
                                                     id="post_code"
                                                     placeholder="Enter post code"
                                                     value={org.post_code}
-                                                    onChange={(e) => setOrg({ ...org, post_code: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, post_code: e.target.value });
+                                                        clearValidationError("post_code");
+                                                    }}
+                                                    className={validationErrors.post_code ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required={org.country === "United Kingdom"}
                                                 />
+                                                {validationErrors.post_code && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.post_code}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="apt_or_suite" className="text-sm font-semibold">APT/Suite</Label>
@@ -2045,9 +2292,19 @@ export default function ActivationPage() {
                                                     id="CustomerName"
                                                     placeholder="Enter customer name"
                                                     value={australiaAddress.CustomerName}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, CustomerName: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, CustomerName: e.target.value });
+                                                        clearValidationError("CustomerName");
+                                                        if (org.country === "United Kingdom") {
+                                                            setIsCustomerNameModified(true);
+                                                        }
+                                                    }}
+                                                    className={validationErrors.CustomerName ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.CustomerName && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.CustomerName}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="FriendlyName" className="text-sm font-semibold">Friendly Name <span className="text-red-500">*</span></Label>
@@ -2055,9 +2312,17 @@ export default function ActivationPage() {
                                                     id="FriendlyName"
                                                     placeholder={`e.g. My ${org.country} Address`}
                                                     value={australiaAddress.FriendlyName}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, FriendlyName: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, FriendlyName: e.target.value });
+                                                        clearValidationError("FriendlyName");
+                                                        setIsFriendlyNameModified(true);
+                                                    }}
+                                                    className={validationErrors.FriendlyName ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.FriendlyName && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.FriendlyName}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
                                                 <Label htmlFor="Street" className="text-sm font-semibold">Street <span className="text-red-500">*</span></Label>
@@ -2065,9 +2330,16 @@ export default function ActivationPage() {
                                                     id="Street"
                                                     placeholder="Enter street address"
                                                     value={australiaAddress.Street}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, Street: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, Street: e.target.value });
+                                                        clearValidationError("Street");
+                                                    }}
+                                                    className={validationErrors.Street ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.Street && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.Street}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2 md:col-span-2">
                                                 <Label htmlFor="StreetSecondary" className="text-sm font-semibold">Street Secondary</Label>
@@ -2084,9 +2356,16 @@ export default function ActivationPage() {
                                                     id="City"
                                                     placeholder="Enter city"
                                                     value={australiaAddress.City}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, City: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, City: e.target.value });
+                                                        clearValidationError("City");
+                                                    }}
+                                                    className={validationErrors.City ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.City && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.City}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="Region" className="text-sm font-semibold">Region / State <span className="text-red-500">*</span></Label>
@@ -2094,9 +2373,16 @@ export default function ActivationPage() {
                                                     id="Region"
                                                     placeholder="Enter region"
                                                     value={australiaAddress.Region}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, Region: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, Region: e.target.value });
+                                                        clearValidationError("Region");
+                                                    }}
+                                                    className={validationErrors.Region ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.Region && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.Region}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="PostalCode" className="text-sm font-semibold">Postal Code <span className="text-red-500">*</span></Label>
@@ -2104,9 +2390,16 @@ export default function ActivationPage() {
                                                     id="PostalCode"
                                                     placeholder="Enter postal code"
                                                     value={australiaAddress.PostalCode}
-                                                    onChange={(e) => setAustraliaAddress({ ...australiaAddress, PostalCode: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setAustraliaAddress({ ...australiaAddress, PostalCode: e.target.value });
+                                                        clearValidationError("PostalCode");
+                                                    }}
+                                                    className={validationErrors.PostalCode ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.PostalCode && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.PostalCode}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
@@ -2121,7 +2414,7 @@ export default function ActivationPage() {
                                         <div className="flex justify-between pt-6">
                                             <Button
                                                 variant="outline"
-                                                onClick={() => setCurrentStep(2)}
+                                                onClick={() => setCurrentStep(1)}
                                                 className="px-8"
                                             >
                                                 Previous
@@ -2191,9 +2484,16 @@ export default function ActivationPage() {
                                                     id="rep_first_name"
                                                     placeholder="Enter first name"
                                                     value={org.authorize_representative_first_name}
-                                                    onChange={(e) => setOrg({ ...org, authorize_representative_first_name: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, authorize_representative_first_name: e.target.value });
+                                                        clearValidationError("rep_first_name");
+                                                    }}
+                                                    className={validationErrors.rep_first_name ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.rep_first_name && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.rep_first_name}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="rep_last_name" className="text-sm font-semibold">Last Name <span className="text-red-500">*</span></Label>
@@ -2201,9 +2501,16 @@ export default function ActivationPage() {
                                                     id="rep_last_name"
                                                     placeholder="Enter last name"
                                                     value={org.authorize_representative_last_name}
-                                                    onChange={(e) => setOrg({ ...org, authorize_representative_last_name: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, authorize_representative_last_name: e.target.value });
+                                                        clearValidationError("rep_last_name");
+                                                    }}
+                                                    className={validationErrors.rep_last_name ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.rep_last_name && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.rep_last_name}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="rep_email" className="text-sm font-semibold">Email <span className="text-red-500">*</span></Label>
@@ -2212,9 +2519,16 @@ export default function ActivationPage() {
                                                     type="email"
                                                     placeholder="Enter email address"
                                                     value={org.authorize_representative_email}
-                                                    onChange={(e) => setOrg({ ...org, authorize_representative_email: e.target.value })}
+                                                    onChange={(e) => {
+                                                        setOrg({ ...org, authorize_representative_email: e.target.value });
+                                                        clearValidationError("rep_email");
+                                                    }}
+                                                    className={validationErrors.rep_email ? "border-red-500 focus-visible:ring-red-500" : ""}
                                                     required
                                                 />
+                                                {validationErrors.rep_email && (
+                                                    <p className="text-xs text-red-500 mt-1">{validationErrors.rep_email}</p>
+                                                )}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="rep_phone" className="text-sm font-semibold">Phone Number <span className="text-red-500">*</span></Label>
@@ -2276,14 +2590,22 @@ export default function ActivationPage() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <Input
-                                                        id="rep_phone"
-                                                        placeholder="Enter phone number"
-                                                        value={org.authorize_representative_phone}
-                                                        onChange={(e) => setOrg({ ...org, authorize_representative_phone: e.target.value })}
-                                                        required
-                                                        className="flex-1"
-                                                    />
+                                                    <div className="flex-1 flex flex-col">
+                                                        <Input
+                                                            id="rep_phone"
+                                                            placeholder="Enter phone number"
+                                                            value={org.authorize_representative_phone}
+                                                            onChange={(e) => {
+                                                                setOrg({ ...org, authorize_representative_phone: e.target.value });
+                                                                clearValidationError("rep_phone");
+                                                            }}
+                                                            required
+                                                            className={`flex-1 ${validationErrors.rep_phone ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                                                        />
+                                                        {validationErrors.rep_phone && (
+                                                            <p className="text-xs text-red-500 mt-1">{validationErrors.rep_phone}</p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2291,7 +2613,7 @@ export default function ActivationPage() {
                                         <div className="flex justify-between pt-6">
                                             <Button
                                                 variant="outline"
-                                                onClick={() => setCurrentStep(2)}
+                                                onClick={() => setCurrentStep(1)}
                                                 className="px-8"
                                             >
                                                 Previous
@@ -2325,10 +2647,16 @@ export default function ActivationPage() {
                                                         id="nz_cert"
                                                         type="file"
                                                         accept="image/*,.pdf,.doc,.docx"
-                                                        onChange={(e) => setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null })}
-                                                        className="cursor-pointer"
+                                                        onChange={(e) => {
+                                                            setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null });
+                                                            clearValidationError("nz_cert");
+                                                        }}
+                                                        className={`cursor-pointer ${validationErrors.nz_cert ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                                                         required
                                                     />
+                                                    {validationErrors.nz_cert && (
+                                                        <p className="text-xs text-red-500">{validationErrors.nz_cert}</p>
+                                                    )}
                                                     {org.business_registration_certificate && (
                                                         <p className="text-xs text-green-500 flex items-center gap-1">
                                                             <Check size={12} /> {(org.business_registration_certificate as File).name}
@@ -2337,18 +2665,18 @@ export default function ActivationPage() {
                                                 </div>
                                             </div>
                                         </div>
-
+ 
                                         <div className="flex justify-between pt-6">
                                             <Button
                                                 variant="outline"
-                                                onClick={() => setCurrentStep(3)}
+                                                onClick={() => setCurrentStep(1)}
                                                 className="px-8"
                                             >
                                                 Previous
                                             </Button>
                                             <Button
                                                 onClick={handleNZFinalSubmit}
-                                                disabled={isSaving || !org.business_registration_certificate}
+                                                disabled={isSaving}
                                                 className="bg-primary hover:bg-primary/90 text-white px-8"
                                             >
                                                 {isSaving ? "Submitting..." : "Submit"}
@@ -2418,10 +2746,16 @@ export default function ActivationPage() {
                                                         id="cert"
                                                         type="file"
                                                         accept="image/*,.pdf"
-                                                        onChange={(e) => setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null })}
-                                                        className="cursor-pointer"
+                                                        onChange={(e) => {
+                                                            setOrg({ ...org, business_registration_certificate: e.target.files?.[0] || null });
+                                                            clearValidationError("cert");
+                                                        }}
+                                                        className={`cursor-pointer ${validationErrors.cert ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                                                         required
                                                     />
+                                                    {validationErrors.cert && (
+                                                        <p className="text-xs text-red-500">{validationErrors.cert}</p>
+                                                    )}
                                                     {org.business_registration_certificate && (
                                                         <p className="text-xs text-green-500 flex items-center gap-1">
                                                             <Check size={12} /> {(org.business_registration_certificate as File).name}
@@ -2436,10 +2770,16 @@ export default function ActivationPage() {
                                                         id="proof"
                                                         type="file"
                                                         accept="image/*,.pdf"
-                                                        onChange={(e) => setOrg({ ...org, proof_of_address: e.target.files?.[0] || null })}
-                                                        className="cursor-pointer"
+                                                        onChange={(e) => {
+                                                            setOrg({ ...org, proof_of_address: e.target.files?.[0] || null });
+                                                            clearValidationError("proof");
+                                                        }}
+                                                        className={`cursor-pointer ${validationErrors.proof ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                                                         required
                                                     />
+                                                    {validationErrors.proof && (
+                                                        <p className="text-xs text-red-500">{validationErrors.proof}</p>
+                                                    )}
                                                     <p className="text-[10px] text-gray-500 italic">Utility Bill or Tax Notice Or Rent</p>
                                                     {org.proof_of_address && (
                                                         <p className="text-xs text-green-500 flex items-center gap-1">
@@ -2453,7 +2793,7 @@ export default function ActivationPage() {
                                         <div className="flex justify-between pt-6">
                                             <Button
                                                 variant="outline"
-                                                onClick={() => setCurrentStep(3)}
+                                                onClick={() => setCurrentStep(1)}
                                                 className="px-8"
                                             >
                                                 Previous
@@ -2660,7 +3000,7 @@ export default function ActivationPage() {
                                 <div className="flex justify-between pt-6">
                                     <Button
                                         variant="outline"
-                                        onClick={() => setCurrentStep(4)}
+                                        onClick={() => setCurrentStep(1)}
                                         className="px-8"
                                     >
                                         Previous
