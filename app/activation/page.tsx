@@ -131,7 +131,7 @@ export default function ActivationPage() {
         state: "",
         billing_contact_name: "",
         billing_email_address: "",
-        country_iso_code: "",
+        country_iso_code: "GB",
         business_registration_authority: "",
         business_website: "",
         authorize_representative_first_name: "",
@@ -289,8 +289,7 @@ export default function ActivationPage() {
         if (step3) {
             const data = JSON.parse(step3);
             if (["Ireland", "United Kingdom", "New Zealand"].includes(countryName)) {
-                const currentIso = countriesData.find(c => c.country === countryName)?.country_code || "";
-                setAustraliaAddress(prev => ({ ...prev, ...data, IsoCountry: currentIso }));
+                setAustraliaAddress(prev => ({ ...prev, ...data }));
             } else {
                 let phoneVal = data.authorize_representative_phone || "";
                 if (phoneVal.startsWith("+")) {
@@ -657,7 +656,7 @@ export default function ActivationPage() {
                 state: data.state || "",
                 billing_contact_name: data.billing_contact_name || "",
                 billing_email_address: data.billing_email_address || "",
-                country_iso_code: data.country_iso_code || "",
+                country_iso_code: data.country_iso_code || "GB",
                 business_registration_authority: data.business_registration_authority || "",
                 business_website: data.business_website || "",
                 authorize_representative_first_name: data.authorize_representative_first_name || "",
@@ -670,9 +669,9 @@ export default function ActivationPage() {
 
             const countryName = orgData.country;
             const hasCachedData = localStorage.getItem(`activation_${countryName}_step1`) ||
-                                 localStorage.getItem(`activation_${countryName}_step2`) ||
-                                 localStorage.getItem(`activation_${countryName}_step3`) ||
-                                 localStorage.getItem(`activation_${countryName}_step4`);
+                localStorage.getItem(`activation_${countryName}_step2`) ||
+                localStorage.getItem(`activation_${countryName}_step3`) ||
+                localStorage.getItem(`activation_${countryName}_step4`);
             if (hasCachedData) {
                 loadCountryData(countryName);
             }
@@ -2137,7 +2136,7 @@ export default function ActivationPage() {
                                                 <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
                                                 <Input
                                                     id="IsoCountry"
-                                                    value={australiaAddress.IsoCountry || org.country_iso_code || ""}
+                                                    value={australiaAddress.IsoCountry}
                                                     disabled
                                                     className="bg-gray-50 cursor-not-allowed"
                                                 />
@@ -2897,7 +2896,7 @@ export default function ActivationPage() {
                                                 <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
                                                 <Input
                                                     id="IsoCountry"
-                                                    value={australiaAddress.IsoCountry || org.country_iso_code || ""}
+                                                    value={australiaAddress.IsoCountry}
                                                     disabled
                                                     className="bg-gray-50 cursor-not-allowed"
                                                 />
@@ -3208,7 +3207,7 @@ export default function ActivationPage() {
                                                 </div>
                                             </div>
                                         </div>
- 
+
                                         <div className="space-y-4 mb-6">
                                             <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                                 <Checkbox
