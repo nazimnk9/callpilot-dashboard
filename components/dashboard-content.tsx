@@ -899,7 +899,15 @@ export function DashboardContent() {
                         { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/ai-call-flow-options' }
                     ];
 
-                    const completedCount = setupSteps.filter(step => orgData?.[step.key] === true || step.key === 'account_created').length;
+                    const checkStepCompleted = (key: string) => {
+                        if (key === 'account_created') return true;
+                        if (key === 'is_given_company_details') {
+                            return orgData?.compliance_status === 'pending' || orgData?.compliance_status === 'approved';
+                        }
+                        return orgData?.[key] === true;
+                    };
+
+                    const completedCount = setupSteps.filter(step => checkStepCompleted(step.key)).length;
                     const isAllCompleted = completedCount === setupSteps.length;
 
                     if (isAllCompleted) {
@@ -919,7 +927,7 @@ export function DashboardContent() {
                                     <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                         <div className="p-6 md:p-8 space-y-3">
                                             {setupSteps.map((option, idx) => {
-                                                const isCompleted = orgData?.[option.key] === true || option.key === 'account_created';
+                                                const isCompleted = checkStepCompleted(option.key);
                                                 return (
                                                     <div
                                                         key={idx}
@@ -971,7 +979,7 @@ export function DashboardContent() {
 
                                 <div className="relative space-y-3">
                                     {setupSteps.map((option, idx) => {
-                                        const isCompleted = orgData?.[option.key] === true || option.key === 'account_created';
+                                        const isCompleted = checkStepCompleted(option.key);
                                         return (
                                             <div
                                                 key={idx}

@@ -388,478 +388,224 @@ export function OrganizationContent() {
                         </div>
                     )}
                     <div className="p-8 space-y-12">
-                        {/* Business Information Section */}
-                        <div className="space-y-6">
-                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Information</h3>
-                                {/* <p className="text-sm text-gray-500 dark:text-gray-400">Basic identification details for your business.</p> */}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="business_name" className="text-sm font-semibold dark:text-gray-100">Registered Business Name <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="business_name"
-                                        placeholder="Enter business name"
-                                        value={editOrg.business_name}
-                                        onChange={(e) => setEditOrg({ ...editOrg, business_name: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="reg_number" className="text-sm font-semibold dark:text-gray-100">Business Registration Number <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="reg_number"
-                                        placeholder="Enter registration number"
-                                        value={editOrg.reg_number}
-                                        onChange={(e) => setEditOrg({ ...editOrg, reg_number: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                    <Label htmlFor="business_registration_authority" className="text-sm font-semibold dark:text-gray-100">Business Registration Authority <span className="text-red-500">*</span></Label>
-                                    <div className="relative" ref={authorityDropdownRef}>
-                                        <div
-                                            onClick={() => !editOrg.is_submitted_for_verification && setIsAuthorityOpen(!isAuthorityOpen)}
-                                            className={`w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md h-10 px-3 flex items-center justify-between transition-colors ${editOrg.is_submitted_for_verification ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"}`}
-                                        >
-                                            <span className={editOrg.business_registration_authority ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
-                                                {editOrg.business_registration_authority || "Select Authority"}
-                                            </span>
-                                            <ChevronsUpDown size={16} className="text-gray-400" />
-                                        </div>
+                        {(() => {
+                            const country = editOrg.country;
+                            const isNZ = country === "New Zealand";
+                            const isUK = country === "United Kingdom";
+                            const isSG = country === "Singapore";
+                            const isAU = country === "Australia";
+                            const isIE = country === "Ireland" || country === "Irreland";
+                            const isQuickSubmit = ["Canada", "India", "United States of America", "Unitend States of America"].includes(country);
+                            const isDefault = !isNZ && !isUK && !isSG && !isAU && !isIE && !isQuickSubmit;
 
-                                        {!editOrg.is_submitted_for_verification && isAuthorityOpen && (
-                                            <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                <div className="max-h-[200px] overflow-y-auto font-sans">
-                                                    {["UK:CRN", "US:EIN", "CA:CBN", "AU:ACN", "OTHER"].map((option) => (
-                                                        <div
-                                                            key={option}
-                                                            onClick={() => {
-                                                                setEditOrg({ ...editOrg, business_registration_authority: option });
-                                                                setIsAuthorityOpen(false);
-                                                            }}
-                                                            className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
-                                                        >
-                                                            <span>{option}</span>
-                                                            {editOrg.business_registration_authority === option && (
-                                                                <Check size={14} className="text-primary" />
-                                                            )}
+                            return (
+                                <div className="space-y-10 animate-in fade-in duration-300">
+                                    {/* Business Information Section */}
+                                    {(isNZ || isUK || isSG || isIE || isDefault) && (
+                                        <div className="space-y-6">
+                                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Information</h3>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 dark:bg-gray-800/20 p-6 rounded-2xl border border-gray-100 dark:border-gray-800/80">
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Registered Business Name</p>
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.business_name || "N/A"}</p>
+                                                </div>
+                                                
+                                                {(isUK || isIE || isDefault) && (
+                                                    <>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Business Registration Number</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.reg_number || "N/A"}</p>
                                                         </div>
-                                                    ))}
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Business Website</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.business_website || "N/A"}</p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {(isUK || isDefault) && (
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Business Registration Authority</p>
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.business_registration_authority || "N/A"}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Authorized Representative Section */}
+                                    {(isUK || isIE || isDefault) && (
+                                        <div className="space-y-6">
+                                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Authorized Representative</h3>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 dark:bg-gray-800/20 p-6 rounded-2xl border border-gray-100 dark:border-gray-800/80">
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">First Name</p>
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.authorize_representative_first_name || "N/A"}</p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Last Name</p>
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.authorize_representative_last_name || "N/A"}</p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Email Address</p>
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.authorize_representative_email || "N/A"}</p>
+                                                </div>
+                                                {(isUK || isDefault) && (
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Phone Number</p>
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedPhoneCode} {editOrg.authorize_representative_phone || "N/A"}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Registered Business Address Section */}
+                                    {(isNZ || isUK || isAU || isIE || isDefault) && (
+                                        <div className="space-y-6">
+                                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Registered Business Address</h3>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 dark:bg-gray-800/20 p-6 rounded-2xl border border-gray-100 dark:border-gray-800/80">
+                                                {!isDefault ? (
+                                                    <>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Customer Name</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                                {isUK 
+                                                                    ? `${editOrg.authorize_representative_first_name} ${editOrg.authorize_representative_last_name}`.trim() || editOrg.business_name
+                                                                    : editOrg.business_name || "N/A"
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Friendly Name</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">My {country} Address In last stage of Business Verification</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Street</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.street_address || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">APT/Suite</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.apt_or_suite || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">City</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.city || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Region / State</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.province || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Postal Code</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.post_code || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Country Code</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.country_iso_code || "N/A"}</p>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Street Address</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.street_address || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">APT/Suite</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.apt_or_suite || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Town / City</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.city || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">State</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.province || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Postcode / ZIP</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.post_code || "N/A"}</p>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Country</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.country || "N/A"}</p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Quick Submit Details (Canada, India, USA) */}
+                                    {isQuickSubmit && (
+                                        <div className="space-y-6">
+                                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Country Identification</h3>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 dark:bg-gray-800/20 p-6 rounded-2xl border border-gray-100 dark:border-gray-800/80">
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Selected Country</p>
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.country || "N/A"}</p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Country ISO Code</p>
+                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{editOrg.country_iso_code || "N/A"}</p>
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="space-y-2 md:col-span-2">
-                                    <Label htmlFor="business_website" className="text-sm font-semibold dark:text-gray-100">Business Website <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="business_website"
-                                        placeholder="https://example.com"
-                                        value={editOrg.business_website}
-                                        onChange={(e) => setEditOrg({ ...editOrg, business_website: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Business Address Section */}
-                        <div className="space-y-6">
-                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Registered Business Address</h3>
-                                {/* <p className="text-sm text-gray-500 dark:text-gray-400">Physical and legal location of your business.</p> */}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="street_address" className="text-sm font-semibold dark:text-gray-100">Street Address <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="street_address"
-                                        placeholder="Enter street address"
-                                        value={editOrg.street_address}
-                                        onChange={(e) => setEditOrg({ ...editOrg, street_address: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="city" className="text-sm font-semibold dark:text-gray-100">Town / City <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="city"
-                                        placeholder="Enter city"
-                                        value={editOrg.city}
-                                        onChange={(e) => setEditOrg({ ...editOrg, city: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="province" className="text-sm font-semibold dark:text-gray-100">State</Label>
-                                    <Input
-                                        id="province"
-                                        placeholder="Enter province"
-                                        value={editOrg.province}
-                                        onChange={(e) => setEditOrg({ ...editOrg, province: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="post_code" className="text-sm font-semibold dark:text-gray-100">Postcode / ZIP {editOrg.country === "United Kingdom" && <span className="text-red-500">*</span>}</Label>
-                                    <Input
-                                        id="post_code"
-                                        placeholder="Enter post code"
-                                        value={editOrg.post_code}
-                                        onChange={(e) => setEditOrg({ ...editOrg, post_code: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required={editOrg.country === "United Kingdom"}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-semibold dark:text-gray-100">Country</Label>
-                                    <div className="relative" ref={dropdownRef}>
-                                        <div
-                                            onClick={() => !editOrg.is_submitted_for_verification && setIsCountryOpen(!isCountryOpen)}
-                                            className={`w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md h-10 px-3 flex items-center justify-between transition-colors ${editOrg.is_submitted_for_verification ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"}`}
-                                        >
-                                            <span className={editOrg.country ? "text-gray-900 dark:text-gray-100 text-[14px]" : "text-gray-400 dark:text-gray-500 text-[14px]"}>
-                                                {editOrg.country ? `${editOrg.country_iso_code ? `(${editOrg.country_iso_code}) ` : ""}${editOrg.country}` : "Select country"}
-                                            </span>
-                                            <ChevronsUpDown size={16} className="text-gray-400" />
                                         </div>
+                                    )}
 
-                                        {!editOrg.is_submitted_for_verification && isCountryOpen && (
-                                            <div className="absolute top-[calc(100%+4px)] left-0 w-[450px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                <div className="p-2 border-b border-gray-100 dark:border-gray-800">
-                                                    <div className="relative">
-                                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                                        <input
-                                                            autoFocus
-                                                            type="text"
-                                                            placeholder="Search country..."
-                                                            value={countrySearch}
-                                                            onChange={(e) => setCountrySearch(e.target.value)}
-                                                            className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="max-h-[200px] overflow-y-auto">
-                                                    {filteredCountries.length > 0 ? (
-                                                        filteredCountries.map((c) => (
-                                                            <div
-                                                                key={c.country_code}
-                                                                onClick={() => {
-                                                                    setEditOrg({ ...editOrg, country: c.country, country_iso_code: c.country_code });
-                                                                    setIsCountryOpen(false);
-                                                                    setCountrySearch("");
-                                                                }}
-                                                                className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
-                                                            >
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">{c.country_code}</span>
-                                                                    <span>{c.country}</span>
-                                                                </div>
-                                                                {editOrg.country === c.country && (
-                                                                    <Check size={14} className="text-primary" />
-                                                                )}
-                                                            </div>
-                                                        ))
+                                    {/* Supporting Documents Section */}
+                                    {(isNZ || isDefault) && (
+                                        <div className="space-y-6">
+                                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
+                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 dark:bg-gray-800/20 p-6 rounded-2xl border border-gray-100 dark:border-gray-800/80">
+                                                <div className="space-y-1.5">
+                                                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Business Registration Certificate</p>
+                                                    {editOrg.existing_certificate_url ? (
+                                                        <a
+                                                            href={editOrg.existing_certificate_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-sm font-bold text-primary hover:underline flex items-center gap-1.5"
+                                                        >
+                                                            View Submitted Certificate
+                                                        </a>
                                                     ) : (
-                                                        <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
-                                                            No countries found
-                                                        </div>
+                                                        <p className="text-sm font-semibold text-gray-400">No certificate uploaded</p>
                                                     )}
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="apt_or_suite" className="text-sm font-semibold dark:text-gray-100">APT/Suite</Label>
-                                    <Input
-                                        id="apt_or_suite"
-                                        placeholder="Enter apartment or suite"
-                                        value={editOrg.apt_or_suite}
-                                        onChange={(e) => setEditOrg({ ...editOrg, apt_or_suite: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Authorize Representative Information Section */}
-                        <div className="space-y-6">
-                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Authorize Representative Information</h3>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="rep_first_name" className="text-sm font-semibold dark:text-gray-100">First Name <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="rep_first_name"
-                                        placeholder="Enter first name"
-                                        value={editOrg.authorize_representative_first_name}
-                                        onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_first_name: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="rep_last_name" className="text-sm font-semibold dark:text-gray-100">Last Name <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="rep_last_name"
-                                        placeholder="Enter last name"
-                                        value={editOrg.authorize_representative_last_name}
-                                        onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_last_name: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="rep_email" className="text-sm font-semibold dark:text-gray-100">Email <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="rep_email"
-                                        type="email"
-                                        placeholder="Enter email address"
-                                        value={editOrg.authorize_representative_email}
-                                        onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_email: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                        disabled={editOrg.is_submitted_for_verification}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="rep_phone" className="text-sm font-semibold dark:text-gray-100">Phone Number <span className="text-red-500">*</span></Label>
-                                    <div className="flex gap-2">
-                                        <div className="relative w-[140px]" ref={phoneCodeDropdownRef}>
-                                            <div
-                                                onClick={() => !editOrg.is_submitted_for_verification && setIsPhoneCodeOpen(!isPhoneCodeOpen)}
-                                                className={`w-full bg-white dark:bg-gray-800 border border-input rounded-md h-10 px-3 flex items-center justify-between transition-colors ${editOrg.is_submitted_for_verification ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"}`}
-                                            >
-                                                <span className="text-gray-900 dark:text-gray-100 text-[14px] truncate">
-                                                    {selectedPhoneCode || "Code"}
-                                                </span>
-                                                <ChevronsUpDown size={16} className="text-gray-400 shrink-0" />
-                                            </div>
-
-                                            {!editOrg.is_submitted_for_verification && isPhoneCodeOpen && (
-                                                <div className="absolute bottom-[calc(100%+4px)] left-0 w-[390px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                    <div className="p-2 border-b border-gray-100 dark:border-gray-800">
-                                                        <div className="relative">
-                                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                                                            <input
-                                                                autoFocus
-                                                                type="text"
-                                                                placeholder="Search code..."
-                                                                value={phoneCodeSearch}
-                                                                onChange={(e) => setPhoneCodeSearch(e.target.value)}
-                                                                className="w-full bg-white dark:bg-gray-800 border-none py-1.5 pl-9 pr-4 text-[14px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="max-h-[200px] overflow-y-auto font-sans">
-                                                        {filteredPhoneCountries.length > 0 ? (
-                                                            filteredPhoneCountries.map((c, index) => (
-                                                                <div
-                                                                    key={`${c.country_code}-${index}`}
-                                                                    onClick={() => {
-                                                                        const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
-                                                                        setSelectedPhoneCode(code);
-                                                                        setIsPhoneCodeOpen(false);
-                                                                        setPhoneCodeSearch("");
-                                                                    }}
-                                                                    className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
-                                                                >
-                                                                    <div className="flex items-center justify-between gap-2 w-full truncate">
-                                                                        <span className="text-primary font-bold w-12">{c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`}</span>
-                                                                        <span className="text-gray-500 dark:text-gray-400 text-xs truncate">{c.country}</span>
-                                                                    </div>
-                                                                    {selectedPhoneCode === (c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`) && (
-                                                                        <Check size={14} className="text-primary shrink-0" />
-                                                                    )}
-                                                                </div>
-                                                            ))
+                                                {isDefault && (
+                                                    <div className="space-y-1.5">
+                                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Proof of Address</p>
+                                                        {editOrg.existing_proof_url ? (
+                                                            <a
+                                                                href={editOrg.existing_proof_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-sm font-bold text-primary hover:underline flex items-center gap-1.5"
+                                                            >
+                                                                View Submitted Proof
+                                                            </a>
                                                         ) : (
-                                                            <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-xs italic">
-                                                                No results
-                                                            </div>
+                                                            <p className="text-sm font-semibold text-gray-400">No proof uploaded</p>
                                                         )}
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
                                         </div>
-                                        <Input
-                                            id="rep_phone"
-                                            placeholder="Enter phone number"
-                                            value={editOrg.authorize_representative_phone}
-                                            onChange={(e) => setEditOrg({ ...editOrg, authorize_representative_phone: e.target.value })}
-                                            className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 flex-1"
-                                            disabled={editOrg.is_submitted_for_verification}
-                                            required
-                                        />
-                                    </div>
+                                    )}
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Supporting Documents Section */}
-                        <div className="space-y-6">
-                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Supporting Documents</h3>
-                                {/* <p className="text-sm text-gray-500 dark:text-gray-400">Compliance documents for account verification.</p> */}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="cert" className="text-sm font-semibold dark:text-gray-100">Business Registration Certificate <span className="text-red-500">*</span></Label>
-                                    <div className="flex flex-col gap-2">
-                                        <Input
-                                            id="cert"
-                                            type="file"
-                                            accept="image/*,.pdf"
-                                            onChange={(e) => setEditOrg({ ...editOrg, business_registration_certificate: e.target.files?.[0] || null })}
-                                            className="cursor-pointer dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                            disabled={editOrg.is_submitted_for_verification}
-                                            required={!editOrg.existing_certificate_url}
-                                        />
-                                        {editOrg.is_submitted_for_verification && editOrg.existing_certificate_url && (
-                                            <a
-                                                href={editOrg.existing_certificate_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs text-primary hover:underline flex items-center gap-1"
-                                            >
-                                                View submitted certificate
-                                            </a>
-                                        )}
-                                        {editOrg.business_registration_certificate && (
-                                            <p className="text-xs text-green-500 flex items-center gap-1">
-                                                <Check size={12} /> {(editOrg.business_registration_certificate as File).name}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="proof" className="text-sm font-semibold dark:text-gray-100">Proof of Address <span className="text-red-500">*</span></Label>
-                                    <div className="flex flex-col gap-2">
-                                        <Input
-                                            id="proof"
-                                            type="file"
-                                            accept="image/*,.pdf"
-                                            onChange={(e) => setEditOrg({ ...editOrg, proof_of_address: e.target.files?.[0] || null })}
-                                            className="cursor-pointer dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                            disabled={editOrg.is_submitted_for_verification}
-                                            required={!editOrg.existing_proof_url}
-                                        />
-                                        <p className="text-[10px] text-gray-500 italic">Utility Bill or Tax Notice Or Rent</p>
-                                        {editOrg.is_submitted_for_verification && editOrg.existing_proof_url && (
-                                            <a
-                                                href={editOrg.existing_proof_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs text-primary hover:underline flex items-center gap-1"
-                                            >
-                                                View submitted proof
-                                            </a>
-                                        )}
-                                        {editOrg.proof_of_address && (
-                                            <p className="text-xs text-green-500 flex items-center gap-1">
-                                                <Check size={12} /> {(editOrg.proof_of_address as File).name}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Additional Billing Info (Optional, keeping consistent with previous UI but matching style) */}
-                        {/* <div className="space-y-6">
-                            <div className="pb-4 border-b border-gray-100 dark:border-gray-800">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Billing Information</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Contact details for invoicing and billing.</p>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="billing_contact" className="text-sm font-semibold dark:text-gray-100">Billing Contact Name</Label>
-                                    <Input
-                                        id="billing_contact"
-                                        value={editOrg.billing_contact_name}
-                                        onChange={(e) => setEditOrg({ ...editOrg, billing_contact_name: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="billing_email" className="text-sm font-semibold dark:text-gray-100">Billing Email Address</Label>
-                                    <Input
-                                        id="billing_email"
-                                        value={editOrg.billing_email_address}
-                                        onChange={(e) => setEditOrg({ ...editOrg, billing_email_address: e.target.value })}
-                                        className="dark:bg-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
-                                    />
-                                </div>
-                            </div>
-                        </div> */}
-
-                        {/* {!editOrg.is_submitted_for_verification && (
-                            <div className="space-y-4 mb-6">
-                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <Checkbox
-                                        id="compliance"
-                                        checked={isComplianceAgreed}
-                                        onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
-                                    />
-                                    <label
-                                        htmlFor="compliance"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                    >
-                                        I have read and agree to the{" "}
-                                        <span
-                                            className="text-primary hover:underline font-bold"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setIsComplianceModalOpen(true);
-                                            }}
-                                        >
-                                            Privacy Policy and Terms
-                                        </span>.
-                                    </label>
-                                </div>
-
-                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                                    <Checkbox
-                                        id="phone-billing"
-                                        checked={isPhoneBillingAgreed}
-                                        onCheckedChange={(checked) => setIsPhoneBillingAgreed(checked === true)}
-                                    />
-                                    <label
-                                        htmlFor="phone-billing"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                    >
-                                        I understand how{" "}
-                                        <span
-                                            className="text-primary hover:underline font-bold"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setIsPhoneBillingModalOpen(true);
-                                            }}
-                                        >
-                                            CallPilot phone numbers are assigned, used, and billed
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                        )} */}
+                            );
+                        })()}
 
                         <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
                             <Button
@@ -868,13 +614,6 @@ export function OrganizationContent() {
                                 className="dark:bg-gray-800 dark:text-gray-100 border-none"
                             >
                                 Back
-                            </Button>
-                            <Button
-                                onClick={handleSave}
-                                disabled={isSaving || editOrg.is_submitted_for_verification || !isComplianceAgreed || !isPhoneBillingAgreed}
-                                className="bg-primary hover:bg-black text-white dark:text-black dark:bg-primary"
-                            >
-                                {isSaving ? "Saving..." : "Submit for Verification"}
                             </Button>
                         </div>
                     </div>
