@@ -744,7 +744,7 @@ export default function ActivationPage() {
             ...prev,
             IsoCountry: org.country_iso_code,
             FriendlyName: org.country === "Australia" && (!isFriendlyNameModified || !prev.FriendlyName)
-                ? `My ${org.country} Address In last stage of Business Verification`
+                ? `My ${org.country} Address`
                 : prev.FriendlyName
         }));
 
@@ -997,7 +997,7 @@ export default function ActivationPage() {
                                     : prev.CustomerName;
                             }
                             updated.FriendlyName = !isFriendlyNameModified || !prev.FriendlyName
-                                ? `My ${org.country} Address In last stage of Business Verification`
+                                ? `My ${org.country} Address`
                                 : prev.FriendlyName;
                             return updated;
                         });

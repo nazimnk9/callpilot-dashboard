@@ -496,7 +496,7 @@ export function OrganizationContent() {
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Friendly Name</p>
-                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">My {country} Address In last stage of Business Verification</p>
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">My {country} Address</p>
                                                         </div>
                                                         <div className="space-y-1">
                                                             <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Street</p>
