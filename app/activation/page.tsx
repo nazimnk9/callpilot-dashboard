@@ -289,7 +289,8 @@ export default function ActivationPage() {
         if (step3) {
             const data = JSON.parse(step3);
             if (["Ireland", "United Kingdom", "New Zealand"].includes(countryName)) {
-                setAustraliaAddress(prev => ({ ...prev, ...data }));
+                const currentIso = countriesData.find(c => c.country === countryName)?.country_code || "";
+                setAustraliaAddress(prev => ({ ...prev, ...data, IsoCountry: currentIso }));
             } else {
                 let phoneVal = data.authorize_representative_phone || "";
                 if (phoneVal.startsWith("+")) {
@@ -2136,7 +2137,7 @@ export default function ActivationPage() {
                                                 <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
                                                 <Input
                                                     id="IsoCountry"
-                                                    value={australiaAddress.IsoCountry}
+                                                    value={australiaAddress.IsoCountry || org.country_iso_code || ""}
                                                     disabled
                                                     className="bg-gray-50 cursor-not-allowed"
                                                 />
@@ -2896,7 +2897,7 @@ export default function ActivationPage() {
                                                 <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
                                                 <Input
                                                     id="IsoCountry"
-                                                    value={australiaAddress.IsoCountry}
+                                                    value={australiaAddress.IsoCountry || org.country_iso_code || ""}
                                                     disabled
                                                     className="bg-gray-50 cursor-not-allowed"
                                                 />
