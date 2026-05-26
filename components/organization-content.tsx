@@ -811,7 +811,7 @@ export function OrganizationContent() {
                             </div>
                         </div> */}
 
-                        {!editOrg.is_submitted_for_verification && (
+                        {/* {!editOrg.is_submitted_for_verification && (
                             <div className="space-y-4 mb-6">
                                 <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
                                     <Checkbox
@@ -859,7 +859,7 @@ export function OrganizationContent() {
                                     </label>
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
                             <Button

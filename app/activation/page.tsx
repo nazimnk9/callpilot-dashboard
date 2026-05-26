@@ -163,14 +163,305 @@ export default function ActivationPage() {
     const [initialOrg, setInitialOrg] = useState({ ...org });
     const [singaporeBusinessName, setSingaporeBusinessName] = useState("");
 
+    const loadCountryData = (countryName: string) => {
+        if (!countryName) return;
+        const step1 = localStorage.getItem(`activation_${countryName}_step1`);
+        const step2 = localStorage.getItem(`activation_${countryName}_step2`);
+        const step3 = localStorage.getItem(`activation_${countryName}_step3`);
+        const step4 = localStorage.getItem(`activation_${countryName}_step4`);
+
+        // If no cached data exists at all for this country, reset to initial fetched organization details
+        if (!step1 && !step2 && !step3 && !step4) {
+            setOrg({
+                ...initialOrg,
+                country: countryName,
+                country_iso_code: countriesData.find(c => c.country === countryName)?.country_code || ""
+            });
+            setAustraliaAddress({
+                CustomerName: "",
+                Street: "",
+                StreetSecondary: "",
+                City: "",
+                Region: "",
+                PostalCode: "",
+                IsoCountry: countriesData.find(c => c.country === countryName)?.country_code || "",
+                FriendlyName: ""
+            });
+            setIrelandEndUser({
+                business_name: initialOrg.business_name || initialOrg.name || "",
+                business_website: initialOrg.business_website || "",
+                business_registration_number: initialOrg.reg_number || "",
+                first_name: initialOrg.authorize_representative_first_name || "",
+                last_name: initialOrg.authorize_representative_last_name || "",
+                email: initialOrg.authorize_representative_email || "",
+                business_registration_identifier: initialOrg.business_registration_authority || "UK:CRN",
+                phone_number: initialOrg.authorize_representative_phone || ""
+            });
+            setSingaporeBusinessName("");
+            return;
+        }
+
+        // If cached data exists, load it
+        if (step1) {
+            const data = JSON.parse(step1);
+            setOrg(prev => ({ ...prev, ...data }));
+        } else {
+            setOrg(prev => ({
+                ...prev,
+                country: countryName,
+                country_iso_code: countriesData.find(c => c.country === countryName)?.country_code || ""
+            }));
+        }
+
+        if (step2) {
+            const data = JSON.parse(step2);
+            if (countryName === "Australia") {
+                setAustraliaAddress(prev => ({ ...prev, ...data }));
+            } else if (countryName === "Singapore") {
+                setSingaporeBusinessName(data.singapore_business_name || data.business_name || "");
+            } else if (countryName === "New Zealand") {
+                setIrelandEndUser(prev => ({ ...prev, business_name: data.business_name || "" }));
+            } else if (["Ireland", "United Kingdom"].includes(countryName)) {
+                setIrelandEndUser(prev => ({ ...prev, ...data }));
+                if (countryName === "United Kingdom" && data.phone_number) {
+                    let phone = data.phone_number;
+                    if (phone.startsWith("+")) {
+                        const sortedCountries = [...countriesData].sort((a, b) => b.phone_code.length - a.phone_code.length);
+                        for (const c of sortedCountries) {
+                            const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                            if (phone.startsWith(code)) {
+                                setUkSelectedPhoneCode(code);
+                                phone = phone.slice(code.length);
+                                break;
+                            }
+                        }
+                    }
+                    setIrelandEndUser(prev => ({ ...prev, phone_number: phone }));
+                }
+            } else {
+                setOrg(prev => ({ ...prev, ...data }));
+            }
+        } else {
+            // Reset step 2 fields if no cache
+            if (countryName === "Australia") {
+                setAustraliaAddress(prev => ({
+                    ...prev,
+                    CustomerName: "",
+                    Street: "",
+                    StreetSecondary: "",
+                    City: "",
+                    Region: "",
+                    PostalCode: "",
+                    IsoCountry: countriesData.find(c => c.country === countryName)?.country_code || "",
+                    FriendlyName: ""
+                }));
+            } else if (countryName === "Singapore") {
+                setSingaporeBusinessName("");
+            } else if (countryName === "New Zealand") {
+                setIrelandEndUser(prev => ({ ...prev, business_name: "" }));
+            } else if (["Ireland", "United Kingdom"].includes(countryName)) {
+                setIrelandEndUser({
+                    business_name: initialOrg.business_name || initialOrg.name || "",
+                    business_website: initialOrg.business_website || "",
+                    business_registration_number: initialOrg.reg_number || "",
+                    first_name: initialOrg.authorize_representative_first_name || "",
+                    last_name: initialOrg.authorize_representative_last_name || "",
+                    email: initialOrg.authorize_representative_email || "",
+                    business_registration_identifier: initialOrg.business_registration_authority || "UK:CRN",
+                    phone_number: initialOrg.authorize_representative_phone || ""
+                });
+            } else {
+                setOrg(prev => ({
+                    ...prev,
+                    business_name: initialOrg.business_name || "",
+                    reg_number: initialOrg.reg_number || "",
+                    business_registration_authority: initialOrg.business_registration_authority || "",
+                    business_website: initialOrg.business_website || "",
+                    street_address: initialOrg.street_address || "",
+                    apt_or_suite: initialOrg.apt_or_suite || "",
+                    city: initialOrg.city || "",
+                    post_code: initialOrg.post_code || "",
+                    province: initialOrg.province || ""
+                }));
+            }
+        }
+
+        if (step3) {
+            const data = JSON.parse(step3);
+            if (["Ireland", "United Kingdom", "New Zealand"].includes(countryName)) {
+                setAustraliaAddress(prev => ({ ...prev, ...data }));
+            } else {
+                let phoneVal = data.authorize_representative_phone || "";
+                if (phoneVal.startsWith("+")) {
+                    const sortedCountries = [...countriesData].sort((a, b) => {
+                        const codeA = a.phone_code.startsWith("+") ? a.phone_code.length : a.phone_code.length + 1;
+                        const codeB = b.phone_code.startsWith("+") ? b.phone_code.length : b.phone_code.length + 1;
+                        return codeB - codeA;
+                    });
+                    for (const c of sortedCountries) {
+                        const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                        if (phoneVal.startsWith(code)) {
+                            setSelectedPhoneCode(code);
+                            phoneVal = phoneVal.slice(code.length);
+                            break;
+                        }
+                    }
+                }
+                setOrg(prev => ({
+                    ...prev,
+                    authorize_representative_first_name: data.authorize_representative_first_name || "",
+                    authorize_representative_last_name: data.authorize_representative_last_name || "",
+                    authorize_representative_email: data.authorize_representative_email || "",
+                    authorize_representative_phone: phoneVal
+                }));
+            }
+        } else {
+            // Reset step 3 fields if no cache
+            if (["Ireland", "United Kingdom", "New Zealand"].includes(countryName)) {
+                setAustraliaAddress(prev => ({
+                    ...prev,
+                    CustomerName: "",
+                    Street: "",
+                    StreetSecondary: "",
+                    City: "",
+                    Region: "",
+                    PostalCode: "",
+                    IsoCountry: countriesData.find(c => c.country === countryName)?.country_code || "",
+                    FriendlyName: ""
+                }));
+            } else {
+                let phoneVal = initialOrg.authorize_representative_phone || "";
+                if (phoneVal.startsWith("+")) {
+                    const sortedCountries = [...countriesData].sort((a, b) => b.phone_code.length - a.phone_code.length);
+                    for (const c of sortedCountries) {
+                        const code = c.phone_code.startsWith("+") ? c.phone_code : `+${c.phone_code}`;
+                        if (phoneVal.startsWith(code)) {
+                            setSelectedPhoneCode(code);
+                            phoneVal = phoneVal.slice(code.length);
+                            break;
+                        }
+                    }
+                }
+                setOrg(prev => ({
+                    ...prev,
+                    authorize_representative_first_name: initialOrg.authorize_representative_first_name || "",
+                    authorize_representative_last_name: initialOrg.authorize_representative_last_name || "",
+                    authorize_representative_email: initialOrg.authorize_representative_email || "",
+                    authorize_representative_phone: phoneVal
+                }));
+            }
+        }
+    };
+
+    const getCountryPatchData = (countryName: string) => {
+        const step1 = JSON.parse(localStorage.getItem(`activation_${countryName}_step1`) || "{}");
+        const step2 = JSON.parse(localStorage.getItem(`activation_${countryName}_step2`) || "{}");
+        const step3 = JSON.parse(localStorage.getItem(`activation_${countryName}_step3`) || "{}");
+        const step4 = JSON.parse(localStorage.getItem(`activation_${countryName}_step4`) || "{}");
+
+        let patchData: any = {
+            country: countryName,
+            country_iso_code: step1.country_iso_code || org.country_iso_code || countriesData.find(c => c.country === countryName)?.country_code || "",
+        };
+
+        if (countryName === "Australia") {
+            const street = step2.Street || australiaAddress.Street || "";
+            const secondary = step2.StreetSecondary || australiaAddress.StreetSecondary || "";
+            const street_address = secondary ? `${street}, ${secondary}` : street;
+
+            patchData = {
+                ...patchData,
+                business_name: step2.CustomerName || australiaAddress.CustomerName || org.business_name,
+                street_address: street_address,
+                apt_or_suite: secondary,
+                city: step2.City || australiaAddress.City || "",
+                province: step2.Region || australiaAddress.Region || "",
+                post_code: step2.PostalCode || australiaAddress.PostalCode || "",
+            };
+        } else if (countryName === "Singapore") {
+            patchData = {
+                ...patchData,
+                business_name: step2.singapore_business_name || singaporeBusinessName || org.business_name,
+            };
+        } else if (countryName === "New Zealand") {
+            const street = step3.Street || australiaAddress.Street || "";
+            const secondary = step3.StreetSecondary || australiaAddress.StreetSecondary || "";
+            const street_address = secondary ? `${street}, ${secondary}` : street;
+
+            patchData = {
+                ...patchData,
+                business_name: step2.business_name || irelandEndUser.business_name || org.business_name,
+                street_address: street_address,
+                apt_or_suite: secondary,
+                city: step3.City || australiaAddress.City || "",
+                province: step3.Region || australiaAddress.Region || "",
+                post_code: step3.PostalCode || australiaAddress.PostalCode || "",
+            };
+        } else if (["Ireland", "United Kingdom"].includes(countryName)) {
+            const street = step3.Street || australiaAddress.Street || "";
+            const secondary = step3.StreetSecondary || australiaAddress.StreetSecondary || "";
+            const street_address = secondary ? `${street}, ${secondary}` : street;
+
+            const rep_phone = step2.phone_number || irelandEndUser.phone_number || "";
+            const fullPhone = rep_phone.startsWith("+")
+                ? rep_phone
+                : (countryName === "United Kingdom"
+                    ? `${ukSelectedPhoneCode}${rep_phone}`
+                    : rep_phone);
+
+            patchData = {
+                ...patchData,
+                business_name: step2.business_name || irelandEndUser.business_name || org.business_name,
+                business_website: step2.business_website || irelandEndUser.business_website || "",
+                reg_number: step2.business_registration_number || irelandEndUser.business_registration_number || "",
+                business_registration_authority: step2.business_registration_identifier || irelandEndUser.business_registration_identifier || "",
+                authorize_representative_first_name: step2.first_name || irelandEndUser.first_name || "",
+                authorize_representative_last_name: step2.last_name || irelandEndUser.last_name || "",
+                authorize_representative_email: step2.email || irelandEndUser.email || "",
+                authorize_representative_phone: fullPhone,
+                street_address: street_address,
+                apt_or_suite: secondary,
+                city: step3.City || australiaAddress.City || "",
+                province: step3.Region || australiaAddress.Region || "",
+                post_code: step3.PostalCode || australiaAddress.PostalCode || "",
+            };
+        } else {
+            patchData = {
+                ...patchData,
+                business_name: step2.business_name || org.business_name,
+                reg_number: step2.reg_number || org.reg_number,
+                business_registration_authority: step2.business_registration_authority || org.business_registration_authority,
+                business_website: step2.business_website || org.business_website,
+                street_address: step2.street_address || org.street_address,
+                apt_or_suite: step2.apt_or_suite || org.apt_or_suite,
+                city: step2.city || org.city,
+                province: step2.province || org.province,
+                post_code: step2.post_code || org.post_code,
+                authorize_representative_first_name: step3.authorize_representative_first_name || org.authorize_representative_first_name,
+                authorize_representative_last_name: step3.authorize_representative_last_name || org.authorize_representative_last_name,
+                authorize_representative_email: step3.authorize_representative_email || org.authorize_representative_email,
+                authorize_representative_phone: step3.authorize_representative_phone || org.authorize_representative_phone,
+            };
+        }
+
+        if (patchData.business_name) {
+            patchData.name = patchData.business_name;
+        }
+
+        return patchData;
+    };
+
     useEffect(() => {
         if (org.country !== "United Kingdom") {
             setIsCustomerNameModified(false);
         }
         setIsFriendlyNameModified(false);
+        setIsComplianceAgreed(false);
+        setIsPhoneBillingAgreed(false);
+        loadCountryData(org.country);
     }, [org.country]);
 
-    const clearActivationData = () => {
+    const clearActivationData = (countryName?: string) => {
         const keys = [
             "activation_step1",
             "activation_step2",
@@ -186,6 +477,13 @@ export default function ActivationPage() {
             "nz_address_sid"
         ];
         keys.forEach(key => localStorage.removeItem(key));
+
+        if (countryName) {
+            localStorage.removeItem(`activation_${countryName}_step1`);
+            localStorage.removeItem(`activation_${countryName}_step2`);
+            localStorage.removeItem(`activation_${countryName}_step3`);
+            localStorage.removeItem(`activation_${countryName}_step4`);
+        }
     };
 
     const [alertConfig, setAlertConfig] = useState<{
@@ -368,7 +666,15 @@ export default function ActivationPage() {
             };
             setOrg(orgData);
             setInitialOrg(orgData);
-            // setIrelandEndUser({
+
+            const countryName = orgData.country;
+            const hasCachedData = localStorage.getItem(`activation_${countryName}_step1`) ||
+                                 localStorage.getItem(`activation_${countryName}_step2`) ||
+                                 localStorage.getItem(`activation_${countryName}_step3`) ||
+                                 localStorage.getItem(`activation_${countryName}_step4`);
+            if (hasCachedData) {
+                loadCountryData(countryName);
+            }
             //     business_name: data.business_name || data.name || "",
             //     business_website: data.business_website || "",
             //     business_registration_number: data.reg_number || "",
@@ -420,15 +726,19 @@ export default function ActivationPage() {
             return;
         }
 
-        if (["India", "Canada", "United States of America"].includes(org.country)) {
-            handleQuickSubmit();
-            return;
-        }
-
+        localStorage.setItem(`activation_${org.country}_step1`, JSON.stringify({
+            country: org.country,
+            country_iso_code: org.country_iso_code
+        }));
         localStorage.setItem("activation_step1", JSON.stringify({
             country: org.country,
             country_iso_code: org.country_iso_code
         }));
+
+        if (["India", "Canada", "United States of America"].includes(org.country)) {
+            handleQuickSubmit();
+            return;
+        }
 
         setAustraliaAddress(prev => ({
             ...prev,
@@ -537,9 +847,18 @@ export default function ActivationPage() {
     const handleQuickSubmit = async () => {
         try {
             setIsSaving(true);
-            await profileService.updateOrganization({
+            localStorage.setItem(`activation_${org.country}_step1`, JSON.stringify({
                 country: org.country,
-                country_iso_code: org.country_iso_code,
+                country_iso_code: org.country_iso_code
+            }));
+            localStorage.setItem("activation_step1", JSON.stringify({
+                country: org.country,
+                country_iso_code: org.country_iso_code
+            }));
+
+            const finalData = getCountryPatchData(org.country);
+            await profileService.updateOrganization({
+                ...finalData,
                 compliance_status: "approved"
             });
 
@@ -550,7 +869,7 @@ export default function ActivationPage() {
                 variant: "default"
             });
 
-            clearActivationData();
+            clearActivationData(org.country);
             router.push("/dashboard");
         } catch (err: any) {
             console.error("Error in quick submission:", err);
@@ -683,6 +1002,11 @@ export default function ActivationPage() {
                             return updated;
                         });
                     }
+
+                    // Save step 2 cached details
+                    localStorage.setItem(`activation_${org.country}_step2`, JSON.stringify(irelandEndUser));
+                    localStorage.setItem("activation_step2", JSON.stringify(irelandEndUser));
+
                     setCurrentStep(3);
                 }
             } catch (err: any) {
@@ -713,6 +1037,17 @@ export default function ActivationPage() {
             scrollToFirstError(newErrors);
             return;
         }
+        localStorage.setItem(`activation_${org.country}_step2`, JSON.stringify({
+            business_name: org.business_name,
+            reg_number: org.reg_number,
+            business_registration_authority: org.business_registration_authority,
+            business_website: org.business_website,
+            street_address: org.street_address,
+            apt_or_suite: org.apt_or_suite,
+            city: org.city,
+            post_code: org.post_code,
+            province: org.province
+        }));
         localStorage.setItem("activation_step2", JSON.stringify({
             business_name: org.business_name,
             reg_number: org.reg_number,
@@ -778,6 +1113,8 @@ export default function ActivationPage() {
                 const bundleSid = localStorage.getItem("bundleSid");
 
                 if (org.country === "New Zealand") {
+                    localStorage.setItem(`activation_${org.country}_step3`, JSON.stringify(australiaAddress));
+                    localStorage.setItem("activation_step3", JSON.stringify(australiaAddress));
                     localStorage.setItem("nz_address_sid", addressSid);
                     setCurrentStep(4);
                     setIsSaving(false);
@@ -836,10 +1173,14 @@ export default function ActivationPage() {
                         );
                     }
 
+                    // Save step 3 cached details
+                    localStorage.setItem(`activation_${org.country}_step3`, JSON.stringify(australiaAddress));
+                    localStorage.setItem("activation_step3", JSON.stringify(australiaAddress));
+
                     // Success!
+                    const finalData = getCountryPatchData(org.country);
                     await profileService.updateOrganization({
-                        country: org.country,
-                        country_iso_code: org.country_iso_code,
+                        ...finalData,
                         address_sid: addressSid,
                         bundle_sid: bundleSid,
                         compliance_status: "pending"
@@ -851,7 +1192,7 @@ export default function ActivationPage() {
                         description: [`${org.country} business details submitted for review.`],
                         variant: "default"
                     });
-                    clearActivationData();
+                    clearActivationData(org.country);
                     router.push("/dashboard");
                 }
             }
@@ -947,14 +1288,28 @@ export default function ActivationPage() {
                     );
                 }
 
+                // Save step 4 cached details (NZ)
+                localStorage.setItem(`activation_${org.country}_step4`, JSON.stringify({
+                    has_cert: !!org.business_registration_certificate,
+                    cert_name: org.business_registration_certificate?.name || ""
+                }));
+
                 // Success!
-                await profileService.updateOrganization({
-                    country: org.country,
-                    country_iso_code: org.country_iso_code,
-                    address_sid: address_sid,
-                    bundle_sid: bundleSid,
-                    compliance_status: "pending"
+                const finalData = getCountryPatchData(org.country);
+                const callPilotFormData = new FormData();
+                Object.keys(finalData).forEach(key => {
+                    if (finalData[key] !== null && finalData[key] !== undefined) {
+                        callPilotFormData.append(key, finalData[key]);
+                    }
                 });
+                callPilotFormData.append("address_sid", address_sid || "");
+                callPilotFormData.append("bundle_sid", bundleSid || "");
+                callPilotFormData.append("compliance_status", "pending");
+                if (org.business_registration_certificate instanceof File) {
+                    callPilotFormData.append("business_registration_certificate", org.business_registration_certificate);
+                }
+
+                await profileService.updateOrganization(callPilotFormData);
 
                 setAlertConfig({
                     open: true,
@@ -962,7 +1317,7 @@ export default function ActivationPage() {
                     description: ["New Zealand business details submitted for review."],
                     variant: "default"
                 });
-                clearActivationData();
+                clearActivationData(org.country);
                 router.push("/dashboard");
             }
         } catch (err: any) {
@@ -1025,11 +1380,13 @@ export default function ActivationPage() {
             if (twilioRes.data && twilioRes.data.sid) {
                 const address_sid = twilioRes.data.sid;
                 const country = localStorage.getItem("activation_step1") ? JSON.parse(localStorage.getItem("activation_step1")!).country : org.country;
-                const country_iso_code = localStorage.getItem("activation_step1") ? JSON.parse(localStorage.getItem("activation_step1")!).country_iso_code : org.country_iso_code;
 
+                localStorage.setItem(`activation_${country}_step2`, JSON.stringify(australiaAddress));
+                localStorage.setItem("activation_step2", JSON.stringify(australiaAddress));
+
+                const finalData = getCountryPatchData(country);
                 await profileService.updateOrganization({
-                    country,
-                    country_iso_code,
+                    ...finalData,
                     address_sid,
                     compliance_status: "pending"
                 });
@@ -1040,7 +1397,7 @@ export default function ActivationPage() {
                     description: ["Address verified and saved successfully."],
                     variant: "default"
                 });
-                clearActivationData();
+                clearActivationData(country);
                 router.push("/dashboard");
             }
         } catch (err: any) {
@@ -1134,12 +1491,18 @@ export default function ActivationPage() {
                     );
 
                     // 4. Update Organization
-                    const country = localStorage.getItem("country");
-                    const country_iso_code = localStorage.getItem("country_iso_code");
+                    const country = localStorage.getItem("country") || org.country;
 
+                    localStorage.setItem(`activation_${country}_step2`, JSON.stringify({
+                        singapore_business_name: singaporeBusinessName
+                    }));
+                    localStorage.setItem("activation_step2", JSON.stringify({
+                        singapore_business_name: singaporeBusinessName
+                    }));
+
+                    const finalData = getCountryPatchData(country);
                     await profileService.updateOrganization({
-                        country: country,
-                        country_iso_code: country_iso_code,
+                        ...finalData,
                         bundle_sid: bundleSid,
                         compliance_status: "pending"
                     });
@@ -1150,7 +1513,7 @@ export default function ActivationPage() {
                         description: ["Singapore business details submitted successfully."],
                         variant: "default"
                     });
-                    clearActivationData();
+                    clearActivationData(country);
                     router.push("/dashboard");
                 }
             }
@@ -1191,6 +1554,12 @@ export default function ActivationPage() {
 
         setOrg(prev => ({ ...prev, authorize_representative_phone: fullPhone }));
 
+        localStorage.setItem(`activation_${org.country}_step3`, JSON.stringify({
+            authorize_representative_first_name: org.authorize_representative_first_name,
+            authorize_representative_last_name: org.authorize_representative_last_name,
+            authorize_representative_email: org.authorize_representative_email,
+            authorize_representative_phone: fullPhone
+        }));
         localStorage.setItem("activation_step3", JSON.stringify({
             authorize_representative_first_name: org.authorize_representative_first_name,
             authorize_representative_last_name: org.authorize_representative_last_name,
@@ -1218,6 +1587,7 @@ export default function ActivationPage() {
             has_proof: !!org.proof_of_address,
             proof_name: org.proof_of_address?.name || ""
         };
+        localStorage.setItem(`activation_${org.country}_step4`, JSON.stringify(fileInfo));
         localStorage.setItem("activation_step4", JSON.stringify(fileInfo));
         setCurrentStep(5);
     };
@@ -1225,32 +1595,7 @@ export default function ActivationPage() {
     const handleSave = async () => {
         const formData = new FormData();
 
-        // Combine all data
-        const step1 = JSON.parse(localStorage.getItem("activation_step1") || "{}");
-        const step2 = JSON.parse(localStorage.getItem("activation_step2") || "{}");
-        const step3 = JSON.parse(localStorage.getItem("activation_step3") || "{}");
-
-        const finalData = {
-            ...step1,
-            ...step2,
-            ...step3,
-            business_name: org.business_name,
-            reg_number: org.reg_number,
-            country: org.country,
-            street_address: org.street_address,
-            apt_or_suite: org.apt_or_suite,
-            city: org.city,
-            post_code: org.post_code,
-            province: org.province,
-            country_iso_code: org.country_iso_code,
-            business_registration_authority: org.business_registration_authority,
-            business_website: org.business_website,
-            authorize_representative_first_name: org.authorize_representative_first_name,
-            authorize_representative_last_name: org.authorize_representative_last_name,
-            authorize_representative_email: org.authorize_representative_email,
-            authorize_representative_phone: org.authorize_representative_phone,
-            name: org.business_name // Mandatory match
-        };
+        const finalData = getCountryPatchData(org.country);
 
         Object.keys(finalData).forEach(key => {
             if (finalData[key] !== null && finalData[key] !== undefined) {
@@ -1270,7 +1615,7 @@ export default function ActivationPage() {
             await profileService.updateOrganization(formData);
 
             // Clear local storage
-            clearActivationData();
+            clearActivationData(org.country);
 
             setAlertConfig({
                 open: true,
@@ -1280,8 +1625,6 @@ export default function ActivationPage() {
             });
 
             router.push("/dashboard");
-            // setTimeout(() => {
-            // }, 1500);
         } catch (err: any) {
             console.error("Error updating organization:", err);
             const errors = err.response?.data || {};
@@ -1607,12 +1950,63 @@ export default function ActivationPage() {
                                         </div>
                                     </div>
                                 </div>
+                                {["India", "Canada", "United States of America"].includes(org.country) && (
+                                    <div className="space-y-4 mb-6">
+                                        <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <Checkbox
+                                                id="compliance"
+                                                checked={isComplianceAgreed}
+                                                onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
+                                            />
+                                            <label
+                                                htmlFor="compliance"
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                            >
+                                                I have read and agree to the{" "}
+                                                <span
+                                                    className="text-primary hover:underline font-bold"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setIsComplianceModalOpen(true);
+                                                    }}
+                                                >
+                                                    Privacy Policy and Terms
+                                                </span>.
+                                            </label>
+                                        </div>
+
+                                        <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <Checkbox
+                                                id="phone-billing"
+                                                checked={isPhoneBillingAgreed}
+                                                onCheckedChange={(checked) => setIsPhoneBillingAgreed(checked === true)}
+                                            />
+                                            <label
+                                                htmlFor="phone-billing"
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                            >
+                                                I understand how{" "}
+                                                <span
+                                                    className="text-primary hover:underline font-bold"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setIsPhoneBillingModalOpen(true);
+                                                    }}
+                                                >
+                                                    CallPilot phone numbers are assigned, used, and billed
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-end pt-6">
                                     <Button
                                         onClick={handleNextStep1}
+                                        disabled={["India", "Canada", "United States of America"].includes(org.country) && (isSaving || !isComplianceAgreed || !isPhoneBillingAgreed)}
                                         className="bg-primary hover:bg-primary/90 text-white px-8"
                                     >
-                                        {["India", "Canada", "United States of America"].includes(org.country) ? "Submit" : "Next"}
+                                        {["India", "Canada", "United States of America"].includes(org.country) ? (isSaving ? "Submitting..." : "Submit") : "Next"}
                                     </Button>
                                 </div>
                             </div>
@@ -1748,6 +2142,54 @@ export default function ActivationPage() {
                                                 />
                                             </div>
                                         </div>
+                                        <div className="space-y-4 mb-6">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                <Checkbox
+                                                    id="compliance"
+                                                    checked={isComplianceAgreed}
+                                                    onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
+                                                />
+                                                <label
+                                                    htmlFor="compliance"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                >
+                                                    I have read and agree to the{" "}
+                                                    <span
+                                                        className="text-primary hover:underline font-bold"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setIsComplianceModalOpen(true);
+                                                        }}
+                                                    >
+                                                        Privacy Policy and Terms
+                                                    </span>.
+                                                </label>
+                                            </div>
+
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                <Checkbox
+                                                    id="phone-billing"
+                                                    checked={isPhoneBillingAgreed}
+                                                    onCheckedChange={(checked) => setIsPhoneBillingAgreed(checked === true)}
+                                                />
+                                                <label
+                                                    htmlFor="phone-billing"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                >
+                                                    I understand how{" "}
+                                                    <span
+                                                        className="text-primary hover:underline font-bold"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setIsPhoneBillingModalOpen(true);
+                                                        }}
+                                                    >
+                                                        CallPilot phone numbers are assigned, used, and billed
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+
                                         <div className="flex justify-between pt-6">
                                             <Button
                                                 variant="outline"
@@ -1758,9 +2200,10 @@ export default function ActivationPage() {
                                             </Button>
                                             <Button
                                                 onClick={handleNextStep2}
+                                                disabled={isSaving || !isComplianceAgreed || !isPhoneBillingAgreed}
                                                 className="bg-primary hover:bg-primary/90 text-white px-8"
                                             >
-                                                Submit
+                                                {isSaving ? "Submitting..." : "Submit"}
                                             </Button>
                                         </div>
                                     </>
@@ -1791,6 +2234,54 @@ export default function ActivationPage() {
                                             </div>
                                         </div>
 
+                                        <div className="space-y-4 mb-6">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                <Checkbox
+                                                    id="compliance"
+                                                    checked={isComplianceAgreed}
+                                                    onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
+                                                />
+                                                <label
+                                                    htmlFor="compliance"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                >
+                                                    I have read and agree to the{" "}
+                                                    <span
+                                                        className="text-primary hover:underline font-bold"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setIsComplianceModalOpen(true);
+                                                        }}
+                                                    >
+                                                        Privacy Policy and Terms
+                                                    </span>.
+                                                </label>
+                                            </div>
+
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                <Checkbox
+                                                    id="phone-billing"
+                                                    checked={isPhoneBillingAgreed}
+                                                    onCheckedChange={(checked) => setIsPhoneBillingAgreed(checked === true)}
+                                                />
+                                                <label
+                                                    htmlFor="phone-billing"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                >
+                                                    I understand how{" "}
+                                                    <span
+                                                        className="text-primary hover:underline font-bold"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setIsPhoneBillingModalOpen(true);
+                                                        }}
+                                                    >
+                                                        CallPilot phone numbers are assigned, used, and billed
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+
                                         <div className="flex justify-between pt-6">
                                             <Button
                                                 variant="outline"
@@ -1801,7 +2292,7 @@ export default function ActivationPage() {
                                             </Button>
                                             <Button
                                                 onClick={handleSingaporeSubmit}
-                                                disabled={isSaving}
+                                                disabled={isSaving || !isComplianceAgreed || !isPhoneBillingAgreed}
                                                 className="bg-primary hover:bg-primary/90 text-white px-8"
                                             >
                                                 {isSaving ? "Submitting..." : "Submit"}
@@ -2411,6 +2902,56 @@ export default function ActivationPage() {
                                                 />
                                             </div>
                                         </div>
+                                        {org.country !== "New Zealand" && (
+                                            <div className="space-y-4 mb-6">
+                                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                    <Checkbox
+                                                        id="compliance"
+                                                        checked={isComplianceAgreed}
+                                                        onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
+                                                    />
+                                                    <label
+                                                        htmlFor="compliance"
+                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                    >
+                                                        I have read and agree to the{" "}
+                                                        <span
+                                                            className="text-primary hover:underline font-bold"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setIsComplianceModalOpen(true);
+                                                            }}
+                                                        >
+                                                            Privacy Policy and Terms
+                                                        </span>.
+                                                    </label>
+                                                </div>
+
+                                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                    <Checkbox
+                                                        id="phone-billing"
+                                                        checked={isPhoneBillingAgreed}
+                                                        onCheckedChange={(checked) => setIsPhoneBillingAgreed(checked === true)}
+                                                    />
+                                                    <label
+                                                        htmlFor="phone-billing"
+                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                    >
+                                                        I understand how{" "}
+                                                        <span
+                                                            className="text-primary hover:underline font-bold"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setIsPhoneBillingModalOpen(true);
+                                                            }}
+                                                        >
+                                                            CallPilot phone numbers are assigned, used, and billed
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <div className="flex justify-between pt-6">
                                             <Button
                                                 variant="outline"
@@ -2421,6 +2962,7 @@ export default function ActivationPage() {
                                             </Button>
                                             <Button
                                                 onClick={handleIrelandSubmit}
+                                                disabled={isSaving || (org.country !== "New Zealand" && (!isComplianceAgreed || !isPhoneBillingAgreed))}
                                                 className="bg-primary hover:bg-primary/90 text-white px-8"
                                             >
                                                 {isSaving ? "Submitting..." : (org.country === "New Zealand" ? "Next" : "Submit")}
@@ -2666,6 +3208,54 @@ export default function ActivationPage() {
                                             </div>
                                         </div>
  
+                                        <div className="space-y-4 mb-6">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                <Checkbox
+                                                    id="compliance"
+                                                    checked={isComplianceAgreed}
+                                                    onCheckedChange={(checked) => setIsComplianceAgreed(checked === true)}
+                                                />
+                                                <label
+                                                    htmlFor="compliance"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                >
+                                                    I have read and agree to the{" "}
+                                                    <span
+                                                        className="text-primary hover:underline font-bold"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setIsComplianceModalOpen(true);
+                                                        }}
+                                                    >
+                                                        Privacy Policy and Terms
+                                                    </span>.
+                                                </label>
+                                            </div>
+
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                <Checkbox
+                                                    id="phone-billing"
+                                                    checked={isPhoneBillingAgreed}
+                                                    onCheckedChange={(checked) => setIsPhoneBillingAgreed(checked === true)}
+                                                />
+                                                <label
+                                                    htmlFor="phone-billing"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                >
+                                                    I understand how{" "}
+                                                    <span
+                                                        className="text-primary hover:underline font-bold"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setIsPhoneBillingModalOpen(true);
+                                                        }}
+                                                    >
+                                                        CallPilot phone numbers are assigned, used, and billed
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+
                                         <div className="flex justify-between pt-6">
                                             <Button
                                                 variant="outline"
@@ -2676,7 +3266,7 @@ export default function ActivationPage() {
                                             </Button>
                                             <Button
                                                 onClick={handleNZFinalSubmit}
-                                                disabled={isSaving}
+                                                disabled={isSaving || !isComplianceAgreed || !isPhoneBillingAgreed}
                                                 className="bg-primary hover:bg-primary/90 text-white px-8"
                                             >
                                                 {isSaving ? "Submitting..." : "Submit"}
