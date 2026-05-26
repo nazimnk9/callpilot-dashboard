@@ -60,7 +60,8 @@ export function OrganizationContent() {
         authorize_representative_first_name: "",
         authorize_representative_last_name: "",
         authorize_representative_email: "",
-        authorize_representative_phone: ""
+        authorize_representative_phone: "",
+        compliance_status: ""
     })
     const [org, setOrg] = useState({
         name: "",
@@ -90,7 +91,8 @@ export function OrganizationContent() {
         authorize_representative_first_name: "",
         authorize_representative_last_name: "",
         authorize_representative_email: "",
-        authorize_representative_phone: ""
+        authorize_representative_phone: "",
+        compliance_status: ""
     })
     const [editOrg, setEditOrg] = useState({ ...org })
     const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false)
@@ -221,7 +223,8 @@ export function OrganizationContent() {
                 authorize_representative_first_name: data.authorize_representative_first_name || "",
                 authorize_representative_last_name: data.authorize_representative_last_name || "",
                 authorize_representative_email: data.authorize_representative_email || "",
-                authorize_representative_phone: phoneVal
+                authorize_representative_phone: phoneVal,
+                compliance_status: data.compliance_status || ""
             }
             setInitialOrg(orgData)
             setOrg(orgData)
@@ -376,10 +379,20 @@ export function OrganizationContent() {
 
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center flex-wrap gap-4">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Business Details</h2>
+                        {editOrg.compliance_status === "pending" && (
+                            <span className="text-lg font-bold text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-4 py-1.5 rounded-full border border-amber-200 dark:border-amber-800 animate-pulse">
+                                Waiting for verification
+                            </span>
+                        )}
+                        {editOrg.compliance_status === "approved" && (
+                            <span className="text-lg font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-4 py-1.5 rounded-full border border-green-200 dark:border-green-800">
+                                Verified
+                            </span>
+                        )}
                     </div>
-                    {editOrg.is_submitted_for_verification && (
+                    {(editOrg.compliance_status === "pending" || editOrg.is_submitted_for_verification) && (
                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl flex items-center gap-3 m-4">
                             <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                             <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
