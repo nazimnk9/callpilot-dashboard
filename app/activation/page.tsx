@@ -205,15 +205,12 @@ export default function ActivationPage() {
         if (step1) {
             const data = JSON.parse(step1);
             setOrg(prev => ({ ...prev, ...data }));
-            setAustraliaAddress(prev => ({ ...prev, IsoCountry: data.country_iso_code || countriesData.find(c => c.country === countryName)?.country_code || "" }));
         } else {
-            const currentIso = countriesData.find(c => c.country === countryName)?.country_code || "";
             setOrg(prev => ({
                 ...prev,
                 country: countryName,
-                country_iso_code: currentIso
+                country_iso_code: countriesData.find(c => c.country === countryName)?.country_code || ""
             }));
-            setAustraliaAddress(prev => ({ ...prev, IsoCountry: currentIso }));
         }
 
         if (step2) {
@@ -536,7 +533,6 @@ export default function ActivationPage() {
         if (step1) {
             const data = JSON.parse(step1);
             setOrg(prev => ({ ...prev, ...data }));
-            setAustraliaAddress(prev => ({ ...prev, IsoCountry: data.country_iso_code || "" }));
         }
         if (step2) {
             const data = JSON.parse(step2);
@@ -2141,14 +2137,7 @@ export default function ActivationPage() {
                                                 <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
                                                 <Input
                                                     id="IsoCountry"
-                                                    value={
-                                                        australiaAddress.IsoCountry || 
-                                                        org.country_iso_code || 
-                                                        (typeof window !== "undefined" 
-                                                            ? (JSON.parse(localStorage.getItem(`activation_${org.country}_step1`) || "{}").country_iso_code || 
-                                                               JSON.parse(localStorage.getItem("activation_step1") || "{}").country_iso_code || "") 
-                                                            : "")
-                                                    }
+                                                    value={australiaAddress.IsoCountry || org.country_iso_code || ""}
                                                     disabled
                                                     className="bg-gray-50 cursor-not-allowed"
                                                 />
@@ -2908,14 +2897,7 @@ export default function ActivationPage() {
                                                 <Label htmlFor="IsoCountry" className="text-sm font-semibold">Country Code</Label>
                                                 <Input
                                                     id="IsoCountry"
-                                                    value={
-                                                        australiaAddress.IsoCountry || 
-                                                        org.country_iso_code || 
-                                                        (typeof window !== "undefined" 
-                                                            ? (JSON.parse(localStorage.getItem(`activation_${org.country}_step1`) || "{}").country_iso_code || 
-                                                               JSON.parse(localStorage.getItem("activation_step1") || "{}").country_iso_code || "") 
-                                                            : "")
-                                                    }
+                                                    value={australiaAddress.IsoCountry || org.country_iso_code || ""}
                                                     disabled
                                                     className="bg-gray-50 cursor-not-allowed"
                                                 />
