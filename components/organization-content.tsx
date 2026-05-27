@@ -396,7 +396,7 @@ export function OrganizationContent() {
                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl flex items-center gap-3 m-4">
                             <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                             <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                                Verification in progress. Details are locked until reviewed.
+                                Verification in progress.
                             </p>
                         </div>
                     )}
@@ -620,7 +620,7 @@ export function OrganizationContent() {
                             );
                         })()}
 
-                        <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
+                        {/* <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
                             <Button
                                 onClick={() => router.back()}
                                 variant="outline"
@@ -628,7 +628,7 @@ export function OrganizationContent() {
                             >
                                 Back
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
