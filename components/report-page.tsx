@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { X, ArrowLeft, Phone, CheckCircle2, Users, Clock } from "lucide-react"
+import { X, ArrowLeft, Phone, CheckCircle2, Users, Clock, Check, Minus } from "lucide-react"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -380,7 +380,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                 <TableHead className="font-semibold text-foreground">Recall</TableHead>
                                 {/* <TableHead className="font-semibold text-foreground">First Message Sent At</TableHead> */}
                                 {/* <TableHead className="font-semibold text-foreground">Status</TableHead> */}
-                                <TableHead className="font-semibold text-foreground">Ai Decision</TableHead>
+                                <TableHead className="font-semibold text-foreground">AI Decision</TableHead>
                                 <TableHead className="font-semibold text-foreground">Updated At</TableHead>
                                 <TableHead className="font-semibold text-foreground">Chat History</TableHead>
                                 {/* <TableHead className="font-semibold text-foreground">Retry call Interview</TableHead> */}
@@ -436,10 +436,22 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                     <TableCell className="text-sm">{row.candidate_name}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_email}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_phone}</TableCell>
-                                    <TableCell className="text-sm">{row.is_retry ? "Yes" : "No"}</TableCell>
+                                    <TableCell className="text-sm">
+                                        {row.is_retry ? (
+                                            <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                        ) : (
+                                            <Minus className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                        )}
+                                    </TableCell>
                                     {/* <TableCell className="text-sm">{formatDate(row.started_at)}</TableCell> */}
                                     {/* <TableCell className="text-sm">{row.status}</TableCell> */}
-                                    <TableCell className="text-sm">{row.ai_decision === "user_disconnect" ? "Incomplete" : row.ai_decision}</TableCell>
+                                    <TableCell className="text-sm">
+                                        {row.ai_decision === "user_disconnect"
+                                            ? "Incomplete"
+                                            : row.ai_decision === "machine_detected"
+                                            ? "Machine Detected"
+                                            : row.ai_decision}
+                                    </TableCell>
                                     <TableCell className="text-sm">{formatDate(row.updated_at)}</TableCell>
                                     <TableCell className="text-sm">
                                         <Button
