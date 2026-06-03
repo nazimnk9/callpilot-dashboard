@@ -395,9 +395,9 @@ export function OrganizationContent() {
                     {(editOrg.compliance_status === "pending" || editOrg.is_submitted_for_verification) && (
                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl flex items-center gap-3 m-4">
                             <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                            <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                            {/* <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
                                 Verification in progress.
-                            </p>
+                            </p> */}
                         </div>
                     )}
                     <div className="p-8 space-y-12">
