@@ -1065,7 +1065,7 @@ export function DashboardContent() {
                                                             {card.value}
                                                         </p>
 
-                                                        {card.title === 'Minutes Remaining' && orgData?.role !== "STAFF" && (
+                                                        {card.title === 'Minutes Remaining' && orgData?.role !== "STAFF" && orgData?.current_plan && (
                                                             <div className="mt-4">
                                                                 <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                                                     <DialogTrigger asChild>

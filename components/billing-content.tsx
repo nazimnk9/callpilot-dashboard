@@ -906,7 +906,7 @@ export function BillingContent() {
                                             {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
                                         </button>
                                     )}
-                                    {orgData?.role !== "STAFF" && (
+                                    {orgData?.role !== "STAFF" && orgData?.current_plan && (
                                         <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                             <DialogTrigger asChild>
                                                 <button className="bg-primary hover:bg-black text-white dark:text-black dark:bg-primary px-0 py-1  sm:px-0 sm:py-1 rounded-2xl text-[12px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] w-[100px] md:w-[110px] sm:w-[15%]">
