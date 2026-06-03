@@ -892,11 +892,11 @@ export function DashboardContent() {
                     const setupSteps = [
                         { label: 'Account Created', key: 'account_created', path: '' },
                         { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
-                        { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
                         { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
+                        { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
                         { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
                         { label: 'Connect Your ATS', key: 'is_ats_connected', path: '/dashboard/connect-ats' },
-                        { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/ai-call-flow-options' }
+                        { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/phone-call-flows' }
                     ];
 
                     const checkStepCompleted = (key: string) => {
@@ -905,6 +905,11 @@ export function DashboardContent() {
                             return orgData?.compliance_status === 'pending' || orgData?.compliance_status === 'approved';
                         }
                         return orgData?.[key] === true;
+                    };
+
+                    const isStepDisabled = (idx: number) => {
+                        if (idx === 0) return false;
+                        return !checkStepCompleted(setupSteps[idx - 1].key);
                     };
 
                     const completedCount = setupSteps.filter(step => checkStepCompleted(step.key)).length;
@@ -928,12 +933,15 @@ export function DashboardContent() {
                                         <div className="p-6 md:p-8 space-y-3">
                                             {setupSteps.map((option, idx) => {
                                                 const isCompleted = checkStepCompleted(option.key);
+                                                const isDisabled = isStepDisabled(idx);
                                                 return (
                                                     <div
                                                         key={idx}
-                                                        className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
+                                                        className={`flex items-center gap-5 group/item transition-all duration-200 ${
+                                                            isCompleted ? '' : (isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:translate-x-1')
+                                                        }`}
                                                         onClick={() => {
-                                                            if (!isCompleted) {
+                                                            if (!isCompleted && !isDisabled) {
                                                                 if (option.key === 'is_purchased_anything') {
                                                                     setSelectedPlan(null);
                                                                     setIsSubscriptionModalOpen(true);
@@ -947,10 +955,16 @@ export function DashboardContent() {
                                                             <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
                                                                 <Check className="h-4 w-4 text-white stroke-[3px]" />
                                                             </div>
+                                                        ) : isDisabled ? (
+                                                            <div className="h-6 w-6 rounded-full border-[3px] border-gray-300 dark:border-gray-700 flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-sm transition-colors duration-200" />
                                                         ) : (
                                                             <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
                                                         )}
-                                                        <span className={`text-[17px] font-medium text-gray-800 dark:text-gray-200 transition-all duration-200 ${!isCompleted ? 'group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400' : ''}`}>
+                                                        <span className={`text-[17px] font-medium transition-all duration-200 ${
+                                                            isCompleted ? 'text-gray-800 dark:text-gray-200' : (
+                                                                isDisabled ? 'text-black/50 dark:text-white/50' : 'text-gray-800 dark:text-gray-200 group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400'
+                                                            )
+                                                        }`}>
                                                             {option.label}
                                                         </span>
                                                     </div>
@@ -980,12 +994,15 @@ export function DashboardContent() {
                                 <div className="relative space-y-3">
                                     {setupSteps.map((option, idx) => {
                                         const isCompleted = checkStepCompleted(option.key);
+                                        const isDisabled = isStepDisabled(idx);
                                         return (
                                             <div
                                                 key={idx}
-                                                className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
+                                                className={`flex items-center gap-5 group/item transition-all duration-200 ${
+                                                    isCompleted ? '' : (isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:translate-x-1')
+                                                }`}
                                                 onClick={() => {
-                                                    if (!isCompleted) {
+                                                    if (!isCompleted && !isDisabled) {
                                                         if (option.key === 'is_purchased_anything') {
                                                             setSelectedPlan(null);
                                                             setIsSubscriptionModalOpen(true);
@@ -999,10 +1016,16 @@ export function DashboardContent() {
                                                     <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
                                                         <Check className="h-4 w-4 text-white stroke-[3px]" />
                                                     </div>
+                                                ) : isDisabled ? (
+                                                    <div className="h-6 w-6 rounded-full border-[3px] border-gray-300 dark:border-gray-700 flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-sm transition-colors duration-200" />
                                                 ) : (
                                                     <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
                                                 )}
-                                                <span className={`text-[17px] font-medium text-gray-800 dark:text-gray-200 transition-all duration-200 ${!isCompleted ? 'group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400' : ''}`}>
+                                                <span className={`text-[17px] font-medium transition-all duration-200 ${
+                                                    isCompleted ? 'text-gray-800 dark:text-gray-200' : (
+                                                        isDisabled ? 'text-black/50 dark:text-white/50' : 'text-gray-800 dark:text-gray-200 group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400'
+                                                    )
+                                                }`}>
                                                     {option.label}
                                                 </span>
                                             </div>
@@ -1065,7 +1088,7 @@ export function DashboardContent() {
                                                             {card.value}
                                                         </p>
 
-                                                        {card.title === 'Minutes Remaining' && orgData?.role !== "STAFF" && (
+                                                        {card.title === 'Minutes Remaining' && orgData?.role !== "STAFF" && orgData?.current_plan && orgData?.current_plan !== 'No Active Plan' && (
                                                             <div className="mt-4">
                                                                 <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                                                     <DialogTrigger asChild>
