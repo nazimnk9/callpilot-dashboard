@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle } from 'lucide-react';
+import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone } from 'lucide-react';
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
+import { profileService } from "@/services/profile-service";
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import {
@@ -167,6 +168,46 @@ export function DashboardContent() {
     const enterpriseSectionRef = useRef<HTMLDivElement>(null);
     const enterpriseSectionUpdateRef = useRef<HTMLDivElement>(null);
 
+    const [verificationBlockedStep, setVerificationBlockedStep] = useState<'verification_pending' | 'platform_activation_required' | 'phone_number_required' | null>(null);
+    const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+    const [isCheckingVerification, setIsCheckingVerification] = useState(false);
+
+    const handleUpgradePlanClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsCheckingVerification(true);
+        try {
+            const statusRes = await profileService.getPlatformStatus();
+            const complianceStatus = statusRes.data.compliance_status;
+            if (complianceStatus === "" || complianceStatus === null || complianceStatus === "rejected") {
+                router.push("/activation");
+                return;
+            }
+            if (complianceStatus === "pending") {
+                setVerificationBlockedStep('verification_pending');
+                setIsVerificationModalOpen(true);
+            } else if (statusRes.data.is_platform_activated !== true) {
+                setVerificationBlockedStep('platform_activation_required');
+                setIsVerificationModalOpen(true);
+            } else if (statusRes.data.have_any_phone_number !== true) {
+                setVerificationBlockedStep('phone_number_required');
+                setIsVerificationModalOpen(true);
+            } else {
+                setVerificationBlockedStep(null);
+                if (orgData?.current_plan) {
+                    fetchCurrentSubscription();
+                    setIsUpdateSubscriptionModalOpen(true);
+                } else {
+                    setSelectedPlan(null);
+                    setIsSubscriptionModalOpen(true);
+                }
+            }
+        } catch (error) {
+            console.error("Error checking platform status:", error);
+            toast.error("Failed to check platform status. Please try again.");
+        } finally {
+            setIsCheckingVerification(false);
+        }
+    };
 
     const fetchOrgData = async () => {
         try {
@@ -1267,19 +1308,15 @@ export function DashboardContent() {
                                                 {card.title === 'Current Plan' && orgData?.role !== "STAFF" && (
                                                     <div className="flex flex-row gap-2 mt-4">
                                                         <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (orgData?.current_plan) {
-                                                                    fetchCurrentSubscription();
-                                                                    setIsUpdateSubscriptionModalOpen(true);
-                                                                } else {
-                                                                    setSelectedPlan(null);
-                                                                    setIsSubscriptionModalOpen(true);
-                                                                }
-                                                            }}
-                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
+                                                            disabled={isCheckingVerification}
+                                                            onClick={handleUpgradePlanClick}
+                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                                         >
-                                                            {orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"}
+                                                            {isCheckingVerification ? (
+                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                            ) : (
+                                                                orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"
+                                                            )}
                                                         </button>
 
                                                         {/* {orgData?.current_plan && (
@@ -1360,19 +1397,15 @@ export function DashboardContent() {
                                                 {card.title === 'Current Plan' && (
                                                     <div className="flex flex-row gap-2 mt-4">
                                                         <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (orgData?.current_plan) {
-                                                                    fetchCurrentSubscription();
-                                                                    setIsUpdateSubscriptionModalOpen(true);
-                                                                } else {
-                                                                    setSelectedPlan(null);
-                                                                    setIsSubscriptionModalOpen(true);
-                                                                }
-                                                            }}
-                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
+                                                            disabled={isCheckingVerification}
+                                                            onClick={handleUpgradePlanClick}
+                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                                         >
-                                                            {orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"}
+                                                            {isCheckingVerification ? (
+                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                            ) : (
+                                                                orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"
+                                                            )}
                                                         </button>
 
                                                         {orgData?.current_plan && (
@@ -1675,6 +1708,48 @@ export function DashboardContent() {
                                 Continue
                             </Button>
                         </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
+                    <DialogContent className="max-w-md w-full p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl">
+                        {verificationBlockedStep === 'verification_pending' ? (
+                            <div className="text-center space-y-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Clock className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verification Pending</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        Your Business data is still waiting for verification. Please come back later.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : verificationBlockedStep === 'platform_activation_required' ? (
+                            <div className="text-center space-y-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Clock className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Platform Activation Required</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        To access AI Phone Numbers, please complete the Platform Activation setup fee payment first.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : verificationBlockedStep === 'phone_number_required' ? (
+                            <div className="text-center space-y-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Phone className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Phone Number Required</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        To configure billing, please purchase an Phone Number first.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : null}
                     </DialogContent>
                 </Dialog>
 
