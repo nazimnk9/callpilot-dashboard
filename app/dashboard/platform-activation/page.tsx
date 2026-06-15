@@ -172,7 +172,7 @@ export default function PlatformActivationPage() {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    const isStep1Completed = data.compliance_status === 'pending';
+                    const isStep1Completed = data.compliance_status === "approved";
                     setIsMotherStepCompleted(isStep1Completed);
                     if (data.is_platform_activated) {
                         router.push('/dashboard');
