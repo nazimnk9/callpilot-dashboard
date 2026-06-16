@@ -33,6 +33,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface OrgUser {
     id: number
@@ -49,6 +50,7 @@ interface OrgUser {
     is_active: boolean
     joined_at: string
     last_active: string | null
+    sent_email_notifications?: boolean
 }
 
 interface OrgInvite {
@@ -81,6 +83,8 @@ export function OrganizationUsersContent() {
     const [isCheckingEmail, setIsCheckingEmail] = useState(false)
     const [emailExists, setEmailExists] = useState<boolean | null>(null)
 
+    const [inviteSentEmailNotifications, setInviteSentEmailNotifications] = useState(true)
+
     // Edit Modal States
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [selectedUser, setSelectedUser] = useState<OrgUser | null>(null)
@@ -88,6 +92,7 @@ export function OrganizationUsersContent() {
     const [editEmail, setEditEmail] = useState("")
     const [editPassword, setEditPassword] = useState("")
     const [isUpdating, setIsUpdating] = useState(false)
+    const [editSentEmailNotifications, setEditSentEmailNotifications] = useState(true)
 
     // Delete Modal States
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -103,6 +108,7 @@ export function OrganizationUsersContent() {
         setEditEmail(user.user.email || "")
         setEditRole(user.role || "")
         setEditPassword("")
+        setEditSentEmailNotifications(user.sent_email_notifications ?? true)
         setIsEditModalOpen(true)
     }
 
@@ -120,9 +126,10 @@ export function OrganizationUsersContent() {
 
         try {
             setIsUpdating(true)
-            const payload: { role?: string; email?: string; password?: string } = {
+            const payload: { role?: string; email?: string; password?: string; sent_email_notifications: boolean } = {
                 role: editRole,
                 email: editEmail,
+                sent_email_notifications: editSentEmailNotifications,
             }
             if (editPassword) {
                 payload.password = editPassword
@@ -320,9 +327,10 @@ export function OrganizationUsersContent() {
 
         try {
             setIsInviting(true)
-            const payload: { role: string; email: string; password?: string } = {
+            const payload: { role: string; email: string; password?: string; sent_email_notifications: boolean } = {
                 role: inviteRole,
                 email: inviteEmail,
+                sent_email_notifications: inviteSentEmailNotifications,
             }
             if (emailExists === false && invitePassword) {
                 payload.password = invitePassword
@@ -340,6 +348,7 @@ export function OrganizationUsersContent() {
             setInvitePassword("")
             setInviteStep(1)
             setEmailExists(null)
+            setInviteSentEmailNotifications(true)
 
             if (activeTab === "invites") {
                 fetchInvites()
@@ -741,6 +750,20 @@ export function OrganizationUsersContent() {
                                             </SelectContent>
                                         </Select>
                                     </div>
+
+                                    <div className="flex items-center space-x-2 pt-2">
+                                        <Checkbox
+                                            id="invite-email-notifications"
+                                            checked={inviteSentEmailNotifications}
+                                            onCheckedChange={(checked) => setInviteSentEmailNotifications(!!checked)}
+                                        />
+                                        <Label
+                                            htmlFor="invite-email-notifications"
+                                            className="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none"
+                                        >
+                                            Email notification
+                                        </Label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -817,7 +840,7 @@ export function OrganizationUsersContent() {
                                 />
                             </div>
 
-                            <div className="space-y-2">
+                             <div className="space-y-2">
                                 <Label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Assign Role <span className="text-red-500">*</span>
                                 </Label>
@@ -831,6 +854,20 @@ export function OrganizationUsersContent() {
                                         <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div className="flex items-center space-x-2 pt-2">
+                                <Checkbox
+                                    id="edit-email-notifications"
+                                    checked={editSentEmailNotifications}
+                                    onCheckedChange={(checked) => setEditSentEmailNotifications(!!checked)}
+                                />
+                                <Label
+                                    htmlFor="edit-email-notifications"
+                                    className="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none"
+                                >
+                                    Email notification
+                                </Label>
                             </div>
                         </div>
                     </div>
@@ -909,7 +946,7 @@ export function OrganizationUsersContent() {
                                     Removing...
                                 </>
                             ) : (
-                                "Remove User"
+                                "Remove Use"
                             )}
                         </Button>
                     </DialogFooter>
