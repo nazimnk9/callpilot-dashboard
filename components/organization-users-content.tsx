@@ -946,7 +946,7 @@ export function OrganizationUsersContent() {
                                     Removing...
                                 </>
                             ) : (
-                                "Remove Use"
+                                "Remove User"
                             )}
                         </Button>
                     </DialogFooter>
