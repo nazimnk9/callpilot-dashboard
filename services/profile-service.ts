@@ -80,7 +80,7 @@ export const profileService = {
         return api.get("/organizations/users/");
     },
 
-    async updateOrganizationUser(uid: string, data: { role?: string; email?: string; password?: string }) {
+    async updateOrganizationUser(uid: string, data: { role?: string; email?: string; password?: string; sent_email_notifications?: boolean }) {
         return api.patch(`/organizations/users/${uid}`, data);
     },
 
@@ -88,7 +88,7 @@ export const profileService = {
         return api.delete(`/organizations/users/${uid}`);
     },
 
-    async inviteUser(data: { role: string; email: string; password?: string }) {
+    async inviteUser(data: { role: string; email: string; password?: string; sent_email_notifications?: boolean }) {
         return api.post("/organizations/invite/", data);
     },
 
