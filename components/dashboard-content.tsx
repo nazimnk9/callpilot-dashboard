@@ -172,6 +172,32 @@ export function DashboardContent() {
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
     const [isCheckingVerification, setIsCheckingVerification] = useState(false);
 
+    const setupSteps = [
+        { label: 'Account Created', key: 'account_created', path: '' },
+        { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
+        { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
+        { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
+        { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
+        { label: 'Connect Your ATS', key: 'is_ats_connected', path: '/dashboard/connect-ats' },
+        { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/phone-call-flows' }
+    ];
+
+    const checkStepCompleted = (key: string) => {
+        if (key === 'account_created') return true;
+        if (key === 'is_given_company_details') {
+            return orgData?.compliance_status === 'pending' || orgData?.compliance_status === 'approved';
+        }
+        return orgData?.[key] === true;
+    };
+
+    const isStepDisabled = (idx: number) => {
+        if (idx === 0) return false;
+        return !checkStepCompleted(setupSteps[idx - 1].key);
+    };
+
+    const completedCount = setupSteps.filter(step => checkStepCompleted(step.key)).length;
+    const isAllCompleted = completedCount === setupSteps.length;
+
     const handleUpgradePlanClick = async (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsCheckingVerification(true);
@@ -930,32 +956,6 @@ export function DashboardContent() {
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Complete Your Account Setup */}
                 {(() => {
-                    const setupSteps = [
-                        { label: 'Account Created', key: 'account_created', path: '' },
-                        { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
-                        { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
-                        { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
-                        { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
-                        { label: 'Connect Your ATS', key: 'is_ats_connected', path: '/dashboard/connect-ats' },
-                        { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/phone-call-flows' }
-                    ];
-
-                    const checkStepCompleted = (key: string) => {
-                        if (key === 'account_created') return true;
-                        if (key === 'is_given_company_details') {
-                            return orgData?.compliance_status === 'pending' || orgData?.compliance_status === 'approved';
-                        }
-                        return orgData?.[key] === true;
-                    };
-
-                    const isStepDisabled = (idx: number) => {
-                        if (idx === 0) return false;
-                        return !checkStepCompleted(setupSteps[idx - 1].key);
-                    };
-
-                    const completedCount = setupSteps.filter(step => checkStepCompleted(step.key)).length;
-                    const isAllCompleted = completedCount === setupSteps.length;
-
                     if (isAllCompleted) {
                         return (
                             <div className="relative">
@@ -1340,95 +1340,99 @@ export function DashboardContent() {
                         ))
                     )}
                 </div>
-                <div>
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">System Controls</h1>
-                    {/* <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
-                </div>
+                {isAllCompleted && (
+                    <>
+                        <div>
+                            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">System Controls</h1>
+                            {/* <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
+                        </div>
 
-                {/* 3 cards in same row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {isLoading ? (
-                        Array(2).fill(0).map((_, i) => (
-                            <div key={i} className="h-32 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
-                                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                            </div>
-                        ))
-                    ) : (
-                        cardss.map((card, index) => (
-                            <div
-                                key={index}
-                                // onClick={() => router.push('/dashboard/billing')}
-                                className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                            >
-                                {/* soft gradient glow */}
-                                <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
-                                    <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
-                                </div>
+                        {/* 3 cards in same row */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {isLoading ? (
+                                Array(2).fill(0).map((_, i) => (
+                                    <div key={i} className="h-32 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
+                                        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                                    </div>
+                                ))
+                            ) : (
+                                cardss.map((card, index) => (
+                                    <div
+                                        key={index}
+                                        // onClick={() => router.push('/dashboard/billing')}
+                                        className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                    >
+                                        {/* soft gradient glow */}
+                                        <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
+                                            <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
+                                        </div>
 
-                                {/* subtle dot pattern */}
-                                <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
-                                    <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
-                                </div>
+                                        {/* subtle dot pattern */}
+                                        <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
+                                            <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
+                                        </div>
 
-                                <div className="relative p-6">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex items-center gap-4">
-                                            {/* icon container */}
-                                            <div
-                                                className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
-                                            >
-                                                <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
-                                                <card.icon size={22} />
-                                            </div>
-
-                                            <div className="min-w-0">
-                                                <div className="flex items-start mt-1">
-                                                    <div>
-                                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                                                            {card.title}
-                                                        </p>
-                                                        <div className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
-                                                            {card.value}
-                                                        </div>
-
-
+                                        <div className="relative p-6">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    {/* icon container */}
+                                                    <div
+                                                        className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
+                                                    >
+                                                        <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
+                                                        <card.icon size={22} />
                                                     </div>
-                                                </div>
-                                                {card.title === 'Current Plan' && (
-                                                    <div className="flex flex-row gap-2 mt-4">
-                                                        <button
-                                                            disabled={isCheckingVerification}
-                                                            onClick={handleUpgradePlanClick}
-                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
-                                                        >
-                                                            {isCheckingVerification ? (
-                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                            ) : (
-                                                                orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"
-                                                            )}
-                                                        </button>
 
-                                                        {orgData?.current_plan && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setIsCancelPlanModalOpen(true);
-                                                                }}
-                                                                className="text-[9px] md:text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-[100px] md:w-[110px] sm:w-[15%] px-1 py-1 md:px-1 md:py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
-                                                            >
-                                                                Cancel Subscription
-                                                            </button>
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-start mt-1">
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                                                    {card.title}
+                                                                </p>
+                                                                <div className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
+                                                                    {card.value}
+                                                                </div>
+
+
+                                                            </div>
+                                                        </div>
+                                                        {card.title === 'Current Plan' && (
+                                                            <div className="flex flex-row gap-2 mt-4">
+                                                                <button
+                                                                    disabled={isCheckingVerification}
+                                                                    onClick={handleUpgradePlanClick}
+                                                                    className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                                                                >
+                                                                    {isCheckingVerification ? (
+                                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                                    ) : (
+                                                                        orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"
+                                                                    )}
+                                                                </button>
+
+                                                                {orgData?.current_plan && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setIsCancelPlanModalOpen(true);
+                                                                        }}
+                                                                        className="text-[9px] md:text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-[100px] md:w-[110px] sm:w-[15%] px-1 py-1 md:px-1 md:py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
+                                                                    >
+                                                                        Cancel Subscription
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
+                                ))
+                            )}
+                        </div>
+                    </>
+                )}
 
                 {/* Add Payment Method Modal */}
                 <Dialog open={isAddPaymentOpen} onOpenChange={(open) => {
