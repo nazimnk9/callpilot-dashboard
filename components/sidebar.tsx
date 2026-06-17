@@ -127,13 +127,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           }`}
       >
         {/* Header - Logo area */}
-        <div className="h-14 md:h-16 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-800 relative">
+        <div className="h-16 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-800 relative">
           <div className="flex items-center justify-center">
             <img
               onClick={() => router.push('/dashboard')}
               src="/callpilot_logo.png"
               alt="CallPilot Logo"
-              className="h-10 md:h-12 w-auto object-contain brightness-100 cursor-pointer"
+              className="h-12 w-auto object-contain brightness-100 cursor-pointer"
             />
           </div>
           <button
@@ -151,12 +151,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Navigation content */}
-        <div className="flex-1 overflow-hidden md:overflow-y-auto px-4 py-2 md:py-4 space-y-1">
-          <nav className="space-y-1.5 md:space-y-3">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+          <nav className="space-y-3">
             {currentMenuItems.map((item, index) => {
               if (item.isHeader) {
                 return (
-                  <div key={index} className="text-[13px] font-medium text-gray-400 dark:text-gray-500 mt-3 md:mt-6 mb-1 md:mb-2 px-3">
+                  <div key={index} className="text-[13px] font-medium text-gray-400 dark:text-gray-500 mt-6 mb-2 px-3">
                     {item.label}
                   </div>
                 );
@@ -166,7 +166,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   key={index}
                   href={item.href || '#'}
-                  className={`flex items-center gap-3 px-3 py-1.5 md:py-2 text-[15px] rounded-lg transition-colors group ${isActive
+                  className={`flex items-center gap-3 px-3 py-2 text-[15px] rounded-lg transition-colors group ${isActive
                     ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
@@ -188,7 +188,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Bottom section */}
-        <div className="border-t border-gray-100 dark:border-gray-800 px-4 md:px-7 py-4 md:py-6 bg-white dark:bg-gray-950 relative">
+        <div className="border-t border-gray-100 dark:border-gray-800 px-7 py-6 bg-white dark:bg-gray-950 relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
