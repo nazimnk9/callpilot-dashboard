@@ -11,8 +11,7 @@ import {
     Lock,
     Search,
     ChevronsUpDown,
-    AlertCircle,
-    Clock
+    AlertCircle
 } from 'lucide-react';
 import { Sidebar } from '@/components/sidebar';
 import { Topbar } from '@/components/topbar';
@@ -134,7 +133,6 @@ export default function PlatformActivationPage() {
     };
 
     const [isPlatformActivated, setIsPlatformActivated] = useState<boolean | null>(null);
-    const [isMotherStepCompleted, setIsMotherStepCompleted] = useState<boolean | null>(null);
 
     const fetchPaymentMethods = async () => {
         try {
@@ -172,8 +170,6 @@ export default function PlatformActivationPage() {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    const isStep1Completed = data.compliance_status === "approved";
-                    setIsMotherStepCompleted(isStep1Completed);
                     if (data.is_platform_activated) {
                         router.push('/dashboard');
                     } else {
@@ -181,11 +177,9 @@ export default function PlatformActivationPage() {
                     }
                 } else {
                     setIsPlatformActivated(false);
-                    setIsMotherStepCompleted(false);
                 }
             } catch (err) {
                 setIsPlatformActivated(false);
-                setIsMotherStepCompleted(false);
             }
         };
 
@@ -387,7 +381,7 @@ export default function PlatformActivationPage() {
         }
     };
 
-    if (isAuthenticated === null || isPlatformActivated === null || isMotherStepCompleted === null) {
+    if (isAuthenticated === null || isPlatformActivated === null) {
         return (
             <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100" />
@@ -411,22 +405,7 @@ export default function PlatformActivationPage() {
                     isSidebarOpen={isSidebarOpen}
                 />
 
-                {!isMotherStepCompleted ? (
-                    <main className="flex-1 flex items-center justify-center p-4 bg-gray-50/50 dark:bg-gray-950">
-                        <div className="max-w-md w-full text-center space-y-6 p-8 rounded-3xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
-                                <Clock className="w-8 h-8 animate-pulse" />
-                            </div>
-                            <div className="space-y-2">
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verification Pending</h2>
-                                <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
-                                    Your Business data is still waiting for verification. Please come back later.
-                                </p>
-                            </div>
-                        </div>
-                    </main>
-                ) : (
-                    <main className="flex-1 overflow-y-auto px-4 py-12">
+                <main className="flex-1 overflow-y-auto px-4 py-12">
                     <div className="max-w-2xl mx-auto">
                         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm space-y-8">
                             <div className="space-y-2">
@@ -530,7 +509,6 @@ export default function PlatformActivationPage() {
                         </div>
                     </div>
                 </main>
-                )}
             </div>
 
             {/* Add Payment Method Dialog */}

@@ -490,9 +490,7 @@ export function PhoneNumberBuyForm() {
                     </CardHeader> */}
 
                     <CardContent className="pt-8 p-6">
-                        {/* {organization?.id === 8 || organization?.country_iso_code === "US" 
-                        ? 
-                        ( */}
+                        {organization?.id === 8 || organization?.country_iso_code === "US" ? (
                             <form onSubmit={handleSubmitPurchase} className="space-y-6">
                                 {/* Country Selection HIDDEN for US */}
 
@@ -592,35 +590,34 @@ export function PhoneNumberBuyForm() {
                                     </Button>
                                 </div>
                             </form>
-                        {/* )  */}
-                        {/* // : organization && (
-                        //     <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-6">
-                        //         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 max-w-2xl">
-                        //             Your Business address and Identification is being verified right now. Please stay with us, we will let you know once it is verified.
-                        //         </h2>
-                        //         <div className="space-y-2">
-                        //             <p className="text-sm text-gray-500 dark:text-gray-400">
-                        //                 You can still check{" "}
-                        //                 <button
-                        //                     type="button"
-                        //                     onClick={() => router.push("/dashboard/help")}
-                        //                     className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                        //                 >
-                        //                     Help
-                        //                 </button>{" "}
-                        //                 section to find useful information about phone numbers. Also you can send{" "}
-                        //                 <button
-                        //                     type="button"
-                        //                     onClick={() => router.push("/dashboard/support")}
-                        //                     className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                        //                 >
-                        //                     Customer Support ticket
-                        //                 </button>{" "}
-                        //                 if you think it's necessary.
-                        //             </p>
-                        //         </div>
-                        //     </div>
-                        // )} */}
+                        ) : organization && (
+                            <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-6">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 max-w-2xl">
+                                    Your Business address and Identification is being verified right now. Please stay with us, we will let you know once it is verified.
+                                </h2>
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        You can still check{" "}
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push("/dashboard/help")}
+                                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                        >
+                                            Help
+                                        </button>{" "}
+                                        section to find useful information about phone numbers. Also you can send{" "}
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push("/dashboard/support")}
+                                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                        >
+                                            Customer Support ticket
+                                        </button>{" "}
+                                        if you think it's necessary.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

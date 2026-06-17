@@ -544,9 +544,7 @@ export function PhoneNumbersContent() {
                 <DialogContent className="sm:max-w-[600px] border-none p-0 overflow-hidden bg-transparent shadow-none">
                     <Card className="border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 group">
                         <CardContent className="pt-8 p-6">
-                            {/* {organization?.id === 8 || organization?.country_iso_code === "US" 
-                            ? 
-                            ( */}
+                            {organization?.id === 8 || organization?.country_iso_code === "US" ? (
                                 <form onSubmit={handleSubmitPurchase} className="space-y-6">
                                     <div className="space-y-3">
                                         <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Payment method *</label>
@@ -598,7 +596,7 @@ export function PhoneNumbersContent() {
                                         </Button>
                                     </div>
                                 </form>
-                            {/* ) : organization && (
+                            ) : organization && (
                                 <div className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-6">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 max-w-2xl">Your Business address and Identification is being verified right now. Please stay with us, we will let you know once it is verified.</h2>
                                     <div className="space-y-2">
@@ -607,7 +605,7 @@ export function PhoneNumbersContent() {
                                         </p>
                                     </div>
                                 </div>
-                            )} */}
+                            )}
                         </CardContent>
                     </Card>
                 </DialogContent>

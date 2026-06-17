@@ -175,7 +175,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                         status: item.status,
                         ai_decision: item.ai_decision,
                         updated_at: item.updated_at,
-                        conversation_json: item.interview_data?.conversation_json || [],
+                        conversation_json: item.conversation_json || [],
                         is_retry: item.is_retry
                     }))
                     setReports(normalized)

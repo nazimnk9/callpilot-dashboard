@@ -83,7 +83,7 @@ export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps
     };
 
     return (
-        <div className="flex flex-col h-full w-full bg-white dark:bg-gray-950">
+        <div className="relative flex flex-col h-full w-full bg-white dark:bg-gray-950">
             {/* Header Area */}
             <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-800 shrink-0">
                 <div className="flex flex-col sm:flex-row gap-6 md:gap-8 items-center sm:items-start text-center sm:text-left max-w-7xl mx-auto w-full">
@@ -111,7 +111,7 @@ export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950/50">
+            <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950/50 pb-28 md:pb-36">
                 <div className="max-w-7xl mx-auto w-full">
                     {/* Body */}
                     <div className="p-6 md:p-6 lg:p-6 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
@@ -175,24 +175,24 @@ export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps
             </div>
 
             {/* Footer */}
-            <div className="p-6 md:p-8 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 shrink-0">
-                <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row gap-4">
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 border-t border-gray-100/80 dark:border-gray-800/80 bg-transparent dark:bg-gray-950/80 backdrop-blur-sm z-10 shrink-0">
+                <div className="max-w-2xl mx-auto w-full flex flex-row gap-4">
                     <Button
                         onClick={handleConnectFlow}
                         disabled={isConnecting}
-                        className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-2xl shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                        className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
                     >
                         {isConnecting ? (
                             <>
-                                <Loader2 className="w-5 h-5 animate-spin mr-3" />
+                                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2 sm:mr-3" />
                                 Connecting...
                             </>
                         ) : (
                             "Add To Your Flows"
                         )}
                     </Button>
-                    <Button variant="outline" className="flex-1 h-14 border-gray-200 dark:border-gray-800 text-lg font-semibold rounded-2xl gap-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all">
-                        <Bookmark className="w-5 h-5" />
+                    <Button variant="outline" className="flex-1 h-12 sm:h-14 border-gray-200 dark:border-gray-800 text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl gap-2 sm:gap-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all shadow-xl shadow-gray-600/60">
+                        <Bookmark className="w-4 h-4 sm:w-5 sm:h-5" />
                         Bookmark
                     </Button>
                 </div>

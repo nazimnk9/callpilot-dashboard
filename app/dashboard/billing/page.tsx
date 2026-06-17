@@ -13,7 +13,6 @@ export default function BillingPage() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isTabletOrLarger, setIsTabletOrLarger] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [blockedStep, setBlockedStep] = useState<'verification_pending' | 'platform_activation_required' | 'phone_number_required' | null>(null)
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -33,15 +32,6 @@ export default function BillingPage() {
                     router.push("/activation");
                     return;
                 }
-                if (complianceStatus === "pending") {
-                    setBlockedStep('verification_pending');
-                } else if (statusRes.data.is_platform_activated !== true) {
-                    setBlockedStep('platform_activation_required');
-                } else if (statusRes.data.have_any_phone_number !== true) {
-                    setBlockedStep('phone_number_required');
-                } else {
-                    setBlockedStep(null);
-                }
             } else {
                 const refreshRes = await authService.refreshToken(refreshToken)
                 if (!refreshRes.ok) {
@@ -57,15 +47,6 @@ export default function BillingPage() {
                 if (complianceStatus === "" || complianceStatus === null || complianceStatus === "rejected") {
                     router.push("/activation");
                     return;
-                }
-                if (complianceStatus === "pending") {
-                    setBlockedStep('verification_pending');
-                } else if (statusRes.data.is_platform_activated !== true) {
-                    setBlockedStep('platform_activation_required');
-                } else if (statusRes.data.have_any_phone_number !== true) {
-                    setBlockedStep('phone_number_required');
-                } else {
-                    setBlockedStep(null);
                 }
             }
             setIsLoading(false)
@@ -103,7 +84,7 @@ export default function BillingPage() {
                     isSidebarOpen={isSidebarOpen}
                 />
 
-                <BillingContent blockedStep={blockedStep} />
+                <BillingContent />
             </div>
         </div>
     )
