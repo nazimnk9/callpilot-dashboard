@@ -1174,7 +1174,16 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                                             transactions.map((tx, index) => (
                                                 <tr key={index} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
                                                     <td className="py-5 pr-4 font-medium text-gray-900 dark:text-gray-100 border-b border-gray-100 dark:border-gray-800">
-                                                        {tx.type_display}
+                                                        {(() => {
+                                                            const rawType = String(tx.type || tx.payment_type || tx.type_display || "");
+                                                            if (rawType === "Phone_Number" || rawType.toLowerCase() === "phone_number") {
+                                                                return "AI Number Subscription";
+                                                            }
+                                                            if (rawType === "initial_payment" || rawType.toLowerCase() === "initial_payment") {
+                                                                return "One Time Payment";
+                                                            }
+                                                            return tx.type_display;
+                                                        })()}
                                                     </td>
                                                     <td className="py-5 px-4 border-b border-gray-100 dark:border-gray-800">
                                                         <span className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${tx.status === 'paid'
