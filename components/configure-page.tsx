@@ -796,12 +796,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     }
 
     return (
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-3 sm:p-4 md:p-8">
+        <div className="relative flex-1 flex flex-col h-full overflow-hidden bg-gray-50/50 dark:bg-gray-950">
             <LoaderOverlay
                 isLoading={isLoading || isSaving}
             />
 
-            <div className="max-w-7xl mx-auto">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-8 pb-28 md:pb-36">
+                <div className="max-w-7xl mx-auto">
                 <div className="mb-5 px-1 sm:px-0">
                     <div className="flex items-center gap-3 sm:gap-6 mb-2">
                         <button onClick={() => router.back()} className="h-8 w-8 -ml-1 sm:-ml-2 cursor-pointer rounded-full transition-all duration-300 hover:scale-125 text-gray-900 dark:text-gray-100">
@@ -1403,91 +1404,94 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                     )}
                 </div>
+            </div>
+        </div>
 
-                {/* Bottom Save Bar */}
-                <div className="mt-12 flex justify-center gap-4">
-                    {searchParams.get("code") === "AICALL191" ? (
-                        <div className="flex flex-row sm:flex-row gap-4">
+        {/* Bottom Save Bar (Footer) */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 border-t border-gray-100/80 dark:border-gray-800/80 bg-transparent dark:bg-gray-950/80 backdrop-blur-sm z-10 shrink-0">
+            <div className="max-w-2xl mx-auto w-full flex flex-row gap-4">
+                {searchParams.get("code") === "AICALL191" ? (
+                    <div className="flex flex-row gap-4 w-full">
+                        <Button
+                            size="lg"
+                            onClick={handleSaveConfiguration}
+                            disabled={isSaving}
+                            className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                        >
+                            {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
+                        </Button>
+                        {isUpdateMode && currentUserRole !== "STAFF" && (
                             <Button
                                 size="lg"
-                                onClick={handleSaveConfiguration}
-                                disabled={isSaving}
-                                className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
+                                variant="outline"
+                                onClick={() => setShowReleaseDialog(true)}
+                                className="flex-1 h-12 sm:h-14 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xl shadow-gray-600/60 hover:scale-[1.01] active:scale-[0.99]"
                             >
-                                {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
+                                Release Flow
                             </Button>
-                            {isUpdateMode && currentUserRole !== "STAFF" && (
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        {!isUpdateMode ? (
+                            <div className="flex flex-row gap-4 w-full">
                                 <Button
                                     size="lg"
-                                    variant="outline"
-                                    onClick={() => setShowReleaseDialog(true)}
-                                    className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
+                                    onClick={handleSaveConfiguration}
+                                    disabled={isSaving}
+                                    className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                 >
-                                    Release Flow
+                                    {isSaving ? "Activating..." : "Activate AI Call"}
                                 </Button>
-                            )}
-                        </div>
-                    ) : (
-                        <>
-                            {!isUpdateMode ? (
-                                <div className="flex flex-row sm:flex-row gap-4 w-full justify-center items-center">
+                                {currentUserRole !== "STAFF" && (
                                     <Button
                                         size="lg"
-                                        onClick={handleSaveConfiguration}
-                                        disabled={isSaving}
-                                        className="h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base sm:text-base px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
+                                        variant="outline"
+                                        onClick={() => setShowReleaseDialog(true)}
+                                        className="flex-1 h-12 sm:h-14 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xl shadow-gray-600/60 hover:scale-[1.01] active:scale-[0.99]"
                                     >
-                                        {isSaving ? "Activating..." : "Activate AI Call"}
+                                        Release Flow
                                     </Button>
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex flex-row gap-4 w-full">
+                                    {!isEditing ? (
+                                        <Button
+                                            size="lg"
+                                            onClick={() => setIsEditing(true)}
+                                            className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                        >
+                                            Edit AI Call
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="lg"
+                                            onClick={handleSaveConfiguration}
+                                            disabled={isSaving}
+                                            className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                        >
+                                            {isSaving ? "Updating..." : "Update AI Call"}
+                                        </Button>
+                                    )}
                                     {currentUserRole !== "STAFF" && (
                                         <Button
                                             size="lg"
                                             variant="outline"
                                             onClick={() => setShowReleaseDialog(true)}
-                                            className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
+                                            className="flex-1 h-12 sm:h-14 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xl shadow-gray-600/60 hover:scale-[1.01] active:scale-[0.99]"
                                         >
                                             Release Flow
                                         </Button>
                                     )}
                                 </div>
-                            ) : (
-                                <>
-                                    <div className="flex flex-row sm:flex-row gap-4 w-full justify-center">
-                                        {!isEditing ? (
-                                            <Button
-                                                size="lg"
-                                                onClick={() => setIsEditing(true)}
-                                                className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
-                                            >
-                                                Edit AI Call
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                size="lg"
-                                                onClick={handleSaveConfiguration}
-                                                disabled={isSaving}
-                                                className="h-12 bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
-                                            >
-                                                {isSaving ? "Updating..." : "Update AI Call"}
-                                            </Button>
-                                        )}
-                                        {currentUserRole !== "STAFF" && (
-                                            <Button
-                                                size="lg"
-                                                variant="outline"
-                                                onClick={() => setShowReleaseDialog(true)}
-                                                className="h-12 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold text-base sm:text-lg px-6 sm:px-12 rounded-xl transition-all shadow-lg w-full sm:min-w-[280px]"
-                                            >
-                                                Release Flow
-                                            </Button>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </>
-                    )}
-                </div>
+                            </>
+                        )}
+                    </>
+                )}
             </div>
+        </div>
 
             <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
                 <AlertDialogContent className="rounded-2xl dark:bg-gray-900 dark:border-gray-800">
