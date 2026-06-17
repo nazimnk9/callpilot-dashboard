@@ -980,7 +980,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 </p>
                                             )}
                                         </div>
-                                        <div className="space-y-2">
+                                        {/* <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">AI Call placed within</Label>
                                             <div id="calling_time_after_status_update" className={fieldErrors.calling_time_after_status_update ? "border-2 border-red-500 rounded-xl" : ""}>
                                                 <Select disabled={isUpdateMode && !isEditing} value={callingTimeAfterStatusUpdate} onValueChange={setCallingTimeAfterStatusUpdate}>
@@ -993,7 +993,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 </Select>
                                             </div>
                                             {fieldErrors.calling_time_after_status_update && <p className="text-xs text-red-500 mt-1">{fieldErrors.calling_time_after_status_update}</p>}
-                                        </div>
+                                        </div> */}
                                         <div className="mb-6 space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time Zone</Label>
                                             <div id="timezone" className={fieldErrors.timezone ? "border-2 border-red-500 rounded-xl p-1" : ""}>

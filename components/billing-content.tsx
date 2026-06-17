@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle } from "lucide-react"
+import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -96,7 +96,11 @@ const STATIC_PRICING_PLANS = [
     }
 ];
 
-export function BillingContent() {
+interface BillingContentProps {
+    blockedStep?: 'verification_pending' | 'platform_activation_required' | 'phone_number_required' | null;
+}
+
+export function BillingContent({ blockedStep = null }: BillingContentProps) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("Overview")
     const [isTopUpOpen, setIsTopUpOpen] = useState(false)
@@ -827,7 +831,50 @@ export function BillingContent() {
 
                 {/* Tab Content */}
                 {activeTab === "Overview" ? (
-                    <div className="space-y-3">
+                    blockedStep === 'verification_pending' ? (
+                        <main className="flex-1 flex items-center justify-center p-4 bg-white dark:bg-gray-950">
+                            <div className="max-w-md w-full text-center space-y-6 p-8 rounded-3xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Clock className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verification Pending</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        Your Business data is still waiting for verification. Please come back later.
+                                    </p>
+                                </div>
+                            </div>
+                        </main>
+                    ) : blockedStep === 'platform_activation_required' ? (
+                        <main className="flex-1 flex items-center justify-center p-4 bg-white dark:bg-gray-950">
+                            <div className="max-w-md w-full text-center space-y-6 p-8 rounded-3xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Clock className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Platform Activation Required</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        To access AI Phone Numbers, please complete the Platform Activation setup fee payment first.
+                                    </p>
+                                </div>
+                            </div>
+                        </main>
+                    ) : blockedStep === 'phone_number_required' ? (
+                        <main className="flex-1 flex items-center justify-center p-4 bg-white dark:bg-gray-950">
+                            <div className="max-w-md w-full text-center space-y-6 p-8 rounded-3xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Phone className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Phone Number Required</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        To configure billing, please purchase an Phone Number first.
+                                    </p>
+                                </div>
+                            </div>
+                        </main>
+                    ) : (
+                        <div className="space-y-3">
                         {/* Current Plan Card */}
                         <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -906,7 +953,7 @@ export function BillingContent() {
                                             {orgData?.current_plan ? "Upgrade Plan" : "Choose a Plan"}
                                         </button>
                                     )}
-                                    {orgData?.role !== "STAFF" && (
+                                    {orgData?.role !== "STAFF" && orgData?.current_plan && orgData?.current_plan !== 'No Active Plan' && (
                                         <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                             <DialogTrigger asChild>
                                                 <button className="bg-primary hover:bg-black text-white dark:text-black dark:bg-primary px-0 py-1  sm:px-0 sm:py-1 rounded-2xl text-[12px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] w-[100px] md:w-[110px] sm:w-[15%]">
@@ -1104,6 +1151,7 @@ export function BillingContent() {
                             </div>
                         </div>
                     </div>
+                    )
                 ) :
                     activeTab === "Billing history" ? (
                         <div className="space-y-3 pt-2">

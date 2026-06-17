@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle } from 'lucide-react';
+import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone } from 'lucide-react';
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
+import { profileService } from "@/services/profile-service";
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import {
@@ -167,6 +168,72 @@ export function DashboardContent() {
     const enterpriseSectionRef = useRef<HTMLDivElement>(null);
     const enterpriseSectionUpdateRef = useRef<HTMLDivElement>(null);
 
+    const [verificationBlockedStep, setVerificationBlockedStep] = useState<'verification_pending' | 'platform_activation_required' | 'phone_number_required' | null>(null);
+    const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+    const [isCheckingVerification, setIsCheckingVerification] = useState(false);
+
+    const setupSteps = [
+        { label: 'Account Created', key: 'account_created', path: '' },
+        { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
+        { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
+        { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
+        { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
+        { label: 'Connect Your ATS', key: 'is_ats_connected', path: '/dashboard/connect-ats' },
+        { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/phone-call-flows' }
+    ];
+
+    const checkStepCompleted = (key: string) => {
+        if (key === 'account_created') return true;
+        if (key === 'is_given_company_details') {
+            return orgData?.compliance_status === 'pending' || orgData?.compliance_status === 'approved';
+        }
+        return orgData?.[key] === true;
+    };
+
+    const isStepDisabled = (idx: number) => {
+        if (idx === 0) return false;
+        return !checkStepCompleted(setupSteps[idx - 1].key);
+    };
+
+    const completedCount = setupSteps.filter(step => checkStepCompleted(step.key)).length;
+    const isAllCompleted = completedCount === setupSteps.length;
+
+    const handleUpgradePlanClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsCheckingVerification(true);
+        try {
+            const statusRes = await profileService.getPlatformStatus();
+            const complianceStatus = statusRes.data.compliance_status;
+            if (complianceStatus === "" || complianceStatus === null || complianceStatus === "rejected") {
+                router.push("/activation");
+                return;
+            }
+            if (complianceStatus === "pending") {
+                setVerificationBlockedStep('verification_pending');
+                setIsVerificationModalOpen(true);
+            } else if (statusRes.data.is_platform_activated !== true) {
+                setVerificationBlockedStep('platform_activation_required');
+                setIsVerificationModalOpen(true);
+            } else if (statusRes.data.have_any_phone_number !== true) {
+                setVerificationBlockedStep('phone_number_required');
+                setIsVerificationModalOpen(true);
+            } else {
+                setVerificationBlockedStep(null);
+                if (orgData?.current_plan) {
+                    fetchCurrentSubscription();
+                    setIsUpdateSubscriptionModalOpen(true);
+                } else {
+                    setSelectedPlan(null);
+                    setIsSubscriptionModalOpen(true);
+                }
+            }
+        } catch (error) {
+            console.error("Error checking platform status:", error);
+            toast.error("Failed to check platform status. Please try again.");
+        } finally {
+            setIsCheckingVerification(false);
+        }
+    };
 
     const fetchOrgData = async () => {
         try {
@@ -889,27 +956,6 @@ export function DashboardContent() {
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Complete Your Account Setup */}
                 {(() => {
-                    const setupSteps = [
-                        { label: 'Account Created', key: 'account_created', path: '' },
-                        { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
-                        { label: 'Buy AI Number', key: 'have_any_phone_number', path: '/dashboard/phone-numbers' },
-                        { label: 'Pay Setup Fee (refunded after 12 months with minutes)', key: 'is_platform_activated', path: '/dashboard/platform-activation' },
-                        { label: 'Choose Plan', key: 'is_purchased_anything', path: '/dashboard/billing' },
-                        { label: 'Connect Your ATS', key: 'is_ats_connected', path: '/dashboard/connect-ats' },
-                        { label: 'AI Call Builder', key: 'is_any_flow_connected', path: '/dashboard/ai-call-flow-options' }
-                    ];
-
-                    const checkStepCompleted = (key: string) => {
-                        if (key === 'account_created') return true;
-                        if (key === 'is_given_company_details') {
-                            return orgData?.compliance_status === 'pending' || orgData?.compliance_status === 'approved';
-                        }
-                        return orgData?.[key] === true;
-                    };
-
-                    const completedCount = setupSteps.filter(step => checkStepCompleted(step.key)).length;
-                    const isAllCompleted = completedCount === setupSteps.length;
-
                     if (isAllCompleted) {
                         return (
                             <div className="relative">
@@ -928,12 +974,15 @@ export function DashboardContent() {
                                         <div className="p-6 md:p-8 space-y-3">
                                             {setupSteps.map((option, idx) => {
                                                 const isCompleted = checkStepCompleted(option.key);
+                                                const isDisabled = isStepDisabled(idx);
                                                 return (
                                                     <div
                                                         key={idx}
-                                                        className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
+                                                        className={`flex items-center gap-5 group/item transition-all duration-200 ${
+                                                            isCompleted ? '' : (isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:translate-x-1')
+                                                        }`}
                                                         onClick={() => {
-                                                            if (!isCompleted) {
+                                                            if (!isCompleted && !isDisabled) {
                                                                 if (option.key === 'is_purchased_anything') {
                                                                     setSelectedPlan(null);
                                                                     setIsSubscriptionModalOpen(true);
@@ -947,10 +996,16 @@ export function DashboardContent() {
                                                             <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
                                                                 <Check className="h-4 w-4 text-white stroke-[3px]" />
                                                             </div>
+                                                        ) : isDisabled ? (
+                                                            <div className="h-6 w-6 rounded-full border-[3px] border-gray-300 dark:border-gray-700 flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-sm transition-colors duration-200" />
                                                         ) : (
                                                             <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
                                                         )}
-                                                        <span className={`text-[17px] font-medium text-gray-800 dark:text-gray-200 transition-all duration-200 ${!isCompleted ? 'group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400' : ''}`}>
+                                                        <span className={`text-[17px] font-medium transition-all duration-200 ${
+                                                            isCompleted ? 'text-gray-800 dark:text-gray-200' : (
+                                                                isDisabled ? 'text-black/50 dark:text-white/50' : 'text-gray-800 dark:text-gray-200 group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400'
+                                                            )
+                                                        }`}>
                                                             {option.label}
                                                         </span>
                                                     </div>
@@ -980,12 +1035,15 @@ export function DashboardContent() {
                                 <div className="relative space-y-3">
                                     {setupSteps.map((option, idx) => {
                                         const isCompleted = checkStepCompleted(option.key);
+                                        const isDisabled = isStepDisabled(idx);
                                         return (
                                             <div
                                                 key={idx}
-                                                className={`flex items-center gap-5 group/item transition-all duration-200 ${!isCompleted ? 'cursor-pointer hover:translate-x-1' : ''}`}
+                                                className={`flex items-center gap-5 group/item transition-all duration-200 ${
+                                                    isCompleted ? '' : (isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:translate-x-1')
+                                                }`}
                                                 onClick={() => {
-                                                    if (!isCompleted) {
+                                                    if (!isCompleted && !isDisabled) {
                                                         if (option.key === 'is_purchased_anything') {
                                                             setSelectedPlan(null);
                                                             setIsSubscriptionModalOpen(true);
@@ -999,10 +1057,16 @@ export function DashboardContent() {
                                                     <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
                                                         <Check className="h-4 w-4 text-white stroke-[3px]" />
                                                     </div>
+                                                ) : isDisabled ? (
+                                                    <div className="h-6 w-6 rounded-full border-[3px] border-gray-300 dark:border-gray-700 flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-sm transition-colors duration-200" />
                                                 ) : (
                                                     <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
                                                 )}
-                                                <span className={`text-[17px] font-medium text-gray-800 dark:text-gray-200 transition-all duration-200 ${!isCompleted ? 'group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400' : ''}`}>
+                                                <span className={`text-[17px] font-medium transition-all duration-200 ${
+                                                    isCompleted ? 'text-gray-800 dark:text-gray-200' : (
+                                                        isDisabled ? 'text-black/50 dark:text-white/50' : 'text-gray-800 dark:text-gray-200 group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400'
+                                                    )
+                                                }`}>
                                                     {option.label}
                                                 </span>
                                             </div>
@@ -1065,7 +1129,7 @@ export function DashboardContent() {
                                                             {card.value}
                                                         </p>
 
-                                                        {card.title === 'Minutes Remaining' && orgData?.role !== "STAFF" && (
+                                                        {card.title === 'Minutes Remaining' && orgData?.role !== "STAFF" && orgData?.current_plan && orgData?.current_plan !== 'No Active Plan' && (
                                                             <div className="mt-4">
                                                                 <Dialog open={isTopUpOpen} onOpenChange={setIsTopUpOpen}>
                                                                     <DialogTrigger asChild>
@@ -1244,19 +1308,15 @@ export function DashboardContent() {
                                                 {card.title === 'Current Plan' && orgData?.role !== "STAFF" && (
                                                     <div className="flex flex-row gap-2 mt-4">
                                                         <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (orgData?.current_plan) {
-                                                                    fetchCurrentSubscription();
-                                                                    setIsUpdateSubscriptionModalOpen(true);
-                                                                } else {
-                                                                    setSelectedPlan(null);
-                                                                    setIsSubscriptionModalOpen(true);
-                                                                }
-                                                            }}
-                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
+                                                            disabled={isCheckingVerification}
+                                                            onClick={handleUpgradePlanClick}
+                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                                         >
-                                                            {orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"}
+                                                            {isCheckingVerification ? (
+                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                            ) : (
+                                                                orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"
+                                                            )}
                                                         </button>
 
                                                         {/* {orgData?.current_plan && (
@@ -1280,99 +1340,99 @@ export function DashboardContent() {
                         ))
                     )}
                 </div>
-                <div>
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">System Controls</h1>
-                    {/* <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
-                </div>
+                {isAllCompleted && (
+                    <>
+                        <div>
+                            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">System Controls</h1>
+                            {/* <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
+                        </div>
 
-                {/* 3 cards in same row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {isLoading ? (
-                        Array(2).fill(0).map((_, i) => (
-                            <div key={i} className="h-32 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
-                                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                            </div>
-                        ))
-                    ) : (
-                        cardss.map((card, index) => (
-                            <div
-                                key={index}
-                                // onClick={() => router.push('/dashboard/billing')}
-                                className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                            >
-                                {/* soft gradient glow */}
-                                <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
-                                    <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
-                                </div>
+                        {/* 3 cards in same row */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {isLoading ? (
+                                Array(2).fill(0).map((_, i) => (
+                                    <div key={i} className="h-32 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
+                                        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                                    </div>
+                                ))
+                            ) : (
+                                cardss.map((card, index) => (
+                                    <div
+                                        key={index}
+                                        // onClick={() => router.push('/dashboard/billing')}
+                                        className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                    >
+                                        {/* soft gradient glow */}
+                                        <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
+                                            <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
+                                        </div>
 
-                                {/* subtle dot pattern */}
-                                <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
-                                    <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
-                                </div>
+                                        {/* subtle dot pattern */}
+                                        <div className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]">
+                                            <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
+                                        </div>
 
-                                <div className="relative p-6">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex items-center gap-4">
-                                            {/* icon container */}
-                                            <div
-                                                className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
-                                            >
-                                                <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
-                                                <card.icon size={22} />
-                                            </div>
-
-                                            <div className="min-w-0">
-                                                <div className="flex items-start mt-1">
-                                                    <div>
-                                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                                                            {card.title}
-                                                        </p>
-                                                        <div className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
-                                                            {card.value}
-                                                        </div>
-
-
+                                        <div className="relative p-6">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    {/* icon container */}
+                                                    <div
+                                                        className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
+                                                    >
+                                                        <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
+                                                        <card.icon size={22} />
                                                     </div>
-                                                </div>
-                                                {card.title === 'Current Plan' && (
-                                                    <div className="flex flex-row gap-2 mt-4">
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (orgData?.current_plan) {
-                                                                    fetchCurrentSubscription();
-                                                                    setIsUpdateSubscriptionModalOpen(true);
-                                                                } else {
-                                                                    setSelectedPlan(null);
-                                                                    setIsSubscriptionModalOpen(true);
-                                                                }
-                                                            }}
-                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
-                                                        >
-                                                            {orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"}
-                                                        </button>
 
-                                                        {orgData?.current_plan && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setIsCancelPlanModalOpen(true);
-                                                                }}
-                                                                className="text-[9px] md:text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-[100px] md:w-[110px] sm:w-[15%] px-1 py-1 md:px-1 md:py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
-                                                            >
-                                                                Cancel Subscription
-                                                            </button>
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-start mt-1">
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                                                    {card.title}
+                                                                </p>
+                                                                <div className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
+                                                                    {card.value}
+                                                                </div>
+
+
+                                                            </div>
+                                                        </div>
+                                                        {card.title === 'Current Plan' && (
+                                                            <div className="flex flex-row gap-2 mt-4">
+                                                                <button
+                                                                    disabled={isCheckingVerification}
+                                                                    onClick={handleUpgradePlanClick}
+                                                                    className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                                                                >
+                                                                    {isCheckingVerification ? (
+                                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                                    ) : (
+                                                                        orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"
+                                                                    )}
+                                                                </button>
+
+                                                                {orgData?.current_plan && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setIsCancelPlanModalOpen(true);
+                                                                        }}
+                                                                        className="text-[9px] md:text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-[100px] md:w-[110px] sm:w-[15%] px-1 py-1 md:px-1 md:py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
+                                                                    >
+                                                                        Cancel Subscription
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
+                                ))
+                            )}
+                        </div>
+                    </>
+                )}
 
                 {/* Add Payment Method Modal */}
                 <Dialog open={isAddPaymentOpen} onOpenChange={(open) => {
@@ -1652,6 +1712,48 @@ export function DashboardContent() {
                                 Continue
                             </Button>
                         </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
+                    <DialogContent className="max-w-md w-full p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl">
+                        {verificationBlockedStep === 'verification_pending' ? (
+                            <div className="text-center space-y-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Clock className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verification Pending</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        Your Business data is still waiting for verification. Please come back later.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : verificationBlockedStep === 'platform_activation_required' ? (
+                            <div className="text-center space-y-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Clock className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Platform Activation Required</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        To access AI Phone Numbers, please complete the Platform Activation setup fee payment first.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : verificationBlockedStep === 'phone_number_required' ? (
+                            <div className="text-center space-y-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                    <Phone className="w-8 h-8 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Phone Number Required</h2>
+                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        To configure billing, please purchase an Phone Number first.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : null}
                     </DialogContent>
                 </Dialog>
 

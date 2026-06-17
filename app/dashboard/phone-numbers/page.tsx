@@ -7,12 +7,14 @@ import { Sidebar } from '@/components/sidebar';
 import { PhoneNumbersContent } from '@/components/phone-numbers-content';
 import { authService, cookieUtils } from '@/services/auth-service';
 import { profileService } from '@/services/profile-service';
+import { Clock } from 'lucide-react';
 
 export default function PhoneNumbersPage() {
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isTabletOrLarger, setIsTabletOrLarger] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    const [blockedStep, setBlockedStep] = useState<'verification_pending' | 'platform_activation_required' | null>(null);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -33,6 +35,13 @@ export default function PhoneNumbersPage() {
                         router.push('/activation');
                         return;
                     }
+                    if (complianceStatus === "pending") {
+                        setBlockedStep('verification_pending');
+                    } else if (statusRes.data.is_platform_activated !== true) {
+                        setBlockedStep('platform_activation_required');
+                    } else {
+                        setBlockedStep(null);
+                    }
                     setIsAuthenticated(true);
                 } else {
                     // Try refresh
@@ -47,6 +56,13 @@ export default function PhoneNumbersPage() {
                         if (complianceStatus === "" || complianceStatus === null || complianceStatus === "rejected") {
                             router.push('/activation');
                             return;
+                        }
+                        if (complianceStatus === "pending") {
+                            setBlockedStep('verification_pending');
+                        } else if (statusRes.data.is_platform_activated !== true) {
+                            setBlockedStep('platform_activation_required');
+                        } else {
+                            setBlockedStep(null);
                         }
                         setIsAuthenticated(true);
                     } else {
@@ -102,7 +118,37 @@ export default function PhoneNumbersPage() {
                 />
 
                 {/* Phone Numbers content */}
-                <PhoneNumbersContent />
+                {blockedStep === 'verification_pending' ? (
+                    <main className="flex-1 flex items-center justify-center p-4 bg-gray-50/50 dark:bg-gray-950">
+                        <div className="max-w-md w-full text-center space-y-6 p-8 rounded-3xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                <Clock className="w-8 h-8 animate-pulse" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verification Pending</h2>
+                                <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    Your Business data is still waiting for verification. Please come back later.
+                                </p>
+                            </div>
+                        </div>
+                    </main>
+                ) : blockedStep === 'platform_activation_required' ? (
+                    <main className="flex-1 flex items-center justify-center p-4 bg-gray-50/50 dark:bg-gray-950">
+                        <div className="max-w-md w-full text-center space-y-6 p-8 rounded-3xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                <Clock className="w-8 h-8 animate-pulse" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Platform Activation Required</h2>
+                                <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    To access AI Phone Numbers, please complete the Platform Activation setup fee payment first.
+                                </p>
+                            </div>
+                        </div>
+                    </main>
+                ) : (
+                    <PhoneNumbersContent />
+                )}
             </div>
         </div>
     );
