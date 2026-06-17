@@ -123,7 +123,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-full md:w-52 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-transform duration-300 z-50 md:relative md:translate-x-0 md:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed left-0 top-0 h-[90vh] md:h-screen w-full md:w-52 bg-white dark:bg-gray-950 border-r border-b md:border-b-0 border-gray-200 dark:border-gray-800 rounded-b-3xl md:rounded-none flex flex-col transition-transform duration-300 z-50 md:relative md:translate-x-0 md:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
       >
         {/* Header - Logo area */}
