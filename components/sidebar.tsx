@@ -93,8 +93,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: FileText, label: 'Business Details', href: '/dashboard/organization', isBold: true },
     { icon: CreditCard, label: 'Billing', href: '/dashboard/billing', isBold: true },
     ...(currentUserRole !== 'STAFF' ? [{ icon: Users, label: 'Users', href: '/dashboard/users', isBold: true }] : []),
-    { label: 'Support Ticket', isHeader: true },
-    { icon: MessageSquare, label: 'Support Ticket', href: '/dashboard/help/support-tickets', isBold: true },
+    { label: 'Support Tickets', isHeader: true },
+    { icon: MessageSquare, label: 'Support Tickets', href: '/dashboard/help/support-tickets', isBold: true },
   ];
 
   const currentMenuItems = isSettingsView ? settingsMenuItems : menuItems;
