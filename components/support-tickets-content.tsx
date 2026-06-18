@@ -174,10 +174,19 @@ export function SupportTicketsContent() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-10"> */}
                     {/* Ticket History */}
                     <div className="lg:col-span-2 space-y-6">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Ticket History</h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ticket History</h2>
+                            <Button
+                                onClick={() => router.push('/dashboard/help/support-tickets/create')}
+                                className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 sm:px-8 lg:px-4 xl:px-6 py-6 rounded-xl text-[13px] xl:text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                            >
+                                <Send size={16} />
+                                Write a Support Ticket
+                            </Button>
+                        </div>
                         <div className="space-y-4">
                             {isLoading ? (
                                 <div className="flex flex-col items-center justify-center py-20 text-gray-500">
@@ -237,7 +246,7 @@ export function SupportTicketsContent() {
                     </div>
 
                     {/* Sidebar Action */}
-                    <div className="lg:col-span-1 space-y-6">
+                    {/* <div className="lg:col-span-1 space-y-6">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Need More Help?</h2>
                         <Card className="bg-[#EBF2FF] dark:bg-blue-900/10 border-[#D6E6FF] dark:border-blue-800/30 p-6 sm:p-8 lg:p-6 xl:p-8 w-full text-center flex flex-col items-center">
                             <div className="w-14 h-14 rounded-full bg-blue-100/50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 border border-blue-200/50 dark:border-blue-700/30">
@@ -255,8 +264,8 @@ export function SupportTicketsContent() {
                                 Write a Support Ticket
                             </Button>
                         </Card>
-                    </div>
-                </div>
+                    </div> */}
+                {/* </div> */}
             </div>
 
             {/* Ticket Details Modal */}
