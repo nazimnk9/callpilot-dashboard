@@ -48,6 +48,7 @@ interface OrgUser {
     }
     role: string
     is_active: boolean
+    status: string
     joined_at: string
     last_active: string | null
     sent_email_notifications?: boolean
@@ -60,6 +61,25 @@ interface OrgInvite {
     role: string
     email: string
     invitation_status: string
+}
+
+const getStatusBadgeClass = (status: string) => {
+    switch (status?.toUpperCase()) {
+        case "ACTIVE":
+            return "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800 px-2.5 py-0.5 rounded-lg"
+        case "DRAFT":
+            return "bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800 px-2.5 py-0.5 rounded-lg"
+        case "PLACEHOLDER":
+            return "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800 px-2.5 py-0.5 rounded-lg"
+        case "HIDDEN":
+            return "bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 border-orange-200 dark:border-orange-800 px-2.5 py-0.5 rounded-lg"
+        case "PAUSED":
+            return "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800 px-2.5 py-0.5 rounded-lg"
+        case "REMOVED":
+            return "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800 px-2.5 py-0.5 rounded-lg"
+        default:
+            return "bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800 px-2.5 py-0.5 rounded-lg"
+    }
 }
 
 export function OrganizationUsersContent() {
@@ -93,6 +113,7 @@ export function OrganizationUsersContent() {
     const [editPassword, setEditPassword] = useState("")
     const [isUpdating, setIsUpdating] = useState(false)
     const [editSentEmailNotifications, setEditSentEmailNotifications] = useState(true)
+    const [editStatus, setEditStatus] = useState("")
 
     // Delete Modal States
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -109,16 +130,17 @@ export function OrganizationUsersContent() {
         setEditRole(user.role || "")
         setEditPassword("")
         setEditSentEmailNotifications(user.sent_email_notifications ?? true)
+        setEditStatus(user.status || "")
         setIsEditModalOpen(true)
     }
 
     const handleUpdateUser = async () => {
         if (!selectedUser) return
 
-        if (!editRole || !editEmail) {
+        if (!editRole || !editEmail || !editStatus) {
             setToast({
                 title: "Error",
-                description: "Email and Role are required fields",
+                description: "Email, Role, and Status are required fields",
                 variant: "destructive",
             })
             return
@@ -126,10 +148,11 @@ export function OrganizationUsersContent() {
 
         try {
             setIsUpdating(true)
-            const payload: { role?: string; email?: string; password?: string; sent_email_notifications: boolean } = {
+            const payload: { role?: string; email?: string; password?: string; sent_email_notifications: boolean; status?: string } = {
                 role: editRole,
                 email: editEmail,
                 sent_email_notifications: editSentEmailNotifications,
+                status: editStatus,
             }
             if (editPassword) {
                 payload.password = editPassword
@@ -545,11 +568,9 @@ export function OrganizationUsersContent() {
                                                     <TableCell className="py-4 px-6">
                                                         <Badge
                                                             variant="outline"
-                                                            className={item.is_active
-                                                                ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800 px-2.5 py-0.5 rounded-lg"
-                                                                : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800 px-2.5 py-0.5 rounded-lg"}
+                                                            className={getStatusBadgeClass(item.status)}
                                                         >
-                                                            {item.is_active ? "Active" : "Inactive"}
+                                                            {item.status}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">
@@ -856,6 +877,25 @@ export function OrganizationUsersContent() {
                                 </Select>
                             </div>
 
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-status" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Status <span className="text-red-500">*</span>
+                                </Label>
+                                <Select value={editStatus} onValueChange={setEditStatus}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
+                                        <SelectItem value="DRAFT" className="rounded-lg">DRAFT</SelectItem>
+                                        <SelectItem value="PLACEHOLDER" className="rounded-lg">PLACEHOLDER</SelectItem>
+                                        <SelectItem value="ACTIVE" className="rounded-lg">ACTIVE</SelectItem>
+                                        <SelectItem value="HIDDEN" className="rounded-lg">HIDDEN</SelectItem>
+                                        <SelectItem value="PAUSED" className="rounded-lg">PAUSED</SelectItem>
+                                        <SelectItem value="REMOVED" className="rounded-lg">REMOVED</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                             <div className="flex items-center space-x-2 pt-2">
                                 <Checkbox
                                     id="edit-email-notifications"
@@ -882,7 +922,7 @@ export function OrganizationUsersContent() {
                         </Button>
                         <Button
                             onClick={handleUpdateUser}
-                            disabled={isUpdating || !editEmail || !editRole}
+                            disabled={isUpdating || !editEmail || !editRole || !editStatus}
                             className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
                         >
                             {isUpdating ? (

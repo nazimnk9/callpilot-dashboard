@@ -88,7 +88,7 @@ export const profileService = {
         return api.get("/organizations/users/");
     },
 
-    async updateOrganizationUser(uid: string, data: { role?: string; email?: string; password?: string; sent_email_notifications?: boolean }) {
+    async updateOrganizationUser(uid: string, data: { role?: string; email?: string; password?: string; sent_email_notifications?: boolean; status?: string }) {
         return api.patch(`/organizations/users/${uid}`, data);
     },
 
