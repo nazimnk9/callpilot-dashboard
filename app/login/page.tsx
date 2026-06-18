@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -207,12 +207,11 @@ export default function SignInPage() {
                             <div className="rounded-2xl bg-card/40 shadow-sm">
                                 <div className="p-5 sm:p-6 border-b border-border">
                                     <div className="flex items-center justify-between gap-4">
-                                        <Link href="/" className="inline-flex items-center">
-                                            <img
-                                                src="/callpilot_logo.png"
-                                                alt="CallPilot"
-                                                className="h-20 sm:h-18 lg:h-20 w-auto"
-                                            />
+                                        <Link href="https://callpilot.pro/" className="inline-flex items-center gap-2 group">
+                                            <ArrowLeft size={18} className="text-slate-900 dark:text-slate-100 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform duration-200" />
+                                            <span className="text-[#2563eb] dark:text-[#3b82f6] font-semibold text-[17px]">
+                                                Website
+                                            </span>
                                         </Link>
 
                                         {step === "login" && (
@@ -347,14 +346,14 @@ export default function SignInPage() {
                                         <p className="text-xs text-muted-foreground">
                                             By signing in, you agree to our{" "}
                                             <Link
-                                                href="/terms-conditions"
+                                                href="https://callpilot.pro/terms-conditions"
                                                 className="underline underline-offset-4 hover:text-headline transition-colors"
                                             >
                                                 Terms
                                             </Link>{" "}
                                             and{" "}
                                             <Link
-                                                href="/privacy-policy"
+                                                href="https://callpilot.pro/privacy-policy"
                                                 className="underline underline-offset-4 hover:text-headline transition-colors"
                                             >
                                                 Privacy Policy
