@@ -45,10 +45,10 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
 
   const handleSwitchOrg = async (uid: string, orgName: string) => {
     try {
-      setSelectedOrg(orgName);
-      setIsOrgDropdownOpen(false);
       await profileService.switchOrganization(uid);
       window.location.reload();
+      setSelectedOrg(orgName);
+      setIsOrgDropdownOpen(false);
     } catch (error) {
       console.error('Failed to switch organization:', error);
     }
