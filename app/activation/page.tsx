@@ -1655,7 +1655,7 @@ export default function ActivationPage() {
     };
 
     const filteredCountries = countries
-        .filter(c => ["India", "Canada", "United States of America", "Australia", "Singapore", "Ireland", "United Kingdom", "New Zealand"].includes(c.country))
+        .filter(c => !["India", "Singapore"].includes(c.country))
         .filter(c =>
             c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
             c.country_code.toLowerCase().includes(countrySearch.toLowerCase()) ||
