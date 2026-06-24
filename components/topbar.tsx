@@ -91,67 +91,130 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
             {/* Organizations Dropdown */}
             {isOrgDropdownOpen && (
               <div className="absolute left-0 top-full mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl py-3 z-50 animate-in fade-in zoom-in duration-200 max-h-96 overflow-y-auto">
-                <div className="px-4 mb-2">
-                  <span className="text-[11px] font-semibold text-gray-400 tracking-wider uppercase">Organizations</span>
-                </div>
-
                 {myOrganizations.length > 0 ? (
-                  myOrganizations.map((orgMember: any) => {
-                    const orgName = orgMember.organization?.name || 'Your Business';
-                    const orgRole = orgMember.role || '';
-                    const isSelected = orgMember.is_active;
+                  (() => {
+                    const myAccountOrgs = myOrganizations.filter((org: any) => org.role === 'OWNER');
+                    const sharedAccountOrgs = myOrganizations.filter((org: any) => org.role !== 'OWNER');
 
                     return (
-                      <div
-                        key={orgMember.uid}
-                        onClick={() => handleSwitchOrg(orgMember.uid, orgName)}
-                        className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                      >
-                        <div className="w-4 flex justify-center flex-shrink-0">
-                          {isSelected ? (
-                            <Check size={14} className="text-gray-600 dark:text-gray-400" />
-                          ) : null}
-                        </div>
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold flex-shrink-0">
-                            {(orgName?.[0] || 'P').toUpperCase()}
-                          </div>
-                          <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                              {orgName} {orgRole ? `(${orgRole})` : ''}
-                            </span>
-                            {/* {orgRole && (
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold tracking-wide uppercase truncate">
-                                {orgRole}
-                              </span>
-                            )} */}
-                          </div>
-                        </div>
-                      </div>
+                      <>
+                        {myAccountOrgs.length > 0 ? (
+                          <>
+                            <div className="px-4 mb-2">
+                              <span className="text-[11px] font-semibold text-gray-400 tracking-wider uppercase">My Account</span>
+                            </div>
+                            {myAccountOrgs.map((orgMember: any) => {
+                              const orgName = orgMember.organization?.name || 'Your Business';
+                              const orgRole = orgMember.role || '';
+                              const isSelected = orgMember.is_active;
+
+                              return (
+                                <div
+                                  key={orgMember.uid}
+                                  onClick={() => handleSwitchOrg(orgMember.uid, orgName)}
+                                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                  <div className="w-4 flex justify-center flex-shrink-0">
+                                    {isSelected ? (
+                                      <Check size={14} className="text-gray-600 dark:text-gray-400" />
+                                    ) : null}
+                                  </div>
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold flex-shrink-0">
+                                      {(orgName?.[0] || 'P').toUpperCase()}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                                        {orgName} {orgRole ? `(${orgRole})` : ''}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </>
+                        ) : (
+                          <>
+                            <div className="px-4 mb-2">
+                              <span className="text-[11px] font-semibold text-gray-400 tracking-wider uppercase">My Account</span>
+                            </div>
+                            <div className="px-4 py-2">
+                              <button
+                                onClick={() => window.open("https://callpilot.pro/get-started", "_blank")}
+                                className="w-full text-left text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors flex items-center gap-1.5"
+                              >
+                                + Create your own account
+                              </button>
+                            </div>
+                          </>
+                        )}
+
+                        {sharedAccountOrgs.length > 0 && (
+                          <>
+                            <div className="px-4 mb-2 mt-4">
+                              <span className="text-[11px] font-semibold text-gray-400 tracking-wider uppercase">Shared Accounts</span>
+                            </div>
+                            {sharedAccountOrgs.map((orgMember: any) => {
+                              const orgName = orgMember.organization?.name || 'Your Business';
+                              const orgRole = orgMember.role || '';
+                              const isSelected = orgMember.is_active;
+
+                              return (
+                                <div
+                                  key={orgMember.uid}
+                                  onClick={() => handleSwitchOrg(orgMember.uid, orgName)}
+                                  className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                  <div className="w-4 flex justify-center flex-shrink-0">
+                                    {isSelected ? (
+                                      <Check size={14} className="text-gray-600 dark:text-gray-400" />
+                                    ) : null}
+                                  </div>
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold flex-shrink-0">
+                                      {(orgName?.[0] || 'P').toUpperCase()}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                                        {orgName} {orgRole ? `(${orgRole})` : ''}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </>
+                        )}
+                      </>
                     );
-                  })
+                  })()
                 ) : (
-                  <div
-                    onClick={() => {
-                      setSelectedOrg(organization?.business_name || 'Your Business');
-                      setIsOrgDropdownOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <div className="w-4 flex justify-center">
-                      {selectedOrg === (organization?.business_name || 'Your Business') ? (
-                        <Check size={14} className="text-gray-600 dark:text-gray-400" />
-                      ) : null}
+                  <>
+                    <div className="px-4 mb-2">
+                      <span className="text-[11px] font-semibold text-gray-400 tracking-wider uppercase">My Account</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
-                        {(organization?.business_name?.[0] || 'P').toUpperCase()}
+                    <div
+                      onClick={() => {
+                        setSelectedOrg(organization?.business_name || 'Your Business');
+                        setIsOrgDropdownOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <div className="w-4 flex justify-center">
+                        {selectedOrg === (organization?.business_name || 'Your Business') ? (
+                          <Check size={14} className="text-gray-600 dark:text-gray-400" />
+                        ) : null}
                       </div>
-                      <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                        {organization?.business_name || 'Your Business'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
+                          {(organization?.business_name?.[0] || 'P').toUpperCase()}
+                        </div>
+                        <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                          {organization?.business_name || 'Your Business'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
             )}
