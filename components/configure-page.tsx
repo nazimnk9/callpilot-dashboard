@@ -11,7 +11,7 @@ import Link from "next/link"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { flowService } from "@/services/flow-service"
 import { profileService } from "@/services/profile-service"
-import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock, Volume2 } from "lucide-react"
+import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock, Volume2, X, Loader2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import {
@@ -185,6 +185,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false)
     const [configUid, setConfigUid] = useState("")
     const [whatsappTemplate, setWhatsappTemplate] = useState<any>(null)
+    const [showWhatsappDeleteConfirm, setShowWhatsappDeleteConfirm] = useState(false)
+    const [isWhatsappDeleting, setIsWhatsappDeleting] = useState(false)
     const isPersistedVoiceSet = useRef(false)
     const fetchWhatsappTemplate = useCallback(async (uid: string) => {
         if (!uid) return
@@ -777,6 +779,35 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         }
     }
 
+    const handleDeleteWhatsappTemplate = async () => {
+        if (!configUid) {
+            setError("No configuration UID found")
+            return
+        }
+
+        try {
+            setIsWhatsappDeleting(true)
+            await flowService.deleteWhatsappTemplate(configUid)
+            
+            setResultTitle("Success")
+            setResultMessage("WhatsApp configuration removed successfully!")
+            setShowResultDialog(true)
+
+            await fetchWhatsappTemplate(configUid)
+        } catch (err: any) {
+            console.error("Error removing WhatsApp configuration:", err)
+            const errorData = err.response?.data
+            const errorMessage = errorData?.details || errorData?.detail || errorData?.message || err.message || "Failed to remove WhatsApp configuration"
+            setError(errorMessage)
+            setResultTitle("Error")
+            setResultMessage(errorMessage)
+            setShowResultDialog(true)
+        } finally {
+            setIsWhatsappDeleting(false)
+            setShowWhatsappDeleteConfirm(false)
+        }
+    }
+
     const handleSelectChange = (setter: (val: string) => void) => (val: string) => {
         if (val === "_CLEAR_") {
             setter("")
@@ -1342,27 +1373,36 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                             <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {showWhatsappUploaderCard && (
-                                    <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex flex-col items-center justify-center space-y-4 min-h-[200px]">
+                                    <Card className="relative p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex flex-col items-center justify-center space-y-4 min-h-[200px]">
                                         {whatsappTemplate ? (
-                                            <div className="flex flex-col items-center space-y-3 text-center">
-                                                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${whatsappTemplate.is_active ? "bg-green-50 dark:bg-green-900/20" : "bg-amber-50 dark:bg-amber-900/20"}`}>
-                                                    {whatsappTemplate.is_active ? (
-                                                        <CheckCircle2 className="h-6 w-6 text-green-500 dark:text-green-400" />
-                                                    ) : (
-                                                        <AlertCircle className="h-6 w-6 text-amber-500 dark:text-amber-400" />
-                                                    )}
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <h5 className="text-base font-semibold text-gray-700 dark:text-gray-300">WhatsApp Document Uploader</h5>
-                                                    {/* <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Template: {whatsappTemplate.template_friendly_name}</p> */}
-                                                    <div className="flex items-center justify-center gap-1.5 mt-1">
-                                                        <div className={`h-1.5 w-1.5 rounded-full ${whatsappTemplate.is_active ? "bg-green-500" : "bg-amber-500"}`} />
-                                                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                                                            {whatsappTemplate.is_active ? "Active" : "Waiting for Activation"}
-                                                        </p>
+                                            <>
+                                                <button
+                                                    onClick={() => setShowWhatsappDeleteConfirm(true)}
+                                                    className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                                    title="Remove WhatsApp configuration"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                                <div className="flex flex-col items-center space-y-3 text-center">
+                                                    <div className={`h-12 w-12 rounded-full flex items-center justify-center ${whatsappTemplate.is_active ? "bg-green-50 dark:bg-green-900/20" : "bg-amber-50 dark:bg-amber-900/20"}`}>
+                                                        {whatsappTemplate.is_active ? (
+                                                            <CheckCircle2 className="h-6 w-6 text-green-500 dark:text-green-400" />
+                                                        ) : (
+                                                            <AlertCircle className="h-6 w-6 text-amber-500 dark:text-amber-400" />
+                                                        )}
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <h5 className="text-base font-semibold text-gray-700 dark:text-gray-300">WhatsApp Document Uploader</h5>
+                                                        {/* <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Template: {whatsappTemplate.template_friendly_name}</p> */}
+                                                        <div className="flex items-center justify-center gap-1.5 mt-1">
+                                                            <div className={`h-1.5 w-1.5 rounded-full ${whatsappTemplate.is_active ? "bg-green-500" : "bg-amber-500"}`} />
+                                                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                                                {whatsappTemplate.is_active ? "Active" : "Waiting for Activation"}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </>
                                         ) : (
                                             <>
                                                 <Button
@@ -1557,6 +1597,44 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         >
                             Delete
                         </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* WhatsApp Template Delete Confirmation */}
+            <AlertDialog open={showWhatsappDeleteConfirm} onOpenChange={setShowWhatsappDeleteConfirm}>
+                <AlertDialogContent className="rounded-2xl dark:bg-gray-900 dark:border-gray-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-red-500 dark:text-red-400 text-xl font-bold">
+                            Remove WhatsApp Configuration
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-600 dark:text-gray-400 text-base font-medium">
+                            Are you sure you want to remove the WhatsApp configuration? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-6">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowWhatsappDeleteConfirm(false)}
+                            disabled={isWhatsappDeleting}
+                            className="h-12 border-2 rounded-xl px-8 font-bold dark:border-gray-700 dark:text-gray-100"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleDeleteWhatsappTemplate}
+                            disabled={isWhatsappDeleting}
+                            className="h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl px-8 border-none flex items-center justify-center gap-2"
+                        >
+                            {isWhatsappDeleting ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Removing...
+                                </>
+                            ) : (
+                                "Remove"
+                            )}
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
