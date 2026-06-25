@@ -412,7 +412,7 @@ export function OrganizationUsersContent() {
 
     const canEditUser = (item: OrgUser) => {
         if (currentUserRole === "OWNER") {
-            return true
+            return item.role !== "OWNER"
         }
         if (currentUserRole === "ADMINISTRATOR") {
             return item.role !== "OWNER"
@@ -765,7 +765,7 @@ export function OrganizationUsersContent() {
                                                 <SelectValue placeholder="Select a role" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
-                                                <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem>
+                                                {/* <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem> */}
                                                 <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
                                                 <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
                                             </SelectContent>
@@ -832,7 +832,7 @@ export function OrganizationUsersContent() {
 
                     <div className="p-6 space-y-6">
                         <div className="space-y-4">
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label htmlFor="edit-email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Email Address <span className="text-red-500">*</span>
                                 </Label>
@@ -845,9 +845,9 @@ export function OrganizationUsersContent() {
                                     required
                                     className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                                 />
-                            </div>
+                            </div> */}
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label htmlFor="edit-password" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Password <span className="text-gray-400 text-xs font-normal">(Leave blank to keep unchanged)</span>
                                 </Label>
@@ -859,7 +859,7 @@ export function OrganizationUsersContent() {
                                     onChange={(e) => setEditPassword(e.target.value)}
                                     className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                                 />
-                            </div>
+                            </div> */}
 
                              <div className="space-y-2">
                                 <Label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -870,7 +870,7 @@ export function OrganizationUsersContent() {
                                         <SelectValue placeholder="Select a role" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
-                                        <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem>
+                                        {/* <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem> */}
                                         <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
                                         <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
                                     </SelectContent>
