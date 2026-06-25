@@ -72,6 +72,7 @@ export function PhoneNumbersContent() {
 
     // Buy Modal State
     const [isBuyModalOpen, setIsBuyModalOpen] = useState(false)
+    const [planPrice, setPlanPrice] = useState<string | null>(null)
 
     // Stripe and Payment States
     const [successMessage, setSuccessMessage] = useState("")
@@ -160,6 +161,7 @@ export function PhoneNumbersContent() {
             fetchCountries()
             fetchBundles()
             fetchPaymentMethods()
+            fetchPhonePlans()
 
             const fetchUserCountry = async () => {
                 try {
@@ -274,6 +276,21 @@ export function PhoneNumbersContent() {
             }
         } catch (err) {
             console.error("Error fetching payment methods:", err)
+        }
+    }
+
+    const fetchPhonePlans = async () => {
+        try {
+            const response = await phoneService.getPhonePlans()
+            const results = response.data.results
+            if (results && results.length > 0) {
+                const phonePlan = results.find((p: any) => p.name === "phone_number") || results[0]
+                if (phonePlan) {
+                    setPlanPrice(phonePlan.price)
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching phone plans:", err)
         }
     }
 
@@ -548,6 +565,16 @@ export function PhoneNumbersContent() {
                             ? 
                             ( */}
                                 <form onSubmit={handleSubmitPurchase} className="space-y-6">
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">AI Voice Number Plan</p>
+                                            <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100 mt-0.5">Recurring Monthly Subscription</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-lg font-extrabold text-gray-900 dark:text-gray-100">{planPrice ? `$${planPrice}` : "$15.00"}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">per month</p>
+                                        </div>
+                                    </div>
                                     <div className="space-y-3">
                                         <label className="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Payment method *</label>
                                         <div className="relative" ref={pmSelectorRef}>
