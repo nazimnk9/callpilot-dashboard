@@ -61,7 +61,11 @@ export function EndUserModal({ open, onOpenChange, onBack, onNext }: EndUserModa
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
-        const updatedData = { ...formData, [name]: value }
+        let val = value
+        if (name === "phone_number" && val.startsWith("0")) {
+            val = val.substring(1)
+        }
+        const updatedData = { ...formData, [name]: val }
         setFormData(updatedData)
         if (typeof window !== "undefined") {
             localStorage.setItem("endUserData", JSON.stringify(updatedData))

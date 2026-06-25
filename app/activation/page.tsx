@@ -2468,6 +2468,12 @@ export default function ActivationPage() {
                                                                                         setUkSelectedPhoneCode(code);
                                                                                         setIsUKPhoneCodeOpen(false);
                                                                                         setUkPhoneCodeSearch("");
+                                                                                        if (irelandEndUser.phone_number.startsWith("0")) {
+                                                                                            setIrelandEndUser(prev => ({
+                                                                                                ...prev,
+                                                                                                phone_number: prev.phone_number.substring(1)
+                                                                                            }));
+                                                                                        }
                                                                                     }}
                                                                                     className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
                                                                                 >
@@ -2495,7 +2501,11 @@ export default function ActivationPage() {
                                                                 placeholder="Enter phone number"
                                                                 value={irelandEndUser.phone_number}
                                                                 onChange={(e) => {
-                                                                    setIrelandEndUser({ ...irelandEndUser, phone_number: e.target.value });
+                                                                    let val = e.target.value;
+                                                                    if (val.startsWith("0")) {
+                                                                        val = val.substring(1);
+                                                                    }
+                                                                    setIrelandEndUser({ ...irelandEndUser, phone_number: val });
                                                                     clearValidationError("uk_phone");
                                                                 }}
                                                                 className={`flex-1 ${validationErrors.uk_phone ? "border-red-500 focus-visible:ring-red-500" : ""}`}
@@ -3113,6 +3123,12 @@ export default function ActivationPage() {
                                                                                     setSelectedPhoneCode(code);
                                                                                     setIsPhoneCodeOpen(false);
                                                                                     setPhoneCodeSearch("");
+                                                                                    if (org.authorize_representative_phone.startsWith("0")) {
+                                                                                        setOrg(prev => ({
+                                                                                            ...prev,
+                                                                                            authorize_representative_phone: prev.authorize_representative_phone.substring(1)
+                                                                                        }));
+                                                                                    }
                                                                                 }}
                                                                                 className="px-4 py-2.5 text-[14px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
                                                                             >
@@ -3140,7 +3156,11 @@ export default function ActivationPage() {
                                                             placeholder="Enter phone number"
                                                             value={org.authorize_representative_phone}
                                                             onChange={(e) => {
-                                                                setOrg({ ...org, authorize_representative_phone: e.target.value });
+                                                                let val = e.target.value;
+                                                                if (val.startsWith("0")) {
+                                                                    val = val.substring(1);
+                                                                }
+                                                                setOrg({ ...org, authorize_representative_phone: val });
                                                                 clearValidationError("rep_phone");
                                                             }}
                                                             required
