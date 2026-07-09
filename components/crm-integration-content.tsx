@@ -18,6 +18,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export function CRMIntegrationContent() {
     const [platforms, setPlatforms] = useState<Platform[]>([]);
@@ -37,6 +46,13 @@ export function CRMIntegrationContent() {
         show: false,
         platform: null,
     });
+    
+    // RecruitCRM specific integration states
+    const [recruitCRMOpen, setRecruitCRMOpen] = useState(false);
+    const [recruitCRMAccessToken, setRecruitCRMAccessToken] = useState("");
+    const [isConnectingRecruitCRM, setIsConnectingRecruitCRM] = useState(false);
+    const [recruitCRMPlatform, setRecruitCRMPlatform] = useState<Platform | null>(null);
+
     const router = useRouter();
     const hasProcessedRef = useRef(false);
 
@@ -139,7 +155,62 @@ export function CRMIntegrationContent() {
         }
     };
 
+    const handleConnectRecruitCRM = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!recruitCRMAccessToken.trim()) return;
+
+        try {
+            setIsConnectingRecruitCRM(true);
+            const authToken = cookieUtils.get("access");
+            if (!authToken) {
+                setErrorDialog({
+                    show: true,
+                    title: "Authentication Error",
+                    message: "Authentication token not found. Please sign in again.",
+                });
+                return;
+            }
+
+            const response = await crmService.connectRecruitCRM(authToken, {
+                access_token: recruitCRMAccessToken.trim(),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccessDialog({
+                    show: true,
+                    title: "Success",
+                    message: `Successfully integrated RecruitCRM!`,
+                });
+                setRecruitCRMOpen(false);
+                setRecruitCRMAccessToken("");
+                await fetchPlatforms();
+            } else {
+                setErrorDialog({
+                    show: true,
+                    title: "Integration Error",
+                    message: data.detail || data.message || "Failed to complete RecruitCRM integration",
+                });
+            }
+        } catch (err) {
+            setErrorDialog({
+                show: true,
+                title: "Integration Error",
+                message: "An error occurred while connecting RecruitCRM",
+            });
+        } finally {
+            setIsConnectingRecruitCRM(false);
+        }
+    };
+
     const handleIntegrate = (platform: Platform) => {
+        if (platform.slug.startsWith("recruitcrm")) {
+            setRecruitCRMPlatform(platform);
+            setRecruitCRMAccessToken("");
+            setRecruitCRMOpen(true);
+            return;
+        }
         try {
             const oauthUrl = `${platform.base_url || "https://id.jobadder.com/"}connect/authorize?response_type=${platform.response_type}&client_id=${platform.client_id}&scope=${platform.scope}&redirect_uri=${platform.redirect_uri}&state=${platform.state}&prompt=login`;
 
@@ -252,6 +323,64 @@ export function CRMIntegrationContent() {
                 </AlertDialogContent>
             </AlertDialog>
 
+            {/* RecruitCRM Connection Dialog */}
+            <Dialog open={recruitCRMOpen} onOpenChange={setRecruitCRMOpen}>
+                <DialogContent className="dark:bg-gray-900 dark:border-gray-800 sm:max-w-[480px] rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                            Connect RecruitCRM Account
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                            Please enter your RecruitCRM Access Token below to connect your account and enable automation features.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleConnectRecruitCRM} className="space-y-6 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                Access Token <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                                type="text"
+                                placeholder="Enter RecruitCRM Access Token"
+                                value={recruitCRMAccessToken}
+                                onChange={(e) => setRecruitCRMAccessToken(e.target.value)}
+                                disabled={isConnectingRecruitCRM}
+                                required
+                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                        </div>
+                        <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setRecruitCRMOpen(false)}
+                                disabled={isConnectingRecruitCRM}
+                                className="w-full sm:w-auto dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={isConnectingRecruitCRM || !recruitCRMAccessToken.trim()}
+                                className="w-full sm:w-auto bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold flex items-center justify-center gap-2"
+                            >
+                                {isConnectingRecruitCRM ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                                        Connecting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Zap className="w-4 h-4" />
+                                        Connect Account
+                                    </>
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
             <div className="max-w-7xl mx-auto space-y-8">
                 <div>
                     <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Available ATS to Connect</h1>
@@ -259,33 +388,35 @@ export function CRMIntegrationContent() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-4">
+                    <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:col-span-2">
                         {isLoading ? (
-                            <Card className="border-2 border-gray-100 dark:border-gray-800 h-full dark:bg-gray-800/50">
-                                <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-start gap-3 flex-1">
-                                            <div className="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                                                <Skeleton className="w-6 h-6 rounded-md dark:bg-gray-700" />
-                                            </div>
-                                            <div className="flex-1 space-y-3">
-                                                <Skeleton className="h-6 w-3/4 dark:bg-gray-700" />
-                                                <Skeleton className="h-4 w-full dark:bg-gray-700" />
-                                                <Skeleton className="h-4 w-2/3 dark:bg-gray-700" />
-                                                <div className="flex gap-2">
-                                                    <Skeleton className="h-5 w-20 rounded-full dark:bg-gray-700" />
-                                                    <Skeleton className="h-5 w-24 rounded-full dark:bg-gray-700" />
+                            Array.from({ length: 2 }).map((_, index) => (
+                                <Card key={index} className="border-2 border-gray-100 dark:border-gray-800 h-full dark:bg-gray-800/50">
+                                    <CardHeader>
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-start gap-3 flex-1">
+                                                <div className="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                                    <Skeleton className="w-6 h-6 rounded-md dark:bg-gray-700" />
+                                                </div>
+                                                <div className="flex-1 space-y-3">
+                                                    <Skeleton className="h-6 w-3/4 dark:bg-gray-700" />
+                                                    <Skeleton className="h-4 w-full dark:bg-gray-700" />
+                                                    <Skeleton className="h-4 w-2/3 dark:bg-gray-700" />
+                                                    <div className="flex gap-2">
+                                                        <Skeleton className="h-5 w-20 rounded-full dark:bg-gray-700" />
+                                                        <Skeleton className="h-5 w-24 rounded-full dark:bg-gray-700" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <Skeleton className="h-10 w-full dark:bg-gray-700" />
-                                </CardContent>
-                            </Card>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Skeleton className="h-10 w-full dark:bg-gray-700" />
+                                    </CardContent>
+                                </Card>
+                            ))
                         ) : platforms.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 dark:text-gray-400 font-medium">No integrations available at the moment.</div>
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400 font-medium lg:col-span-2">No integrations available at the moment.</div>
                         ) : (
                             platforms.map((platform) => (
                                 <Card
@@ -296,7 +427,17 @@ export function CRMIntegrationContent() {
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-start gap-3 flex-1">
                                                 <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
-                                                    <img src="/jobadder.jpeg" className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                                                    {platform.slug.startsWith("jobadder") ? (
+                                                        <img src="/jobadder.jpeg" className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                                                    ) : platform.slug.startsWith("recruitcrm") ? (
+                                                        <div className="w-6 h-6 rounded bg-indigo-600 dark:bg-indigo-900 flex items-center justify-center text-white text-xs font-black select-none">
+                                                            R
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center text-white text-xs font-black select-none">
+                                                            {platform.name.charAt(0)}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="flex-1">
                                                     <CardTitle className="text-md dark:text-gray-100">{platform.name} Integration</CardTitle>
@@ -333,7 +474,7 @@ export function CRMIntegrationContent() {
                                         <div className="flex items-center gap-4">
                                             <Button
                                                 onClick={() => handleIntegrate(platform)}
-                                                disabled={isIntegrating || platform.is_connected}
+                                                disabled={isIntegrating || isConnectingRecruitCRM || platform.is_connected}
                                                 className={`gap-2 ${platform.is_connected
                                                     ? "bg-green-500/50 text-white cursor-not-allowed"
                                                     : "bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200"
@@ -342,11 +483,11 @@ export function CRMIntegrationContent() {
                                                 <Zap className="w-4 h-4" />
                                                 {platform.is_connected ? "Already Integrated" : `Integrate ${platform.name} Account`}
                                             </Button>
-
+ 
                                             {platform.is_connected && (
                                                 <Button
                                                     onClick={() => setDisconnectDialog({ show: true, platform })}
-                                                    disabled={isIntegrating}
+                                                    disabled={isIntegrating || isConnectingRecruitCRM}
                                                     className="bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200"
                                                 >
                                                     Disconnect
