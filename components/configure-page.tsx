@@ -32,6 +32,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { WhatsappConfigModal } from "@/components/whatsapp-config-modal"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 interface ConfigurePageProps {
     featureUid?: string
@@ -1006,7 +1007,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                                             <Checkbox
                                                                                 id={`platform-${p.id}`}
                                                                                 checked={isChecked}
-                                                                                onCheckedChange={() => {}}
+                                                                                onCheckedChange={() => { }}
                                                                                 className="border-gray-300 dark:border-gray-500 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                                                                             />
                                                                             <label
@@ -1491,24 +1492,73 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     )}
                                     <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800`}>
                                         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">ATS/CRM Application Status Setup</h2>
-                                        <div className="space-y-4">
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                                                Please create the following Job Application Statuses within your ATS/CRM under:
-                                            </p>
-                                            <p className="text-sm sm:text-base font-semibold text-[#1e293b] dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50">
-                                                Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
-                                            </p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                                                If these statuses do not already exist, please add:
-                                            </p>
-                                            <ul className="space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside pl-2">
-                                                <li>Applied</li>
-                                                <li>AI Call - No Reply</li>
-                                                <li>AI Call - Link Sent</li>
-                                                <li>Unsuccessful</li>
-                                                <li>Documents Received</li>
-                                            </ul>
-                                        </div>
+                                        <Accordion type="single" collapsible defaultValue="jobadder" className="w-full space-y-2">
+                                            <AccordionItem value="jobadder" className="border-b border-gray-100 dark:border-gray-700">
+                                                <AccordionTrigger className="hover:no-underline py-3">
+                                                    <div className="flex items-center text-left">
+                                                        {/* <span className="text-base font-semibold text-gray-900 dark:text-gray-100">JobAdder</span> */}
+                                                        <span className="w-1.5" />
+                                                        <img src="/images/JobAdder.jpg" alt="JobAdder logo" className="w-[85px] h-[85px] rounded object-contain inline-block" />
+                                                        <span className="w-12 sm:w-16" />
+                                                        <sup className="text-red-600 dark:text-red-400 font-semibold text-[10px] sm:text-xs" style={{ verticalAlign: 'baseline', position: 'relative', top: '0' }}>Setup Required</sup>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2">
+                                                    <div className="space-y-4">
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                                            Please create the following Job Application Statuses within your ATS/CRM under:
+                                                        </p>
+                                                        <p className="text-sm sm:text-base font-semibold text-[#1e293b] dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                                                            Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
+                                                        </p>
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                                            If these statuses do not already exist, please add:
+                                                        </p>
+                                                        <ul className="space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside pl-2">
+                                                            <li>Applied</li>
+                                                            <li>AI Call - No Reply</li>
+                                                            <li>AI Call - Link Sent</li>
+                                                            <li>Unsuccessful</li>
+                                                            <li>Documents Received</li>
+                                                        </ul>
+                                                    </div>
+                                                </AccordionContent>
+                                            </AccordionItem>
+
+                                            <AccordionItem value="recruitcrm" className="border-b-0">
+                                                <AccordionTrigger className="hover:no-underline py-3">
+                                                    <div className="flex items-center text-left">
+                                                        <span className="text-base font-semibold text-gray-900 dark:text-gray-100">Recruit crm</span>
+                                                        <span className="w-1.5" />
+                                                        <div className="w-5 h-5 rounded bg-indigo-600 dark:bg-indigo-900 flex items-center justify-center text-white text-lg font-black select-none inline-flex">
+                                                            R
+                                                        </div>
+                                                        <span className="w-12 sm:w-16" />
+                                                        <sup className="text-red-600 dark:text-red-400 font-semibold text-[10px] sm:text-xs" style={{ verticalAlign: 'baseline', position: 'relative', top: '0' }}>Setup Required</sup>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2">
+                                                    <div className="space-y-4">
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                                            Please create the following Job Application Statuses within your ATS/CRM under:
+                                                        </p>
+                                                        <p className="text-sm sm:text-base font-semibold text-[#1e293b] dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                                                            Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
+                                                        </p>
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                                            If these statuses do not already exist, please add:
+                                                        </p>
+                                                        <ul className="space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside pl-2">
+                                                            <li>Assigned</li>
+                                                            <li>AI Call - No Reply</li>
+                                                            <li>AI Call - Link Sent</li>
+                                                            <li>Unsuccessful</li>
+                                                            <li>Documents Received</li>
+                                                        </ul>
+                                                    </div>
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        </Accordion>
                                     </Card>
                                 </div>
                             </>
