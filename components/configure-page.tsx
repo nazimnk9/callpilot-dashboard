@@ -1493,12 +1493,12 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800`}>
                                         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">ATS/CRM Application Status Setup</h2>
                                         <Accordion type="single" collapsible defaultValue="jobadder" className="w-full space-y-2 border border-[3px] rounded-md border-gray-100 dark:border-gray-700 p-3">
-                                            <AccordionItem value="jobadder" className="border-b border-gray-100 dark:border-gray-700">
+                                            <AccordionItem value="jobadder" className="border-b-[4px]  border-gray-100 dark:border-gray-700">
                                                 <AccordionTrigger className="hover:no-underline py-3">
-                                                    <div className="flex items-center text-left">
+                                                    <div className="flex items-center text-left min-h-[32px]">
                                                         {/* <span className="text-base font-semibold text-gray-900 dark:text-gray-100">JobAdder</span> */}
                                                         <span className="w-1.5" />
-                                                        <img src="/images/JobAdder.jpg" alt="JobAdder logo" className="w-[85px] h-[85px] rounded object-contain inline-block" />
+                                                        <img src="/jo.jpg" alt="JobAdder logo" className="w-[90px] h-[40px] rounded object-contain inline-block" />
                                                         <span className="w-12 sm:w-16" />
                                                         <sup className="text-red-600 dark:text-red-400 font-semibold text-[10px] sm:text-xs" style={{ verticalAlign: 'baseline', position: 'relative', top: '0' }}>Setup Required</sup>
                                                     </div>
@@ -1527,10 +1527,10 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                                             <AccordionItem value="recruitcrm" className="border-b-0">
                                                 <AccordionTrigger className="hover:no-underline py-3">
-                                                    <div className="flex items-center text-left">
+                                                    <div className="flex items-center text-left min-h-[32px]">
                                                         <span className="text-base font-semibold text-gray-900 dark:text-gray-100">Recruit crm</span>
                                                         <span className="w-1.5" />
-                                                        <div className="w-5 h-5 rounded bg-indigo-600 dark:bg-indigo-900 flex items-center justify-center text-white text-lg font-black select-none inline-flex">
+                                                        <div className="w-6 h-6 rounded bg-indigo-600 dark:bg-indigo-900 flex items-center justify-center text-white text-lg font-black select-none inline-flex">
                                                             R
                                                         </div>
                                                         <span className="w-12 sm:w-16" />
