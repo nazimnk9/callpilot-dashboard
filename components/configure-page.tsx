@@ -1492,7 +1492,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     )}
                                     <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800`}>
                                         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">ATS/CRM Application Status Setup</h2>
-                                        <Accordion type="single" collapsible defaultValue="jobadder" className="w-full space-y-2">
+                                        <Accordion type="single" collapsible defaultValue="jobadder" className="w-full space-y-2 border border-[3px] rounded-md border-gray-100 dark:border-gray-700 p-3">
                                             <AccordionItem value="jobadder" className="border-b border-gray-100 dark:border-gray-700">
                                                 <AccordionTrigger className="hover:no-underline py-3">
                                                     <div className="flex items-center text-left">
@@ -1549,7 +1549,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                             If these statuses do not already exist, please add:
                                                         </p>
                                                         <ul className="space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside pl-2">
-                                                            <li>Assigned</li>
+                                                            <li>Assigned or Applied</li>
                                                             <li>AI Call - No Reply</li>
                                                             <li>AI Call - Link Sent</li>
                                                             <li>Unsuccessful</li>
