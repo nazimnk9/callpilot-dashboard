@@ -11,7 +11,7 @@ import Link from "next/link"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { flowService } from "@/services/flow-service"
 import { profileService } from "@/services/profile-service"
-import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock, Volume2, X, Loader2, ChevronDown } from "lucide-react"
+import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock, Volume2, X, Loader2, ChevronDown, Search } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import {
@@ -32,7 +32,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { WhatsappConfigModal } from "@/components/whatsapp-config-modal"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 interface ConfigurePageProps {
     featureUid?: string
@@ -108,6 +107,130 @@ const TIME_OPTIONS = [
         return { label: time.slice(0, 5), value: time }
     }),
     { label: "23:59", value: "23:59:00" }
+]
+
+const ATS_SYSTEMS = [
+    "JobAdder",
+    "Recruit CRM",
+    "Bullhorn",
+    "Salesforce CRM",
+    "HubSpot CRM",
+    "Greenhouse",
+    "Lever",
+    "Workable",
+    "Ashby",
+    "JazzHR",
+    "Breezy HR",
+    "Zoho Recruit",
+    "SmartRecruiters",
+    "iCIMS",
+    "Jobvite",
+    "Pinpoint",
+    "Fountain",
+    "Loxo",
+    "Vincere",
+    "Firefish",
+    "PCRecruiter",
+    "Ceipal",
+    "CATS",
+    "Tracker",
+    "Erecruit",
+    "Avionté",
+    "AkkenCloud",
+    "Chameleon-i",
+    "FastTrack",
+    "TempWorks",
+    "Workday Recruiting",
+    "Taleo (Oracle)",
+    "SuccessFactors (SAP)",
+    "BrassRing (IBM)",
+    "SilkRoad",
+    "Cornerstone OnDemand",
+    "PageUp",
+    "PeopleFluent",
+    "Tribepad",
+    "Hireserve",
+    "Netivate",
+    "Recruitee",
+    "Teamtailor",
+    "Homerun",
+    "Freshteam",
+    "BambooHR ATS",
+    "Rippling ATS",
+    "Personio ATS",
+    "Factorial ATS",
+    "HiBob ATS",
+    "GoHire",
+    "Manatal",
+    "Talentera",
+    "Talent Reef",
+    "Harver",
+    "Outmatch",
+    "Criteria Corp",
+    "Codility",
+    "HackerRank",
+    "TestGorilla",
+    "Vervoe",
+    "SparkHire",
+    "HireVue",
+    "VidCruiter",
+    "Willo",
+    "Sonru",
+    "Modern Hire",
+    "Phenom",
+    "Beamery",
+    "Eightfold.ai",
+    "SeekOut",
+    "Hiretual",
+    "Entelo",
+    "Hired",
+    "Vettery",
+    "Underdog.io",
+    "Triplebyte",
+    "Turing",
+    "Toptal",
+    "Upwork",
+    "Fiverr",
+    "Freelancer",
+    "Guru",
+    "PeoplePerHour",
+    "TxtSync",
+    "Bullhorn Messaging",
+    "Grayscale",
+    "Sense",
+    "Mya",
+    "AllyO",
+    "Paradox (Olivia)",
+    "Wade & Wendy",
+    "Stella.ai",
+    "Ideal",
+    "Restless Bandit",
+    "Fetcher",
+    "Textio",
+    "Ongig",
+    "Gender Decoder",
+    "Appcast",
+    "Recruitics",
+    "PandoLogic",
+    "Talroo",
+    "JobTarget",
+    "Broadbean",
+    "LogicMelon",
+    "Idibu",
+    "Oorwin",
+    "Vervoe ATS",
+    "Zartis",
+    "Staffing Future",
+    "Jobsoid",
+    "Njoyn",
+    "Simplicant",
+    "CV-Library",
+    "Reed.co.uk",
+    "Totaljobs",
+    "CareerBuilder",
+    "Monster ATS",
+    "ZipRecruiter ATS",
+    "Indeed Hire"
 ]
 
 export function ConfigurePage({ featureUid }: ConfigurePageProps) {
@@ -190,6 +313,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [showWhatsappDeleteConfirm, setShowWhatsappDeleteConfirm] = useState(false)
     const [isWhatsappDeleting, setIsWhatsappDeleting] = useState(false)
     const isPersistedVoiceSet = useRef(false)
+
+    // ATS dropdown states
+    const [selectedAts, setSelectedAts] = useState("JobAdder")
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [highlightedIndex, setHighlightedIndex] = useState(0)
+    const dropdownRef = useRef<HTMLDivElement>(null)
     const fetchWhatsappTemplate = useCallback(async (uid: string) => {
         if (!uid) return
         try {
@@ -245,6 +375,31 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             }
         }
     }, [isUpdateMode])
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside)
+        }
+    }, [])
+
+    useEffect(() => {
+        setHighlightedIndex(0)
+    }, [searchQuery])
+
+    useEffect(() => {
+        if (isDropdownOpen) {
+            const activeEl = document.getElementById(`ats-item-${highlightedIndex}`)
+            if (activeEl) {
+                activeEl.scrollIntoView({ block: "nearest" })
+            }
+        }
+    }, [highlightedIndex, isDropdownOpen])
 
     useEffect(() => {
         const nameParam = searchParams.get("name")
@@ -851,6 +1006,45 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             router.push("/dashboard/platform-activation")
         }
         // otherwise stay on page for other successes
+    }
+
+    const filteredAtsSystems = ATS_SYSTEMS.filter(system =>
+        system.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    const getStatusesForAts = (ats: string) => {
+        if (ats.toLowerCase() === "recruit crm") {
+            return ["Assigned or Applied", "AI Call - No Reply", "AI Call - Link Sent", "Documents Received", "Unsuccessful"]
+        }
+        return ["Applied", "AI Call - No Reply", "AI Call - Link Sent", "Documents Received", "Unsuccessful"]
+    }
+
+    const handleAtsKeyDown = (e: React.KeyboardEvent) => {
+        if (!isDropdownOpen) {
+            if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault()
+                setIsDropdownOpen(true)
+            }
+            return
+        }
+
+        if (e.key === "Escape") {
+            setIsDropdownOpen(false)
+            e.preventDefault()
+        } else if (e.key === "ArrowDown") {
+            e.preventDefault()
+            setHighlightedIndex((prev) => (prev + 1) % filteredAtsSystems.length)
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault()
+            setHighlightedIndex((prev) => (prev - 1 + filteredAtsSystems.length) % filteredAtsSystems.length)
+        } else if (e.key === "Enter") {
+            e.preventDefault()
+            if (filteredAtsSystems[highlightedIndex]) {
+                setSelectedAts(filteredAtsSystems[highlightedIndex])
+                setIsDropdownOpen(false)
+                setSearchQuery("")
+            }
+        }
     }
 
     return (
@@ -1490,75 +1684,113 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             )}
                                         </Card>
                                     )}
-                                    <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800`}>
-                                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">ATS/CRM Application Status Setup</h2>
-                                        <Accordion type="single" collapsible defaultValue="jobadder" className="w-full space-y-2 border border-[3px] rounded-md border-gray-100 dark:border-gray-700 p-3">
-                                            <AccordionItem value="jobadder" className="border-b-[4px]  border-gray-100 dark:border-gray-700">
-                                                <AccordionTrigger className="hover:no-underline py-3">
-                                                    <div className="flex items-center text-left min-h-[32px]">
-                                                        {/* <span className="text-base font-semibold text-gray-900 dark:text-gray-100">JobAdder</span> */}
-                                                        <span className="w-1.5" />
-                                                        <img src="/jo.jpg" alt="JobAdder logo" className="w-[90px] h-[40px] rounded object-contain inline-block" />
-                                                        <span className="w-12 sm:w-16" />
-                                                        <sup className="text-red-600 dark:text-red-400 font-semibold text-[10px] sm:text-xs" style={{ verticalAlign: 'baseline', position: 'relative', top: '0' }}>Setup Required</sup>
-                                                    </div>
-                                                </AccordionTrigger>
-                                                <AccordionContent className="pt-2">
-                                                    <div className="space-y-4">
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                                                            Please create the following Job Application Statuses within your ATS/CRM under:
-                                                        </p>
-                                                        <p className="text-sm sm:text-base font-semibold text-[#1e293b] dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50">
-                                                            Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
-                                                        </p>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                                                            If these statuses do not already exist, please add:
-                                                        </p>
-                                                        <ul className="space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside pl-2">
-                                                            <li>Applied</li>
-                                                            <li>AI Call - No Reply</li>
-                                                            <li>AI Call - Link Sent</li>
-                                                            <li>Unsuccessful</li>
-                                                            <li>Documents Received</li>
-                                                        </ul>
-                                                    </div>
-                                                </AccordionContent>
-                                            </AccordionItem>
+                                    <Card className={`${showWhatsappUploaderCard ? "" : "lg:col-span-2"} p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-[#E5E7EB] rounded-2xl bg-white text-[#1F2937]`}>
+                                        <style dangerouslySetInnerHTML={{ __html: `
+                                            @keyframes atsFadeIn {
+                                                from { opacity: 0; transform: translateY(2px); }
+                                                to { opacity: 1; transform: translateY(0); }
+                                            }
+                                            .animate-ats-fade-in {
+                                                animation: atsFadeIn 0.2s ease-out forwards;
+                                            }
+                                        ` }} />
+                                        <h2 className="text-xl font-semibold text-[#1F2937] mb-6">ATS/CRM Application Status Setup</h2>
+                                        
+                                        {/* Premium Searchable Dropdown */}
+                                        <div className="relative mb-6" ref={dropdownRef}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                onKeyDown={handleAtsKeyDown}
+                                                className="w-full flex items-center justify-between px-5 py-4 h-[54px] bg-white border border-[#E5E7EB] rounded-[14px] shadow-[0_4px_12px_rgba(0,0,0,0.02)] text-[#1F2937] hover:border-gray-300 transition-all focus:outline-none focus:ring-2 focus:ring-[#0252FF]/20"
+                                            >
+                                                <span className="font-semibold text-base">{selectedAts}</span>
+                                                <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'transform rotate-180' : ''}`} />
+                                            </button>
 
-                                            <AccordionItem value="recruitcrm" className="border-b-0">
-                                                <AccordionTrigger className="hover:no-underline py-3">
-                                                    <div className="flex items-center text-left min-h-[32px]">
-                                                        <span className="text-base font-semibold text-gray-900 dark:text-gray-100">Recruit crm</span>
-                                                        <span className="w-1.5" />
-                                                        <div className="w-6 h-6 rounded bg-indigo-600 dark:bg-indigo-900 flex items-center justify-center text-white text-lg font-black select-none inline-flex">
-                                                            R
-                                                        </div>
-                                                        <span className="w-12 sm:w-16" />
-                                                        <sup className="text-red-600 dark:text-red-400 font-semibold text-[10px] sm:text-xs" style={{ verticalAlign: 'baseline', position: 'relative', top: '0' }}>Setup Required</sup>
+                                            {isDropdownOpen && (
+                                                <div className="absolute top-[62px] left-0 right-0 bg-white border border-[#E5E7EB] rounded-[14px] shadow-[0_10px_25px_rgba(0,0,0,0.06)] z-50 overflow-hidden flex flex-col max-h-[320px]">
+                                                    <div className="p-3 border-b border-gray-100 flex items-center gap-2 bg-[#F7F8FA]">
+                                                        <Search className="h-4 w-4 text-gray-400 shrink-0" />
+                                                        <input
+                                                            type="text"
+                                                            value={searchQuery}
+                                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                                            onKeyDown={handleAtsKeyDown}
+                                                            placeholder="Search ATS or CRM..."
+                                                            className="w-full bg-transparent border-none text-sm text-[#1F2937] placeholder-gray-400 focus:outline-none focus:ring-0"
+                                                            autoFocus
+                                                        />
+                                                        {searchQuery && (
+                                                            <button
+                                                                onClick={() => setSearchQuery("")}
+                                                                className="text-gray-400 hover:text-gray-600"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </button>
+                                                        )}
                                                     </div>
-                                                </AccordionTrigger>
-                                                <AccordionContent className="pt-2">
-                                                    <div className="space-y-4">
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                                                            Please create the following Job Application Statuses within your ATS/CRM under:
-                                                        </p>
-                                                        <p className="text-sm sm:text-base font-semibold text-[#1e293b] dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/50">
-                                                            Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
-                                                        </p>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                                                            If these statuses do not already exist, please add:
-                                                        </p>
-                                                        <ul className="space-y-2 text-sm font-semibold text-gray-700 dark:text-gray-300 list-disc list-inside pl-2">
-                                                            <li>Assigned or Applied</li>
-                                                            <li>AI Call - No Reply</li>
-                                                            <li>AI Call - Link Sent</li>
-                                                            <li>Unsuccessful</li>
-                                                            <li>Documents Received</li>
-                                                        </ul>
+
+                                                    <div className="overflow-y-auto py-2 flex-1 scrollbar-thin">
+                                                        {filteredAtsSystems.length > 0 ? (
+                                                            filteredAtsSystems.map((system, index) => {
+                                                                const isSelected = selectedAts === system
+                                                                const isHighlighted = highlightedIndex === index
+                                                                return (
+                                                                    <button
+                                                                        key={system}
+                                                                        id={`ats-item-${index}`}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setSelectedAts(system)
+                                                                            setIsDropdownOpen(false)
+                                                                            setSearchQuery("")
+                                                                        }}
+                                                                        className={`w-full text-left px-5 py-3 text-sm transition-colors flex items-center justify-between ${
+                                                                            isSelected
+                                                                                ? "text-[#0252FF] font-semibold bg-[#F7F8FA]"
+                                                                                : isHighlighted
+                                                                                ? "bg-gray-100/80 text-[#1F2937]"
+                                                                                : "text-[#1F2937] hover:bg-[#F7F8FA]"
+                                                                        }`}
+                                                                    >
+                                                                        <span>{system}</span>
+                                                                        {isSelected && (
+                                                                            <div className="h-2 w-2 rounded-full bg-[#0252FF]" />
+                                                                        )}
+                                                                    </button>
+                                                                )
+                                                            })
+                                                        ) : (
+                                                            <div className="text-center py-6 text-sm text-gray-400">
+                                                                No integrations found
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                </AccordionContent>
-                                            </AccordionItem>
-                                        </Accordion>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Instruction details with light grey background */}
+                                        <div key={selectedAts} className="bg-[#F7F8FA] border border-[#E5E7EB]/80 rounded-[14px] p-5 space-y-4 animate-ats-fade-in">
+                                            <p className="text-sm font-semibold text-[#1F2937] leading-relaxed">
+                                                Please create the following Job Application Statuses within your ATS/CRM under:
+                                            </p>
+                                            <p className="text-sm sm:text-base font-bold text-[#1F2937] bg-white p-3 rounded-[10px] border border-[#E5E7EB] shadow-sm">
+                                                Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
+                                            </p>
+                                            <p className="text-sm font-semibold text-[#1F2937] leading-relaxed">
+                                                If these statuses do not already exist, please add:
+                                            </p>
+                                            <ul className="space-y-2.5 text-sm font-bold text-[#1F2937]">
+                                                {getStatusesForAts(selectedAts).map((status, index) => (
+                                                    <li key={index} className="flex items-center gap-3">
+                                                        <span className="text-[#0252FF] font-semibold text-sm shrink-0 min-w-[16px]">{index + 1}.</span>
+                                                        <span>{status}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     </Card>
                                 </div>
                             </>
@@ -1584,9 +1816,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             {isUpdateMode && currentUserRole !== "STAFF" && (
                                 <Button
                                     size="lg"
-                                    variant="outline"
                                     onClick={() => setShowReleaseDialog(true)}
-                                    className="flex-1 h-12 sm:h-14 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xl shadow-gray-600/60 hover:scale-[1.01] active:scale-[0.99]"
+                                    className="flex-1 h-12 sm:h-14 bg-black hover:bg-gray-900 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                                 >
                                     Release Flow
                                 </Button>
@@ -1607,9 +1838,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     {currentUserRole !== "STAFF" && (
                                         <Button
                                             size="lg"
-                                            variant="outline"
                                             onClick={() => setShowReleaseDialog(true)}
-                                            className="flex-1 h-12 sm:h-14 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xl shadow-gray-600/60 hover:scale-[1.01] active:scale-[0.99]"
+                                            className="flex-1 h-12 sm:h-14 bg-black hover:bg-gray-900 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                                         >
                                             Release Flow
                                         </Button>
@@ -1639,9 +1869,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         {currentUserRole !== "STAFF" && (
                                             <Button
                                                 size="lg"
-                                                variant="outline"
                                                 onClick={() => setShowReleaseDialog(true)}
-                                                className="flex-1 h-12 sm:h-14 border-2 border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl transition-all shadow-xl shadow-gray-600/60 hover:scale-[1.01] active:scale-[0.99]"
+                                                className="flex-1 h-12 sm:h-14 bg-black hover:bg-gray-900 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                                             >
                                                 Release Flow
                                             </Button>
@@ -1692,7 +1921,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         </Button>
                         <Button
                             onClick={handleReleaseFlow}
-                            className="h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl px-8 border-none"
+                            className="h-12 bg-black hover:bg-gray-900 text-white font-bold rounded-xl px-8 border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                         >
                             Release Flow
                         </Button>
