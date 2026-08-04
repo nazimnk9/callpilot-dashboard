@@ -53,6 +53,13 @@ export function CRMIntegrationContent() {
     const [isConnectingRecruitCRM, setIsConnectingRecruitCRM] = useState(false);
     const [recruitCRMPlatform, setRecruitCRMPlatform] = useState<Platform | null>(null);
 
+    // Greenhouse specific integration states
+    const [greenhouseOpen, setGreenhouseOpen] = useState(false);
+    const [greenhouseClientId, setGreenhouseClientId] = useState("");
+    const [greenhouseClientSecret, setGreenhouseClientSecret] = useState("");
+    const [isConnectingGreenhouse, setIsConnectingGreenhouse] = useState(false);
+    const [greenhousePlatform, setGreenhousePlatform] = useState<Platform | null>(null);
+
     const router = useRouter();
     const hasProcessedRef = useRef(false);
 
@@ -204,11 +211,69 @@ export function CRMIntegrationContent() {
         }
     };
 
+    const handleConnectGreenhouse = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!greenhouseClientId.trim() || !greenhouseClientSecret.trim()) return;
+
+        try {
+            setIsConnectingGreenhouse(true);
+            const authToken = cookieUtils.get("access");
+            if (!authToken) {
+                setErrorDialog({
+                    show: true,
+                    title: "Authentication Error",
+                    message: "Authentication token not found. Please sign in again.",
+                });
+                return;
+            }
+
+            const response = await crmService.connectGreenhouse(authToken, {
+                client_id: greenhouseClientId.trim(),
+                client_secret: greenhouseClientSecret.trim(),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccessDialog({
+                    show: true,
+                    title: "Success",
+                    message: `Successfully integrated Greenhouse!`,
+                });
+                setGreenhouseOpen(false);
+                setGreenhouseClientId("");
+                setGreenhouseClientSecret("");
+                await fetchPlatforms();
+            } else {
+                setErrorDialog({
+                    show: true,
+                    title: "Integration Error",
+                    message: data.detail || data.message || "Failed to complete Greenhouse integration",
+                });
+            }
+        } catch (err) {
+            setErrorDialog({
+                show: true,
+                title: "Integration Error",
+                message: "An error occurred while connecting Greenhouse",
+            });
+        } finally {
+            setIsConnectingGreenhouse(false);
+        }
+    };
+
     const handleIntegrate = (platform: Platform) => {
         if (platform.slug.startsWith("recruitcrm")) {
             setRecruitCRMPlatform(platform);
             setRecruitCRMAccessToken("");
             setRecruitCRMOpen(true);
+            return;
+        }
+        if (platform.name.toLowerCase() === "greenhouse" || platform.slug.toLowerCase().includes("greenhouse")) {
+            setGreenhousePlatform(platform);
+            setGreenhouseClientId("");
+            setGreenhouseClientSecret("");
+            setGreenhouseOpen(true);
             return;
         }
         try {
@@ -381,6 +446,78 @@ export function CRMIntegrationContent() {
                 </DialogContent>
             </Dialog>
 
+            {/* Greenhouse Connection Dialog */}
+            <Dialog open={greenhouseOpen} onOpenChange={setGreenhouseOpen}>
+                <DialogContent className="dark:bg-gray-900 dark:border-gray-800 sm:max-w-[480px] rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                            Connect Greenhouse Account
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                            Please enter your Greenhouse Client ID and Client Secret below to connect your account and enable automation features.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleConnectGreenhouse} className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                Client ID <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                                type="text"
+                                placeholder="Enter Client ID"
+                                value={greenhouseClientId}
+                                onChange={(e) => setGreenhouseClientId(e.target.value)}
+                                disabled={isConnectingGreenhouse}
+                                required
+                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                Client Secret <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                                type="password"
+                                placeholder="Enter Client Secret"
+                                value={greenhouseClientSecret}
+                                onChange={(e) => setGreenhouseClientSecret(e.target.value)}
+                                disabled={isConnectingGreenhouse}
+                                required
+                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                        </div>
+                        <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setGreenhouseOpen(false)}
+                                disabled={isConnectingGreenhouse}
+                                className="w-full sm:w-auto dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={isConnectingGreenhouse || !greenhouseClientId.trim() || !greenhouseClientSecret.trim()}
+                                className="w-full sm:w-auto bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold flex items-center justify-center gap-2"
+                            >
+                                {isConnectingGreenhouse ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                                        Connecting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Zap className="w-4 h-4" />
+                                        Connect Account
+                                    </>
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
             <div className="max-w-7xl mx-auto space-y-8">
                 <div>
                     <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Available ATS to Connect</h1>
@@ -433,6 +570,8 @@ export function CRMIntegrationContent() {
                                                         <div className="w-6 h-6 rounded bg-indigo-600 dark:bg-indigo-900 flex items-center justify-center text-white text-xs font-black select-none">
                                                             R
                                                         </div>
+                                                    ) : (platform.name.toLowerCase() === "greenhouse" || platform.slug.toLowerCase().includes("greenhouse")) ? (
+                                                        <img src="/greenhouse-logo-freelogovectors.net_.png" className="w-6 h-6 object-contain" />
                                                     ) : (
                                                         <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center text-white text-xs font-black select-none">
                                                             {platform.name.charAt(0)}
@@ -474,7 +613,7 @@ export function CRMIntegrationContent() {
                                         <div className="flex items-center gap-4">
                                             <Button
                                                 onClick={() => handleIntegrate(platform)}
-                                                disabled={isIntegrating || isConnectingRecruitCRM || platform.is_connected}
+                                                disabled={isIntegrating || isConnectingRecruitCRM || isConnectingGreenhouse || platform.is_connected}
                                                 className={`gap-2 ${platform.is_connected
                                                     ? "bg-green-500/50 text-white cursor-not-allowed"
                                                     : "bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200"
@@ -487,7 +626,7 @@ export function CRMIntegrationContent() {
                                             {platform.is_connected && (
                                                 <Button
                                                     onClick={() => setDisconnectDialog({ show: true, platform })}
-                                                    disabled={isIntegrating || isConnectingRecruitCRM}
+                                                    disabled={isIntegrating || isConnectingRecruitCRM || isConnectingGreenhouse}
                                                     className="bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200"
                                                 >
                                                     Disconnect
