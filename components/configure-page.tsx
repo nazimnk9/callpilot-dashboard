@@ -109,21 +109,24 @@ const TIME_OPTIONS = [
     { label: "23:59", value: "23:59:00" }
 ]
 
-const ATS_SYSTEMS = [
-    "JobAdder",
-    "Recruit CRM",
+const SPECIAL_ATS = [
+    "JobAdder (Green Light)",
+    "Recruit CRM (Green Light)",
+    "Greenhouse (Green Light)",
+    "iCIMS (Amber Light)",
+    "Ashby (Amber Light)"
+]
+
+const RAW_ATS_SYSTEMS = [
     "Bullhorn",
     "Salesforce CRM",
     "HubSpot CRM",
-    "Greenhouse",
     "Lever",
     "Workable",
-    "Ashby",
     "JazzHR",
     "Breezy HR",
     "Zoho Recruit",
     "SmartRecruiters",
-    "iCIMS",
     "Jobvite",
     "Pinpoint",
     "Fountain",
@@ -233,6 +236,11 @@ const ATS_SYSTEMS = [
     "Indeed Hire"
 ]
 
+const ATS_SYSTEMS = [
+    ...SPECIAL_ATS,
+    ...[...RAW_ATS_SYSTEMS].sort((a, b) => a.localeCompare(b))
+]
+
 export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -315,7 +323,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const isPersistedVoiceSet = useRef(false)
 
     // ATS dropdown states
-    const [selectedAts, setSelectedAts] = useState("JobAdder")
+    const [selectedAts, setSelectedAts] = useState("JobAdder (Green Light)")
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const [highlightedIndex, setHighlightedIndex] = useState(0)
@@ -1013,7 +1021,8 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     )
 
     const getStatusesForAts = (ats: string) => {
-        if (ats.toLowerCase() === "recruit crm") {
+        const lower = ats.toLowerCase()
+        if (lower.includes("recruit crm") || lower.includes("recruitcrm")) {
             return ["Assigned or Applied", "AI Call - No Reply", "AI Call - Link Sent", "Documents Received", "Unsuccessful"]
         }
         return ["Applied", "AI Call - No Reply", "AI Call - Link Sent", "Documents Received", "Unsuccessful"]
@@ -1704,7 +1713,21 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 onKeyDown={handleAtsKeyDown}
                                                 className="w-full flex items-center justify-between px-5 py-4 h-[54px] bg-white border border-[#E5E7EB] rounded-[14px] shadow-[0_4px_12px_rgba(0,0,0,0.02)] text-[#1F2937] hover:border-gray-300 transition-all focus:outline-none focus:ring-2 focus:ring-[#0252FF]/20"
                                             >
-                                                <span className="font-semibold text-base">{selectedAts}</span>
+                                                <span className="font-semibold text-base flex items-center gap-2">
+                                                    <span>{selectedAts.replace(" (Green Light)", "").replace(" (Amber Light)", "")}</span>
+                                                    {selectedAts.includes("(Green Light)") && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                            Live
+                                                        </span>
+                                                    )}
+                                                    {selectedAts.includes("(Amber Light)") && (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                                            In Progress
+                                                        </span>
+                                                    )}
+                                                </span>
                                                 <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'transform rotate-180' : ''}`} />
                                             </button>
 
@@ -1754,7 +1777,21 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                                                 : "text-[#1F2937] hover:bg-[#F7F8FA]"
                                                                         }`}
                                                                     >
-                                                                        <span>{system}</span>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span>{system.replace(" (Green Light)", "").replace(" (Amber Light)", "")}</span>
+                                                                            {system.includes("(Green Light)") && (
+                                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                                                    Live
+                                                                                </span>
+                                                                            )}
+                                                                            {system.includes("(Amber Light)") && (
+                                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                                                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                                                                    In Progress
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                         {isSelected && (
                                                                             <div className="h-2 w-2 rounded-full bg-[#0252FF]" />
                                                                         )}
