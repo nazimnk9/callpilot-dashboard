@@ -731,8 +731,8 @@ export function PhoneNumbersContent() {
                                                 {[
                                                     { label: "Voice", capable: number.voice_capable },
                                                     { label: "SMS", capable: number.sms_capable },
-                                                    { label: "MMS", capable: number.mms_capable },
-                                                    { label: "Fax", capable: number.fax_capable },
+                                                    // { label: "MMS", capable: number.mms_capable },
+                                                    // { label: "Fax", capable: number.fax_capable },
                                                 ].map((cap) => (
                                                     <div key={cap.label} className="flex items-center gap-2 md:gap-2.5">
                                                         <div className={`p-1 rounded-full ${cap.capable ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
