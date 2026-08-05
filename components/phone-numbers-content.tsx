@@ -731,7 +731,7 @@ export function PhoneNumbersContent() {
                                                 {[
                                                     { label: "Voice", capable: number.voice_capable },
                                                     { label: "SMS", capable: number.sms_capable },
-                                                    // { label: "MMS", capable: number.mms_capable },
+                                                    { label: "MMS", capable: number.mms_capable },
                                                     // { label: "Fax", capable: number.fax_capable },
                                                 ].map((cap) => (
                                                     <div key={cap.label} className="flex items-center gap-2 md:gap-2.5">
