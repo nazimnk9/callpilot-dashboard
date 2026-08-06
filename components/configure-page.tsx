@@ -277,13 +277,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
     const [placedStatus, setPlacedStatus] = useState<string>("")
 
     const INITIAL_TIMELINE: TimelineDay[] = [
-        { day: "Monday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
-        { day: "Tuesday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
-        { day: "Wednesday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
-        { day: "Thursday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
-        { day: "Friday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
-        { day: "Saturday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
-        { day: "Sunday", startTime: "09:00:00", endTime: "18:00:00", isActive: true },
+        { day: "Monday", startTime: "00:00:00", endTime: "23:59:00", isActive: true },
+        { day: "Tuesday", startTime: "00:00:00", endTime: "23:59:00", isActive: true },
+        { day: "Wednesday", startTime: "00:00:00", endTime: "23:59:00", isActive: true },
+        { day: "Thursday", startTime: "00:00:00", endTime: "23:59:00", isActive: true },
+        { day: "Friday", startTime: "00:00:00", endTime: "23:59:00", isActive: true },
+        { day: "Saturday", startTime: "00:00:00", endTime: "23:59:00", isActive: true },
+        { day: "Sunday", startTime: "00:00:00", endTime: "23:59:00", isActive: true },
     ]
 
     // Timeline State
