@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Zap, Check, Phone, Plus } from "lucide-react";
+import { Zap, Check, Phone, Plus, Plug } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -62,6 +62,55 @@ export function CRMIntegrationContent() {
 
     const router = useRouter();
     const hasProcessedRef = useRef(false);
+
+    const displayPlatforms = [
+        {
+            slug: "jobadder",
+            name: "JobAdder",
+            logo: "/jobadder.jpeg",
+            isStatic: false,
+        },
+        {
+            slug: "recruitcrm",
+            name: "Recruit CRM",
+            logo: "/recruitcrm.png",
+            isStatic: false,
+        },
+        {
+            slug: "greenhouse",
+            name: "Greenhouse",
+            logo: "/greenhouse.png",
+            isStatic: false,
+        },
+        {
+            slug: "ashby",
+            name: "Ashby",
+            logo: null,
+            isStatic: true,
+            statusType: "in-progress",
+        },
+        {
+            slug: "icims",
+            name: "iCIMS",
+            logo: "plug",
+            isStatic: true,
+            statusType: "coming-soon",
+        },
+        {
+            slug: "sap-successfactors",
+            name: "SAP SuccessFactors",
+            logo: "plug",
+            isStatic: true,
+            statusType: "coming-soon",
+        },
+    ];
+
+    const getDynamicPlatform = (slug: string) => {
+        if (slug === "jobadder") return platforms.find(p => p.slug.startsWith("jobadder"));
+        if (slug === "recruitcrm") return platforms.find(p => p.slug.startsWith("recruitcrm"));
+        if (slug === "greenhouse") return platforms.find(p => p.name.toLowerCase() === "greenhouse" || p.slug.toLowerCase().includes("greenhouse"));
+        return undefined;
+    };
 
     useEffect(() => {
         fetchPlatforms();
@@ -518,127 +567,116 @@ export function CRMIntegrationContent() {
                 </DialogContent>
             </Dialog>
 
-            <div className="max-w-7xl mx-auto space-y-8">
+            <div className="max-w-4xl mx-auto space-y-6">
                 <div>
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Available ATS to Connect</h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your ATS integrations and settings</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Available ATS to Connect</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5 font-medium">Manage your ATS integrations and settings</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 lg:col-span-2">
-                        {isLoading ? (
-                            Array.from({ length: 2 }).map((_, index) => (
-                                <Card key={index} className="border-2 border-gray-100 dark:border-gray-800 h-full dark:bg-gray-800/50">
-                                    <CardHeader>
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-start gap-3 flex-1">
-                                                <div className="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                                                    <Skeleton className="w-6 h-6 rounded-md dark:bg-gray-700" />
-                                                </div>
-                                                <div className="flex-1 space-y-3">
-                                                    <Skeleton className="h-6 w-3/4 dark:bg-gray-700" />
-                                                    <Skeleton className="h-4 w-full dark:bg-gray-700" />
-                                                    <Skeleton className="h-4 w-2/3 dark:bg-gray-700" />
-                                                    <div className="flex gap-2">
-                                                        <Skeleton className="h-5 w-20 rounded-full dark:bg-gray-700" />
-                                                        <Skeleton className="h-5 w-24 rounded-full dark:bg-gray-700" />
-                                                    </div>
-                                                </div>
-                                            </div>
+                {isLoading ? (
+                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {Array.from({ length: 6 }).map((_, index) => (
+                                <div key={index} className="flex items-center justify-between p-6">
+                                    <div className="flex items-center gap-4">
+                                        <Skeleton className="w-14 h-14 rounded-xl dark:bg-gray-800" />
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-5 w-32 dark:bg-gray-800" />
+                                            {(index === 0 || index === 2) && (
+                                                <Skeleton className="h-4 w-16 dark:bg-gray-800" />
+                                            )}
                                         </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <Skeleton className="h-10 w-full dark:bg-gray-700" />
-                                    </CardContent>
-                                </Card>
-                            ))
-                        ) : platforms.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 dark:text-gray-400 font-medium lg:col-span-2">No integrations available at the moment.</div>
-                        ) : (
-                            platforms.map((platform) => (
-                                <Card
-                                    key={platform.id}
-                                    className="border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 group h-full"
-                                >
-                                    <CardHeader>
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-start gap-3 flex-1">
-                                                <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
-                                                    {platform.slug.startsWith("jobadder") ? (
-                                                        <img src="/jobadder.jpeg" className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                                                    ) : platform.slug.startsWith("recruitcrm") ? (
-                                                        <div className="w-6 h-6 rounded bg-indigo-600 dark:bg-indigo-900 flex items-center justify-center text-white text-xs font-black select-none">
-                                                            R
-                                                        </div>
-                                                    ) : (platform.name.toLowerCase() === "greenhouse" || platform.slug.toLowerCase().includes("greenhouse")) ? (
-                                                        <img src="/greenhouse-logo-freelogovectors.net_.png" className="w-6 h-6 object-contain" />
-                                                    ) : (
-                                                        <div className="w-6 h-6 rounded bg-gray-600 flex items-center justify-center text-white text-xs font-black select-none">
-                                                            {platform.name.charAt(0)}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <CardTitle className="text-md dark:text-gray-100">{platform.name} Integration</CardTitle>
-                                                    <CardDescription className="mt-2 text-gray-500 dark:text-gray-400">
-                                                        {platform.description || `Connect your ${platform.name} account to enable automation features.`}
-                                                    </CardDescription>
-                                                    {/* <div className="mt-3 flex items-center gap-2 flex-wrap">
-                                                        <span className="inline-block px-2.5 py-1 bg-green-500/10 dark:bg-green-500/20 rounded-full text-xs font-medium text-green-700 dark:text-green-400">
-                                                            Status: {platform.status}
-                                                        </span>
-                                                        {platform.is_connected && (
-                                                            <span className="px-2.5 py-1 bg-green-500/20 dark:bg-green-500/30 text-green-700 dark:text-green-400 rounded-full flex items-center gap-1.5 text-xs font-medium">
-                                                                <Check className="w-3.5 h-3.5" />
-                                                                Connected
-                                                            </span>
-                                                        )}
-                                                    </div> */}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="flex flex-col gap-4">
-                                        {/* {platform.is_connected && (
-                                            <Link
-                                            href={`https://callpilot.pro/job-adder/document-uploader${platform.my_platform?.uid ? `?uid=${platform.my_platform.uid}` : ''}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium underline underline-offset-4 flex items-center gap-1.5 transition-colors"
-                                        >
-                                            JobAdder Document Uploader
-                                        </Link>
-                                        )} */}
-                                        
+                                    </div>
+                                    <Skeleton className="h-10 w-28 rounded-xl dark:bg-gray-800" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {displayPlatforms.map((p) => {
+                                const dynamicPlatform = getDynamicPlatform(p.slug);
+                                const isConnected = !p.isStatic && dynamicPlatform?.is_connected;
+                                
+                                return (
+                                    <div key={p.slug} className="flex items-center justify-between p-6 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors duration-200">
                                         <div className="flex items-center gap-4">
-                                            <Button
-                                                onClick={() => handleIntegrate(platform)}
-                                                disabled={isIntegrating || isConnectingRecruitCRM || isConnectingGreenhouse || platform.is_connected}
-                                                className={`gap-2 ${platform.is_connected
-                                                    ? "bg-green-500/50 text-white cursor-not-allowed"
-                                                    : "bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200"
-                                                    } font-semibold transition-all duration-200`}
-                                            >
-                                                <Zap className="w-4 h-4" />
-                                                {platform.is_connected ? "Already Integrated" : `Integrate ${platform.name} Account`}
-                                            </Button>
- 
-                                            {platform.is_connected && (
+                                            {/* Logo */}
+                                            {p.slug === "jobadder" && (
+                                                <div className="w-14 h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                                                    <img src="/jobadder.jpeg" alt="JobAdder" className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
+                                            {p.slug === "recruitcrm" && (
+                                                <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-200 bg-[#286cb3]">
+                                                    <img src="/recruitcrm.png" alt="Recruit CRM" className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
+                                            {p.slug === "greenhouse" && (
+                                                <div className="w-14 h-14 rounded-xl bg-[#008F52] flex items-center justify-center flex-shrink-0 p-3 shadow-sm">
+                                                    <img src="/greenhouse.png" alt="Greenhouse" className="w-full h-full object-contain brightness-0 invert" />
+                                                </div>
+                                            )}
+                                            {p.slug === "ashby" && (
+                                                <div className="w-14 h-14 rounded-xl bg-[#3B125C] flex items-center justify-center flex-shrink-0 text-white font-serif text-2xl font-bold select-none shadow-sm">
+                                                    A
+                                                </div>
+                                            )}
+                                            {(p.slug === "icims" || p.slug === "sap-successfactors") && (
+                                                <div className="w-14 h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                    <Plug className="w-6 h-6 text-gray-400 rotate-45" />
+                                                </div>
+                                            )}
+
+                                            {/* Details */}
+                                            <div className="flex flex-col">
+                                                <span className="text-base font-semibold text-gray-900 dark:text-gray-100">{p.name}</span>
+                                                {isConnected && (
+                                                    <div className="flex items-center gap-1.5 mt-1">
+                                                        <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                                                        <span className="text-xs font-semibold text-[#10B981]">Live</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Action / Status Badge */}
+                                        <div>
+                                            {p.isStatic ? (
+                                                p.statusType === "in-progress" ? (
+                                                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold text-[#B7791F] bg-[#FFF4E5] dark:text-amber-400 dark:bg-amber-950/30">
+                                                        In Progress
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold text-[#475467] bg-[#F2F4F7] dark:text-gray-400 dark:bg-gray-800">
+                                                        Coming Soon
+                                                    </span>
+                                                )
+                                            ) : isConnected ? (
                                                 <Button
-                                                    onClick={() => setDisconnectDialog({ show: true, platform })}
+                                                    onClick={() => setDisconnectDialog({ show: true, platform: dynamicPlatform || null })}
                                                     disabled={isIntegrating || isConnectingRecruitCRM || isConnectingGreenhouse}
-                                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200"
+                                                    className="bg-[#EF4444] hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
                                                 >
                                                     Disconnect
                                                 </Button>
+                                            ) : (
+                                                <Button
+                                                    onClick={() => dynamicPlatform && handleIntegrate(dynamicPlatform)}
+                                                    disabled={isIntegrating || isConnectingRecruitCRM || isConnectingGreenhouse || !dynamicPlatform}
+                                                    className="bg-[#0062FF] hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
+                                                >
+                                                    Connect to ATS
+                                                </Button>
                                             )}
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </main>
     );
