@@ -1703,7 +1703,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 animation: atsFadeIn 0.2s ease-out forwards;
                                             }
                                         ` }} />
-                                        <h2 className="text-xl font-semibold text-[#1F2937] mb-6">ATS/CRM Application Status Setup</h2>
+                                        <h2 className="text-xl font-semibold text-[#1F2937] mb-6">ATS/CRM Application Status/Stage Setup</h2>
                                         
                                         {/* Premium Searchable Dropdown */}
                                         <div className="relative mb-6" ref={dropdownRef}>
@@ -1809,25 +1809,37 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
 
                                         {/* Instruction details with light grey background */}
-                                        <div key={selectedAts} className="bg-[#F7F8FA] border border-[#E5E7EB]/80 rounded-[14px] p-5 space-y-4 animate-ats-fade-in">
-                                            <p className="text-sm font-semibold text-[#1F2937] leading-relaxed">
-                                                Please create the following Job Application Statuses within your ATS/CRM under:
-                                            </p>
-                                            <p className="text-sm sm:text-base font-bold text-[#1F2937] bg-white p-3 rounded-[10px] border border-[#E5E7EB] shadow-sm">
-                                                Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New
-                                            </p>
-                                            <p className="text-sm font-semibold text-[#1F2937] leading-relaxed">
-                                                If these statuses do not already exist, please add:
-                                            </p>
-                                            <ul className="space-y-2.5 text-sm font-bold text-[#1F2937]">
-                                                {getStatusesForAts(selectedAts).map((status, index) => (
-                                                    <li key={index} className="flex items-center gap-3">
-                                                        <span className="text-[#0252FF] font-semibold text-sm shrink-0 min-w-[16px]">{index + 1}.</span>
-                                                        <span>{status}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        {selectedAts.toLowerCase().includes("greenhouse") ? (
+                                            <div key={selectedAts} className="bg-[#F7F8FA] border border-[#E5E7EB]/80 rounded-[14px] p-8 flex flex-col items-center justify-center min-h-[220px] animate-ats-fade-in">
+                                                <p className="text-xl font-bold text-[#1F2937] text-center">
+                                                    No Setup required
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div key={selectedAts} className="bg-[#F7F8FA] border border-[#E5E7EB]/80 rounded-[14px] p-5 space-y-4 animate-ats-fade-in">
+                                                <p className="text-sm font-semibold text-[#1F2937] leading-relaxed">
+                                                    Please create the following Job Application Statuses/Stages within your ATS/CRM under:
+                                                </p>
+                                                <p className="text-sm sm:text-base font-bold text-[#1F2937] bg-white p-3 rounded-[10px] border border-[#E5E7EB] shadow-sm">
+                                                    {selectedAts.toLowerCase().includes("recruit crm") || selectedAts.toLowerCase().includes("recruitcrm") ? (
+                                                        <>Admin Settings &rarr; Hiring Pipeline &rarr; Create New Hiring Pipeline</>
+                                                    ) : (
+                                                        <>Settings &rarr; Job Applications &rarr; Status &rarr; Stage &rarr; New</>
+                                                    )}
+                                                </p>
+                                                <p className="text-sm font-semibold text-[#1F2937] leading-relaxed">
+                                                    If these statuses/stages do not already exist, please add:
+                                                </p>
+                                                <ul className="space-y-2.5 text-sm font-bold text-[#1F2937]">
+                                                    {getStatusesForAts(selectedAts).map((status, index) => (
+                                                        <li key={index} className="flex items-center gap-3">
+                                                            <span className="text-[#0252FF] font-semibold text-sm shrink-0 min-w-[16px]">{index + 1}.</span>
+                                                            <span>{status}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                     </Card>
                                 </div>
                             </>
