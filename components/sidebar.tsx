@@ -31,6 +31,7 @@ import {
   User,
   CreditCard,
   MessageSquare,
+  HelpCircle,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -188,7 +189,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Bottom section */}
-        <div className="border-t border-gray-100 dark:border-gray-800 px-7 py-6 bg-white dark:bg-gray-950 relative">
+        <div className="border-t border-gray-100 dark:border-gray-800 px-7 py-6 bg-white dark:bg-gray-950 relative flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link
+                href="/dashboard/helps"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-md"
+              >
+                <HelpCircle size={16} strokeWidth={2.5} className="text-gray-500 dark:text-gray-500 h-[18px] w-[18px]" />
+                <span>Helps</span>
+              </Link>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
