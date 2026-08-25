@@ -68,6 +68,15 @@ export default function HelpPage() {
         return () => window.removeEventListener("resize", checkViewport)
     }, [router])
 
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.location.hash) {
+            const hash = window.location.hash;
+            if (hash.startsWith("#step-") || hash.startsWith("#ref-")) {
+                router.replace(`/dashboard/helps${hash}`);
+            }
+        }
+    }, [router])
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
