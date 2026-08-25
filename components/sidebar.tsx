@@ -190,7 +190,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Bottom section */}
         <div className="border-t border-gray-100 dark:border-gray-800 px-7 py-6 bg-white dark:bg-gray-950 relative flex flex-col gap-4">
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
                 href="/dashboard/helps"
@@ -202,7 +202,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <span>Helps</span>
               </Link>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
