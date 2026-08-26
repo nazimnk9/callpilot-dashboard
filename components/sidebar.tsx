@@ -199,7 +199,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className="flex items-center gap-1.5 font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-md"
               >
                 <HelpCircle size={16} strokeWidth={2.5} className="text-gray-500 dark:text-gray-500 h-[18px] w-[18px]" />
-                <span>Helps</span>
+                <span>Help</span>
               </Link>
             </div>
           </div>
