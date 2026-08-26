@@ -86,8 +86,8 @@ const docSections: Section[] = [
     ]
   },
   {
-    id: "step-4",
-    title: "STEP 4 · Buy AI Number",
+    id: "step-3",
+    title: "STEP 3 · Buy AI Number",
     group: "setup",
     icon: Phone,
     blocks: [
@@ -140,13 +140,13 @@ const docSections: Section[] = [
     ]
   },
   {
-    id: "step-5",
-    title: "STEP 5 · Choose Plan",
+    id: "step-4",
+    title: "STEP 4 · Choose Plan",
     group: "setup",
     icon: CreditCard,
     blocks: [
       {
-        title: "STEP 5 · Choose Plan Pricing Table",
+        title: "STEP 4 · Choose Plan Pricing Table",
         purpose: "This screen shows CallPilot's subscription tiers, each built around a monthly quota of applicant screenings. Calls that go unanswered do not consume credits — No Answer. No Charge.",
         steps: [
           "Select the tier matching your screening volume.",
@@ -166,8 +166,8 @@ const docSections: Section[] = [
     ]
   },
   {
-    id: "step-6",
-    title: "STEP 6 · Connect Your ATS",
+    id: "step-5",
+    title: "STEP 5 · Connect Your ATS",
     group: "setup",
     icon: Link2,
     blocks: [
@@ -188,8 +188,8 @@ const docSections: Section[] = [
     ]
   },
   {
-    id: "step-7",
-    title: "STEP 7 · AI Call Builder",
+    id: "step-6",
+    title: "STEP 6 · AI Call Builder",
     group: "setup",
     icon: Sparkles,
     blocks: [
@@ -345,7 +345,7 @@ const StaticScreenshots = ({ images }: { images: string[] }) => {
 const HelpBlockComponent = ({ block, searchQuery }: { block: Block; searchQuery: string }) => {
   return (
     <div className="space-y-6 pt-6 first:pt-0 border-t border-gray-100 dark:border-gray-800/60 first:border-none">
-      {block.title && block.title !== "STEP 5 · Choose Plan Pricing Table" && (
+      {block.title && block.title !== "STEP 4 · Choose Plan Pricing Table" && (
         <h4 className="text-[15px] font-bold text-gray-800 dark:text-gray-200 border-l-2 border-blue-500 pl-3">
           <Highlight text={block.title} query={searchQuery} />
         </h4>
@@ -357,8 +357,8 @@ const HelpBlockComponent = ({ block, searchQuery }: { block: Block; searchQuery:
       */}
       <StaticScreenshots images={block.screenshots} />
 
-      {/* Pricing table block specifically rendered in Step 5 */}
-      {block.title === "STEP 5 · Choose Plan Pricing Table" && (
+      {/* Pricing table block specifically rendered in Step 4 */}
+      {block.title === "STEP 4 · Choose Plan Pricing Table" && (
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800 my-4 bg-white dark:bg-gray-900 shadow-sm">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800 text-[13px]">
             <thead className="bg-gray-50 dark:bg-gray-800/40">
