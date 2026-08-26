@@ -93,6 +93,18 @@ export const crmService = {
         return response;
     },
 
+    async connectGreenhouseOAuth(token: string, data: { code: string; redirect_uri: string }) {
+        const response = await fetch(`${BASE_URL}/organizations/platform/greenhouse/connect`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+        return response;
+    },
+
     async disconnectPlatform(token: string, uid: string) {
         const response = await fetch(`${BASE_URL}/organizations/platform/my_platforms/${uid}`, {
             method: "DELETE",

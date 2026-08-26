@@ -53,12 +53,7 @@ export function CRMIntegrationContent() {
     const [isConnectingRecruitCRM, setIsConnectingRecruitCRM] = useState(false);
     const [recruitCRMPlatform, setRecruitCRMPlatform] = useState<Platform | null>(null);
 
-    // Greenhouse specific integration states
-    const [greenhouseOpen, setGreenhouseOpen] = useState(false);
-    const [greenhouseClientId, setGreenhouseClientId] = useState("");
-    const [greenhouseClientSecret, setGreenhouseClientSecret] = useState("");
-    const [isConnectingGreenhouse, setIsConnectingGreenhouse] = useState(false);
-    const [greenhousePlatform, setGreenhousePlatform] = useState<Platform | null>(null);
+
 
     const router = useRouter();
     const hasProcessedRef = useRef(false);
@@ -161,24 +156,48 @@ export function CRMIntegrationContent() {
     const checkOAuthCallback = async () => {
         try {
             const params = new URLSearchParams(window.location.search);
+            const error = params.get("error");
+            const errorDescription = params.get("error_description");
+
+            if (error) {
+                setErrorDialog({
+                    show: true,
+                    title: "Integration Error",
+                    message: errorDescription || error || "Failed to complete integration",
+                });
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
             const code = params.get("code");
+            const state = params.get("state");
 
             if (code) {
                 setIsIntegrating(true);
                 const authToken = cookieUtils.get("access");
-                const platformSlug = localStorage.getItem("platformSlug");
-                const redirectUri = localStorage.getItem("redirectUri");
+                const platformSlug = localStorage.getItem("platformSlug") || state || "";
+                const redirectUri = localStorage.getItem("redirectUri") || (window.location.origin + window.location.pathname);
 
-                if (!authToken || !platformSlug || !redirectUri) {
+                if (!authToken) {
                     setIsIntegrating(false);
                     return;
                 }
 
-                const response = await crmService.connectPlatform(authToken, {
-                    code: code,
-                    redirect_uri: redirectUri,
-                    platform_slug: platformSlug,
-                });
+                const isGreenhouse = state === "greenhouse" || platformSlug?.toLowerCase().includes("greenhouse");
+
+                let response;
+                if (isGreenhouse) {
+                    response = await crmService.connectGreenhouseOAuth(authToken, {
+                        code: code,
+                        redirect_uri: redirectUri,
+                    });
+                } else {
+                    response = await crmService.connectPlatform(authToken, {
+                        code: code,
+                        redirect_uri: redirectUri,
+                        platform_slug: platformSlug || "jobadder",
+                    });
+                }
 
                 const data = await response.json();
 
@@ -186,7 +205,7 @@ export function CRMIntegrationContent() {
                     setSuccessDialog({
                         show: true,
                         title: "Success",
-                        message: `Successfully integrated ${platformSlug}!`,
+                        message: `Successfully integrated ${isGreenhouse ? "Greenhouse" : platformSlug}!`,
                     });
                     localStorage.removeItem("platformSlug");
                     localStorage.removeItem("redirectUri");
@@ -196,7 +215,7 @@ export function CRMIntegrationContent() {
                     setErrorDialog({
                         show: true,
                         title: "Integration Error",
-                        message: data.detail || data.platform_slug || "Failed to complete integration",
+                        message: data.detail || data.platform_slug || data.message || "Failed to complete integration",
                     });
                 }
             }
@@ -260,56 +279,7 @@ export function CRMIntegrationContent() {
         }
     };
 
-    const handleConnectGreenhouse = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!greenhouseClientId.trim() || !greenhouseClientSecret.trim()) return;
 
-        try {
-            setIsConnectingGreenhouse(true);
-            const authToken = cookieUtils.get("access");
-            if (!authToken) {
-                setErrorDialog({
-                    show: true,
-                    title: "Authentication Error",
-                    message: "Authentication token not found. Please sign in again.",
-                });
-                return;
-            }
-
-            const response = await crmService.connectGreenhouse(authToken, {
-                client_id: greenhouseClientId.trim(),
-                client_secret: greenhouseClientSecret.trim(),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSuccessDialog({
-                    show: true,
-                    title: "Success",
-                    message: `Successfully integrated Greenhouse!`,
-                });
-                setGreenhouseOpen(false);
-                setGreenhouseClientId("");
-                setGreenhouseClientSecret("");
-                await fetchPlatforms();
-            } else {
-                setErrorDialog({
-                    show: true,
-                    title: "Integration Error",
-                    message: data.detail || data.message || "Failed to complete Greenhouse integration",
-                });
-            }
-        } catch (err) {
-            setErrorDialog({
-                show: true,
-                title: "Integration Error",
-                message: "An error occurred while connecting Greenhouse",
-            });
-        } finally {
-            setIsConnectingGreenhouse(false);
-        }
-    };
 
     const handleIntegrate = (platform: Platform) => {
         if (platform.slug.startsWith("recruitcrm")) {
@@ -318,15 +288,14 @@ export function CRMIntegrationContent() {
             setRecruitCRMOpen(true);
             return;
         }
-        if (platform.name.toLowerCase() === "greenhouse" || platform.slug.toLowerCase().includes("greenhouse")) {
-            setGreenhousePlatform(platform);
-            setGreenhouseClientId("");
-            setGreenhouseClientSecret("");
-            setGreenhouseOpen(true);
-            return;
-        }
         try {
-            const oauthUrl = `${platform.base_url || "https://id.jobadder.com/"}connect/authorize?response_type=${platform.response_type}&client_id=${platform.client_id}&scope=${platform.scope}&redirect_uri=${platform.redirect_uri}&state=${platform.state}&prompt=login`;
+            let oauthUrl = "";
+            if (platform.name.toLowerCase() === "greenhouse" || platform.slug.toLowerCase().includes("greenhouse")) {
+                const greenhouseScope = platform.scope ? platform.scope.replace(/,/g, ' ') : '';
+                oauthUrl = `${platform.base_url || "https://auth.greenhouse.io/authorize"}?response_type=code&client_id=${platform.client_id}&redirect_uri=${encodeURIComponent(platform.redirect_uri)}&scope=${encodeURIComponent(greenhouseScope)}&state=${platform.state}`;
+            } else {
+                oauthUrl = `${platform.base_url || "https://id.jobadder.com/"}connect/authorize?response_type=${platform.response_type || "code"}&client_id=${platform.client_id}&scope=${platform.scope}&redirect_uri=${platform.redirect_uri}&state=${platform.state}&prompt=login`;
+            }
 
             localStorage.setItem("platformSlug", platform.slug);
             localStorage.setItem("redirectUri", platform.redirect_uri);
@@ -495,77 +464,7 @@ export function CRMIntegrationContent() {
                 </DialogContent>
             </Dialog>
 
-            {/* Greenhouse Connection Dialog */}
-            <Dialog open={greenhouseOpen} onOpenChange={setGreenhouseOpen}>
-                <DialogContent className="dark:bg-gray-900 dark:border-gray-800 sm:max-w-[480px] rounded-2xl">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                            Connect Greenhouse Account
-                        </DialogTitle>
-                        <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                            Please enter your Greenhouse Client ID and Client Secret below to connect your account and enable automation features.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleConnectGreenhouse} className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                Client ID <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                                type="text"
-                                placeholder="Enter Client ID"
-                                value={greenhouseClientId}
-                                onChange={(e) => setGreenhouseClientId(e.target.value)}
-                                disabled={isConnectingGreenhouse}
-                                required
-                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                Client Secret <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                                type="password"
-                                placeholder="Enter Client Secret"
-                                value={greenhouseClientSecret}
-                                onChange={(e) => setGreenhouseClientSecret(e.target.value)}
-                                disabled={isConnectingGreenhouse}
-                                required
-                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                        </div>
-                        <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setGreenhouseOpen(false)}
-                                disabled={isConnectingGreenhouse}
-                                className="w-full sm:w-auto dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={isConnectingGreenhouse || !greenhouseClientId.trim() || !greenhouseClientSecret.trim()}
-                                className="w-full sm:w-auto bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold flex items-center justify-center gap-2"
-                            >
-                                {isConnectingGreenhouse ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                                        Connecting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Zap className="w-4 h-4" />
-                                        Connect Account
-                                    </>
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+
 
             <div className="max-w-4xl mx-auto space-y-6">
                 <div>
@@ -656,7 +555,7 @@ export function CRMIntegrationContent() {
                                             ) : isConnected ? (
                                                 <Button
                                                     onClick={() => setDisconnectDialog({ show: true, platform: dynamicPlatform || null })}
-                                                    disabled={isIntegrating || isConnectingRecruitCRM || isConnectingGreenhouse}
+                                                    disabled={isIntegrating || isConnectingRecruitCRM}
                                                     className="bg-[#EF4444] hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
                                                 >
                                                     Disconnect
@@ -664,7 +563,7 @@ export function CRMIntegrationContent() {
                                             ) : (
                                                 <Button
                                                     onClick={() => dynamicPlatform && handleIntegrate(dynamicPlatform)}
-                                                    disabled={isIntegrating || isConnectingRecruitCRM || isConnectingGreenhouse || !dynamicPlatform}
+                                                    disabled={isIntegrating || isConnectingRecruitCRM || !dynamicPlatform}
                                                     className="bg-[#0062FF] hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
                                                 >
                                                     Connect to ATS
