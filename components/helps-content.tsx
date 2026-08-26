@@ -48,7 +48,6 @@ const docSections: Section[] = [
     title: "STEP 1 · Account Created",
     group: "setup",
     icon: Users,
-    needsConfirmation: true,
     blocks: [
       {
         purpose: "After you sign up for CallPilot, your account is created and you land on your dashboard to begin setup.",
@@ -238,7 +237,11 @@ const docSections: Section[] = [
           { name: "Choose a Plan", description: "Opens the subscription list to select or adjust your plan tier." },
           { name: "Navigation Tabs", description: "Switch views to see linked cards, default payment profiles, or PDF receipts." }
         ],
-        screenshots: ["/help/Account & Billing.png"]
+        screenshots: [
+          "/help/Choose Plan 1.png",
+          "/help/Choose Plan 2.png",
+          "/help/Choose Plan 3.png"
+        ]
       },
       {
         title: "Purchasing Minutes Add-on",
@@ -252,7 +255,10 @@ const docSections: Section[] = [
         actions: [
           { name: "Continue", description: "Authorizes the payment and instantly updates your minutes balance." }
         ],
-        screenshots: ["/help/Account & Billing.png"]
+        screenshots: [
+          "/help/Purchasing Minutes Add-on 1.png",
+          "/help/Purchasing Minutes Add-on 2.png",
+        ]
       }
     ]
   },
@@ -568,14 +574,11 @@ export function HelpsContent() {
     <div className="flex-1 overflow-y-auto bg-gray-50/40 dark:bg-gray-950 font-sans" ref={listContainerRef}>
       
       {/* 1. Header (Static Title Block) */}
-      <div className="relative overflow-hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 py-10 px-6 sm:px-8">
+      <div className="relative overflow-hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 pt-5 pb-6 px-6 sm:px-8">
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="max-w-[960px] mx-auto relative z-10">
-          <Badge className="mb-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-50 border border-blue-100 dark:border-blue-800/40 text-xs px-3 py-0.5 font-semibold rounded-full w-fit">
-            Account Setup Guide
-          </Badge>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
             CallPilot Setup & Help Guide
           </h1>
@@ -586,7 +589,7 @@ export function HelpsContent() {
       </div>
 
       {/* 2. Pinned/Sticky Search Input Bar */}
-      <div className="sticky top-0 z-20 bg-gray-50/90 dark:bg-gray-950/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-4 px-6 sm:px-8 shadow-sm">
+      <div className="sticky top-0 z-20 bg-white dark:bg-gray-900 py-4 px-6 sm:px-8">
         <div className="max-w-[960px] mx-auto relative">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           <Input
@@ -609,7 +612,7 @@ export function HelpsContent() {
       </div>
 
       {/* 3. Main Accordion Content Area */}
-      <div className="max-w-[960px] mx-auto px-6 sm:px-8 py-8 space-y-8">
+      <div className="max-w-[960px] mx-auto px-6 sm:px-8 pt-3 pb-8 space-y-8">
         
         {filteredSections.length === 0 ? (
           /* Empty State */
