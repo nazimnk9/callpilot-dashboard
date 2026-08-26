@@ -281,7 +281,7 @@ const docSections: Section[] = [
           { name: "View Chat History", description: "Opens the transcript of the candidate's call." },
           { name: "AI Decision Badge", description: "Color-coded tag showing the automated candidate grade." }
         ],
-        screenshots: ["/help/Call Activity & Analytics Reports.png"]
+        screenshots: ["/help/Call_Activity.png"]
       }
     ]
   }
