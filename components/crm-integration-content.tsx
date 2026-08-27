@@ -53,6 +53,12 @@ export function CRMIntegrationContent() {
     const [isConnectingRecruitCRM, setIsConnectingRecruitCRM] = useState(false);
     const [recruitCRMPlatform, setRecruitCRMPlatform] = useState<Platform | null>(null);
 
+    // Ashby specific integration states
+    const [ashbyOpen, setAshbyOpen] = useState(false);
+    const [ashbyApiKey, setAshbyApiKey] = useState("");
+    const [isConnectingAshby, setIsConnectingAshby] = useState(false);
+    const [ashbyPlatform, setAshbyPlatform] = useState<Platform | null>(null);
+
 
 
     const router = useRouter();
@@ -80,9 +86,8 @@ export function CRMIntegrationContent() {
         {
             slug: "ashby",
             name: "Ashby",
-            logo: null,
-            isStatic: true,
-            statusType: "in-progress",
+            logo: "/ashby-social-preview.png",
+            isStatic: false,
         },
         {
             slug: "icims",
@@ -104,6 +109,7 @@ export function CRMIntegrationContent() {
         if (slug === "jobadder") return platforms.find(p => p.slug.startsWith("jobadder"));
         if (slug === "recruitcrm") return platforms.find(p => p.slug.startsWith("recruitcrm"));
         if (slug === "greenhouse") return platforms.find(p => p.name.toLowerCase() === "greenhouse" || p.slug.toLowerCase().includes("greenhouse"));
+        if (slug === "ashby") return platforms.find(p => p.slug.startsWith("ashby"));
         return undefined;
     };
 
@@ -279,6 +285,55 @@ export function CRMIntegrationContent() {
         }
     };
 
+    const handleConnectAshby = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!ashbyApiKey.trim()) return;
+
+        try {
+            setIsConnectingAshby(true);
+            const authToken = cookieUtils.get("access");
+            if (!authToken) {
+                setErrorDialog({
+                    show: true,
+                    title: "Authentication Error",
+                    message: "Authentication token not found. Please sign in again.",
+                });
+                return;
+            }
+
+            const response = await crmService.connectAshby(authToken, {
+                access_token: ashbyApiKey.trim(),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccessDialog({
+                    show: true,
+                    title: "Success",
+                    message: `Successfully integrated Ashby!`,
+                });
+                setAshbyOpen(false);
+                setAshbyApiKey("");
+                await fetchPlatforms();
+            } else {
+                setErrorDialog({
+                    show: true,
+                    title: "Integration Error",
+                    message: data.detail || data.message || "Failed to complete Ashby integration",
+                });
+            }
+        } catch (err) {
+            setErrorDialog({
+                show: true,
+                title: "Integration Error",
+                message: "An error occurred while connecting Ashby",
+            });
+        } finally {
+            setIsConnectingAshby(false);
+        }
+    };
+
 
 
     const handleIntegrate = (platform: Platform) => {
@@ -286,6 +341,12 @@ export function CRMIntegrationContent() {
             setRecruitCRMPlatform(platform);
             setRecruitCRMAccessToken("");
             setRecruitCRMOpen(true);
+            return;
+        }
+        if (platform.slug.startsWith("ashby")) {
+            setAshbyPlatform(platform);
+            setAshbyApiKey("");
+            setAshbyOpen(true);
             return;
         }
         try {
@@ -464,6 +525,64 @@ export function CRMIntegrationContent() {
                 </DialogContent>
             </Dialog>
 
+            {/* Ashby Connection Dialog */}
+            <Dialog open={ashbyOpen} onOpenChange={setAshbyOpen}>
+                <DialogContent className="dark:bg-gray-900 dark:border-gray-800 sm:max-w-[480px] rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                            Connect Ashby Account
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                            Please enter your Ashby API Key below to connect your account and enable automation features.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleConnectAshby} className="space-y-6 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                API Key <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                                type="text"
+                                placeholder="Enter Ashby API Key"
+                                value={ashbyApiKey}
+                                onChange={(e) => setAshbyApiKey(e.target.value)}
+                                disabled={isConnectingAshby}
+                                required
+                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                        </div>
+                        <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setAshbyOpen(false)}
+                                disabled={isConnectingAshby}
+                                className="w-full sm:w-auto dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={isConnectingAshby || !ashbyApiKey.trim()}
+                                className="w-full sm:w-auto bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold flex items-center justify-center gap-2"
+                            >
+                                {isConnectingAshby ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                                        Connecting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Zap className="w-4 h-4" />
+                                        Connect Account
+                                    </>
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
 
 
             <div className="max-w-4xl mx-auto space-y-6">
@@ -518,8 +637,8 @@ export function CRMIntegrationContent() {
                                                 </div>
                                             )}
                                             {p.slug === "ashby" && (
-                                                <div className="w-14 h-14 rounded-xl bg-[#3B125C] flex items-center justify-center flex-shrink-0 text-white font-serif text-2xl font-bold select-none shadow-sm">
-                                                    A
+                                                <div className="w-14 h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                                                    <img src="/ashby-social-preview.png" alt="Ashby" className="w-full h-full object-cover" />
                                                 </div>
                                             )}
                                             {(p.slug === "icims" || p.slug === "sap-successfactors") && (
@@ -555,7 +674,7 @@ export function CRMIntegrationContent() {
                                             ) : isConnected ? (
                                                 <Button
                                                     onClick={() => setDisconnectDialog({ show: true, platform: dynamicPlatform || null })}
-                                                    disabled={isIntegrating || isConnectingRecruitCRM}
+                                                    disabled={isIntegrating || isConnectingRecruitCRM || isConnectingAshby}
                                                     className="bg-[#EF4444] hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
                                                 >
                                                     Disconnect
@@ -563,7 +682,7 @@ export function CRMIntegrationContent() {
                                             ) : (
                                                 <Button
                                                     onClick={() => dynamicPlatform && handleIntegrate(dynamicPlatform)}
-                                                    disabled={isIntegrating || isConnectingRecruitCRM || !dynamicPlatform}
+                                                    disabled={isIntegrating || isConnectingRecruitCRM || isConnectingAshby || !dynamicPlatform}
                                                     className="bg-[#0062FF] hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
                                                 >
                                                     Connect to ATS

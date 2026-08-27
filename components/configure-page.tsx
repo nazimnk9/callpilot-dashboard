@@ -114,7 +114,7 @@ const SPECIAL_ATS = [
     "Recruit CRM (Green Light)",
     "Greenhouse (Green Light)",
     "iCIMS (Amber Light)",
-    "Ashby (Amber Light)"
+    "Ashby (Green Light)"
 ]
 
 const RAW_ATS_SYSTEMS = [

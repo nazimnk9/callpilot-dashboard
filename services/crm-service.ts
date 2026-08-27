@@ -81,6 +81,18 @@ export const crmService = {
         return response;
     },
 
+    async connectAshby(token: string, data: { access_token: string }) {
+        const response = await fetch(`${BASE_URL}/organizations/platform/ashby/connect`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+        return response;
+    },
+
     async connectGreenhouse(token: string, data: { client_id: string; client_secret: string }) {
         const response = await fetch(`${BASE_URL}/organizations/platform/greenhouse/connect`, {
             method: "POST",
