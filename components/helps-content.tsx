@@ -104,7 +104,7 @@ const docSections: Section[] = [
           { name: "+ Buy AI Number", description: "Launches the number search and selection wizard to purchase a new phone number." },
           { name: "Release", description: "Instantly terminates the selected phone number, removing it from your active lines." }
         ],
-        screenshots: ["/help/Buy AI Number 1.png"]
+        screenshots: ["/help/Buy_AI_Number_1.png"]
       },
       {
         title: "Purchasing a New Number",
@@ -119,7 +119,7 @@ const docSections: Section[] = [
           { name: "Buy AI Number", description: "Performs verification and charges the monthly fee, activating the number on your account." },
           { name: "+ Add payment method", description: "Opens a secure form to record a new credit or debit card." }
         ],
-        screenshots: ["/help/Buy AI Number 2.png"]
+        screenshots: ["/help/Buy_AI_Number_2.png"]
       },
       {
         title: "Registering a Payment Method",
@@ -135,7 +135,7 @@ const docSections: Section[] = [
           { name: "Add payment method", description: "Tokenizes the card via Stripe and saves it to your wallet profile." },
           { name: "Cancel", description: "Exits the card entry drawer without saving changes." }
         ],
-        screenshots: ["/help/Buy AI Number 3.png", "/help/Buy AI Number 4.png"]
+        screenshots: ["/help/Buy_AI_Number_3.png", "/help/Buy_AI_Number_4.png"]
       }
     ]
   },
