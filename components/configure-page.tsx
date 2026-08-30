@@ -998,6 +998,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
         return selectedNames.join(", ")
     }
 
+    const isPlatformConnected = (system: string) => {
+        const cleanSystem = system.replace(" (Green Light)", "").replace(" (Amber Light)", "").replace(/\s+/g, "").toLowerCase();
+        return platformOptions.some(p => {
+            const cleanOption = (p.platform?.name || "").replace(/\s+/g, "").toLowerCase();
+            return cleanOption === cleanSystem;
+        });
+    }
+
     const handleSelectChange = (setter: (val: string) => void) => (val: string) => {
         if (val === "_CLEAR_") {
             setter("")
@@ -1715,16 +1723,15 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             >
                                                 <span className="font-semibold text-base flex items-center gap-2">
                                                     <span>{selectedAts.replace(" (Green Light)", "").replace(" (Amber Light)", "")}</span>
-                                                    {selectedAts.includes("(Green Light)") && (
+                                                    {isPlatformConnected(selectedAts) ? (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                            Live
+                                                            Connected
                                                         </span>
-                                                    )}
-                                                    {selectedAts.includes("(Amber Light)") && (
-                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                                                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                                            In Progress
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                                                            Disconnected
                                                         </span>
                                                     )}
                                                 </span>
@@ -1779,16 +1786,15 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                                     >
                                                                         <div className="flex items-center gap-2">
                                                                             <span>{system.replace(" (Green Light)", "").replace(" (Amber Light)", "")}</span>
-                                                                            {system.includes("(Green Light)") && (
+                                                                            {isPlatformConnected(system) ? (
                                                                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                                                    Live
+                                                                                    Connected
                                                                                 </span>
-                                                                            )}
-                                                                            {system.includes("(Amber Light)") && (
-                                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                                                                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                                                                    In Progress
+                                                                            ) : (
+                                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                                                                                    <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                                                                                    Disconnected
                                                                                 </span>
                                                                             )}
                                                                         </div>
