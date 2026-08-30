@@ -1610,7 +1610,7 @@ export default function ActivationPage() {
             formData.append("proof_of_address", org.proof_of_address);
         }
 
-        formData.append("compliance_status", "pending");
+        formData.append("compliance_status", "approved");
 
         try {
             setIsSaving(true);
