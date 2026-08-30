@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone } from 'lucide-react';
+import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone, Minus } from 'lucide-react';
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
 import { profileService } from "@/services/profile-service";
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
     Dialog,
     DialogContent,
@@ -172,6 +173,15 @@ export function DashboardContent() {
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
     const [isCheckingVerification, setIsCheckingVerification] = useState(false);
 
+    // AI Applicant Screening Call Report States
+    const [myFlows, setMyFlows] = useState<any[]>([]);
+    const [screeningReports, setScreeningReports] = useState<any[]>([]);
+    const [screeningTotalCount, setScreeningTotalCount] = useState(0);
+    const [isScreeningLoading, setIsScreeningLoading] = useState(false);
+    const [screeningPage, setScreeningPage] = useState(1);
+    const [selectedInterview, setSelectedInterview] = useState<any>(null);
+    const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+
     const setupSteps = [
         { label: 'Account Created', key: 'account_created', path: '' },
         { label: 'Add Business Details', key: 'is_given_company_details', path: '/dashboard/organization' },
@@ -292,6 +302,125 @@ export function DashboardContent() {
         }
     };
 
+    const SCREENING_PAGE_SIZE = 20;
+    const hasScreeningFlow = myFlows.some((item: any) => 
+        item.flow?.code !== "AICALL191" && 
+        (item.flow?.name?.toLowerCase().includes("screening") || item.flow?.name?.toLowerCase().includes("applicant") || item.flow?.name === "AI Application Screening call")
+    );
+    const screeningTotalPages = Math.ceil(screeningTotalCount / SCREENING_PAGE_SIZE);
+
+    const fetchMyFlows = async () => {
+        try {
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/flows/available-flow/my_flows`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const flows = data.results || [];
+                setMyFlows(flows);
+                
+                const hasScreening = flows.some((item: any) => 
+                    item.flow?.code !== "AICALL191" && 
+                    (item.flow?.name?.toLowerCase().includes("screening") || item.flow?.name?.toLowerCase().includes("applicant") || item.flow?.name === "AI Application Screening call")
+                );
+                if (hasScreening) {
+                    fetchScreeningReports(1);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching my flows:", err);
+        }
+    };
+
+    const fetchScreeningReports = async (page: number) => {
+        try {
+            setIsScreeningLoading(true);
+            const token = cookieUtils.get("access");
+            const response = await fetch(`${BASE_URL}/interview/?page=${page}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const normalized = data.results.map((item: any) => ({
+                    id: item.id,
+                    reports_uid: item.uid,
+                    uid: item.uid,
+                    candidate_id: item.candidate_id,
+                    candidate_name: item.candidate_name,
+                    candidate_email: item.candidate_email,
+                    candidate_phone: item.candidate_phone,
+                    started_at: item.started_at,
+                    status: item.status,
+                    ai_decision: item.ai_decision,
+                    updated_at: item.updated_at,
+                    conversation_json: item?.conversation_json || [],
+                    is_retry: item.is_retry
+                }));
+                setScreeningReports(normalized);
+                setScreeningTotalCount(data.count || 0);
+                setScreeningPage(page);
+            }
+        } catch (err) {
+            console.error("Error fetching screening reports:", err);
+        } finally {
+            setIsScreeningLoading(false);
+        }
+    };
+
+    const handleScreeningPageChange = (newPage: number) => {
+        if (newPage < 1 || newPage > screeningTotalPages) return;
+        fetchScreeningReports(newPage);
+    };
+
+    const renderScreeningPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+        let startPage = Math.max(1, screeningPage - 2);
+        let endPage = Math.min(screeningTotalPages, startPage + maxVisible - 1);
+
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <Button
+                    key={i}
+                    variant={screeningPage === i ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 w-9 rounded-xl font-semibold transition-all duration-200 cursor-pointer ${
+                        screeningPage === i
+                            ? "bg-primary text-white shadow-md shadow-primary/20 scale-105"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700"
+                    }`}
+                    onClick={() => handleScreeningPageChange(i)}
+                >
+                    {i}
+                </Button>
+            );
+        }
+        return pages;
+    };
+
+    const formatDate = (dateString: string | null) => {
+        if (!dateString || dateString === "None") return "-"
+        try {
+            return new Date(dateString).toLocaleString()
+        } catch (e) {
+            return dateString
+        }
+    };
+
+    const handleViewChat = (item: any) => {
+        setSelectedInterview(item);
+        setIsChatModalOpen(true);
+    };
+
     const fetchCurrentSubscription = async () => {
         setIsFetchingSubscription(true);
         try {
@@ -322,6 +451,7 @@ export function DashboardContent() {
         fetchPaymentMethods();
         fetchCurrentSubscription();
         fetchPlans();
+        fetchMyFlows();
 
         // Fetch user's country automatically
         const fetchUserCountry = async () => {
@@ -1431,6 +1561,115 @@ export function DashboardContent() {
                                 ))
                             )}
                         </div>
+
+                        {/* AI Applicant Screening Call Report Section */}
+                        {hasScreeningFlow && (
+                            <div className="mt-8 space-y-6">
+                                <div>
+                                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Applicant Screening Call - Report</h1>
+                                </div>
+
+                                <div className="border border-gray-200 dark:border-gray-800 rounded-2xl bg-white dark:bg-gray-900 overflow-hidden mb-8 shadow-sm">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50/50 dark:bg-gray-800/30">
+                                                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Candidate ID</TableHead>
+                                                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Candidate Name</TableHead>
+                                                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Candidate Email</TableHead>
+                                                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Candidate Mobile</TableHead>
+                                                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Recall</TableHead>
+                                                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">AI Decision</TableHead>
+                                                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Updated At</TableHead>
+                                                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Chat History</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {isScreeningLoading ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={8} className="text-center h-24 text-gray-500">Loading records...</TableCell>
+                                                </TableRow>
+                                            ) : screeningReports.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={8} className="text-center h-24 text-gray-500">No records found.</TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                screeningReports.map((row) => (
+                                                    <TableRow key={row.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20">
+                                                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">{row.candidate_id}</TableCell>
+                                                        <TableCell className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.candidate_name}</TableCell>
+                                                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">{row.candidate_email}</TableCell>
+                                                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">{row.candidate_phone}</TableCell>
+                                                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">
+                                                            {row.is_retry ? (
+                                                                <Check className="h-4 w-4 text-green-600 dark:text-green-400" strokeWidth={3} />
+                                                            ) : (
+                                                                <Minus className="h-4 w-4 text-gray-400 dark:text-gray-500" strokeWidth={3} />
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">
+                                                            {row.ai_decision === "user_disconnect"
+                                                                ? "Incomplete"
+                                                                : row.ai_decision === "machine_detected"
+                                                                ? "Machine Detected"
+                                                                : row.ai_decision}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">{formatDate(row.updated_at)}</TableCell>
+                                                        <TableCell className="text-sm text-gray-700 dark:text-gray-300">
+                                                            <Button
+                                                                variant="link"
+                                                                className="text-primary hover:underline p-0 h-auto cursor-pointer"
+                                                                onClick={() => handleViewChat(row)}
+                                                            >
+                                                                View
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+
+                                {screeningTotalPages > 1 && (
+                                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 mb-8 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm">
+                                        <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            Showing{" "}
+                                            <span className="font-semibold text-gray-900 dark:text-white">
+                                                {Math.min(screeningTotalCount, (screeningPage - 1) * SCREENING_PAGE_SIZE + 1)}
+                                            </span>{" "}
+                                            to{" "}
+                                            <span className="font-semibold text-gray-900 dark:text-white">
+                                                {Math.min(screeningTotalCount, screeningPage * SCREENING_PAGE_SIZE)}
+                                            </span>{" "}
+                                            of <span className="font-semibold text-gray-900 dark:text-white">{screeningTotalCount}</span> entries
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-9 px-3 rounded-xl font-semibold border-gray-200 dark:border-gray-700 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                                                disabled={screeningPage === 1}
+                                                onClick={() => handleScreeningPageChange(screeningPage - 1)}
+                                            >
+                                                Previous
+                                            </Button>
+                                            <div className="flex items-center gap-1">
+                                                {renderScreeningPageNumbers()}
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-9 px-3 rounded-xl font-semibold border-gray-200 dark:border-gray-700 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                                                disabled={screeningPage === screeningTotalPages}
+                                                onClick={() => handleScreeningPageChange(screeningPage + 1)}
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </>
                 )}
 
@@ -2247,6 +2486,33 @@ export function DashboardContent() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                {/* Chat History Modal */}
+                <Dialog open={isChatModalOpen} onOpenChange={setIsChatModalOpen}>
+                    <DialogContent className="max-w-xl p-0 overflow-hidden bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl">
+                        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Chat History</h2>
+                        </div>
+                        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                            {selectedInterview?.conversation_json && selectedInterview.conversation_json.length > 0 ? (
+                                selectedInterview.conversation_json.map((msg: any, idx: number) => (
+                                    <div key={idx} className={`flex ${msg.role === "assistant" || msg.sender === "ai" ? "justify-start" : "justify-end"}`}>
+                                        <div
+                                            className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === "assistant" || msg.sender === "ai"
+                                                ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-none border border-gray-200/50 dark:border-gray-700/50"
+                                                : "bg-[#0062FF] text-white rounded-tr-none"
+                                                }`}
+                                        >
+                                            {msg.content || msg.message}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-center text-gray-500 dark:text-gray-400 font-medium">No chat history available.</p>
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Placeholder for more content to make it look full */}
                 {/* <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
