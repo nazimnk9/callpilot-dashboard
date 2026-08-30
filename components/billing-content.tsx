@@ -105,6 +105,8 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
     const [activeTab, setActiveTab] = useState("Overview")
     const [isTopUpOpen, setIsTopUpOpen] = useState(false)
     const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false)
+    const [addPaymentError, setAddPaymentError] = useState<string | null>(null);
+    const addPaymentErrorRef = useRef<HTMLDivElement>(null);
     const [stripe, setStripe] = useState<Stripe | null>(null);
     const [elements, setElements] = useState<StripeElements | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -555,24 +557,31 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
         }
     };
 
+    useEffect(() => {
+        if (addPaymentError && addPaymentErrorRef.current) {
+            addPaymentErrorRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, [addPaymentError]);
+
     const handleAddPaymentMethod = async () => {
         if (!stripe || !elements || !cardNumberRef.current) return;
+        setAddPaymentError(null);
 
         if (!isCardComplete) {
-            setErrorDetail("Please enter your card information");
+            setAddPaymentError("Please enter your card information");
             return;
         }
 
         if (!cardholderName.trim()) {
-            setErrorDetail("Please enter the name on card");
+            setAddPaymentError("Please enter the name on card");
             return;
         }
         if (!selectedCountry) {
-            setErrorDetail("Please select a country");
+            setAddPaymentError("Please select a country");
             return;
         }
         if (!addressLine1.trim()) {
-            setErrorDetail("Please enter the address line 1");
+            setAddPaymentError("Please enter the address line 1");
             return;
         }
 
@@ -595,7 +604,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
             });
 
             if (error) {
-                toast.error(error.message);
+                setAddPaymentError(error.message || "Failed to create payment method");
                 setIsSubmitting(false);
                 return;
             }
@@ -631,11 +640,12 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                 fetchPaymentMethods();
             } else {
                 const errData = await response.json();
-                setErrorDetail(errData.details || errData.detail || "Failed to add payment method");
+                const errMsg = errData.error?.message || errData.message || errData.details || errData.detail || "Failed to add payment method";
+                setAddPaymentError(errMsg);
             }
         } catch (err) {
             console.error(err);
-            setErrorDetail("An unexpected error occurred");
+            setAddPaymentError("An unexpected error occurred");
         } finally {
             setIsSubmitting(false);
         }
@@ -1329,6 +1339,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
             <Dialog open={isAddPaymentOpen} onOpenChange={(open) => {
                 setIsAddPaymentOpen(open);
                 if (!open) {
+                    setAddPaymentError(null);
                     if (cardNumberRef.current) cardNumberRef.current.unmount();
                     if (cardExpiryRef.current) cardExpiryRef.current.unmount();
                     if (cardCvcRef.current) cardCvcRef.current.unmount();
@@ -1348,6 +1359,21 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                             Add your credit card details below. This card will be saved to your account and can be removed at any time.
                         </p>
                     </DialogHeader>
+
+                    {addPaymentError && (
+                        <div
+                            ref={addPaymentErrorRef}
+                            className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-200"
+                        >
+                            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-[14px] font-bold text-red-600 dark:text-red-400">Error</h4>
+                                <p className="text-[13px] text-red-500 dark:text-red-400/90 font-medium mt-0.5 leading-relaxed">
+                                    {addPaymentError}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="space-y-6">
                         {/* Card Information */}

@@ -97,6 +97,8 @@ export default function PlatformActivationPage() {
     const [selectedPm, setSelectedPm] = useState<any>(null);
     const [isPmSelectorOpen, setIsPmSelectorOpen] = useState(false);
     const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
+    const [addPaymentError, setAddPaymentError] = useState<string | null>(null);
+    const addPaymentErrorRef = useRef<HTMLDivElement>(null);
 
     // Stripe states
     const [stripe, setStripe] = useState<Stripe | null>(null);
@@ -282,24 +284,31 @@ export default function PlatformActivationPage() {
 
 
 
+    useEffect(() => {
+        if (addPaymentError && addPaymentErrorRef.current) {
+            addPaymentErrorRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, [addPaymentError]);
+
     const handleAddPaymentMethod = async () => {
         if (!stripe || !elements || !cardNumberRef.current) return;
+        setAddPaymentError(null);
 
         if (!isCardComplete) {
-            setErrorDetail("Please enter your card information");
+            setAddPaymentError("Please enter your card information");
             return;
         }
 
         if (!cardholderName.trim()) {
-            setErrorDetail("Please enter the name on card");
+            setAddPaymentError("Please enter the name on card");
             return;
         }
         if (!selectedCountry) {
-            setErrorDetail("Please select a country");
+            setAddPaymentError("Please select a country");
             return;
         }
         if (!addressLine1.trim()) {
-            setErrorDetail("Please enter the address line 1");
+            setAddPaymentError("Please enter the address line 1");
             return;
         }
 
@@ -322,7 +331,7 @@ export default function PlatformActivationPage() {
             });
 
             if (error) {
-                setErrorDetail(error.message || "Failed to create payment method");
+                setAddPaymentError(error.message || "Failed to create payment method");
                 setIsSubmitting(false);
                 return;
             }
@@ -354,11 +363,12 @@ export default function PlatformActivationPage() {
                 setSelectedCountry(null);
             } else {
                 const errData = await response.json();
-                toast.error(errData.detail || "Failed to add payment method");
+                const errMsg = errData.error?.message || errData.message || errData.details || errData.detail || "Failed to add payment method";
+                setAddPaymentError(errMsg);
             }
         } catch (err) {
             console.error(err);
-            toast.error("An unexpected error occurred");
+            setAddPaymentError("An unexpected error occurred");
         } finally {
             setIsSubmitting(false);
         }
@@ -534,7 +544,12 @@ export default function PlatformActivationPage() {
             </div>
 
             {/* Add Payment Method Dialog */}
-            <Dialog open={isAddPaymentOpen} onOpenChange={setIsAddPaymentOpen}>
+            <Dialog open={isAddPaymentOpen} onOpenChange={(open) => {
+                setIsAddPaymentOpen(open);
+                if (!open) {
+                    setAddPaymentError(null);
+                }
+            }}>
                 <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[480px] p-5 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6 overflow-y-auto max-h-[90vh]">
                     <DialogHeader className="p-0 space-y-2 text-left">
                         <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
@@ -544,6 +559,21 @@ export default function PlatformActivationPage() {
                             Add your credit card details below. This card will be saved to your account.
                         </p>
                     </DialogHeader>
+
+                    {addPaymentError && (
+                        <div
+                            ref={addPaymentErrorRef}
+                            className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-200"
+                        >
+                            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-[14px] font-bold text-red-600 dark:text-red-400">Error</h4>
+                                <p className="text-[13px] text-red-500 dark:text-red-400/90 font-medium mt-0.5 leading-relaxed">
+                                    {addPaymentError}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="space-y-6">
                         <div className="space-y-2">
