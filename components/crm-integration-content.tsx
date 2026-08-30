@@ -613,9 +613,17 @@ export function CRMIntegrationContent() {
                 ) : (
                     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
                         <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {displayPlatforms.map((p) => {
-                                const dynamicPlatform = getDynamicPlatform(p.slug);
-                                const isConnected = !p.isStatic && dynamicPlatform?.is_connected;
+                            {[...displayPlatforms]
+                                .sort((a, b) => {
+                                    const aDynamic = getDynamicPlatform(a.slug);
+                                    const bDynamic = getDynamicPlatform(b.slug);
+                                    const aConnected = !a.isStatic && aDynamic?.is_connected ? 1 : 0;
+                                    const bConnected = !b.isStatic && bDynamic?.is_connected ? 1 : 0;
+                                    return bConnected - aConnected;
+                                })
+                                .map((p) => {
+                                    const dynamicPlatform = getDynamicPlatform(p.slug);
+                                    const isConnected = !p.isStatic && dynamicPlatform?.is_connected;
                                 
                                 return (
                                     <div key={p.slug} className="flex items-center justify-between p-6 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors duration-200">
