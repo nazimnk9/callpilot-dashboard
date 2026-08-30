@@ -1026,7 +1026,11 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
     const filteredAtsSystems = ATS_SYSTEMS.filter(system =>
         system.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    ).sort((a, b) => {
+        const aConnected = isPlatformConnected(a) ? 1 : 0
+        const bConnected = isPlatformConnected(b) ? 1 : 0
+        return bConnected - aConnected
+    })
 
     const getStatusesForAts = (ats: string) => {
         const lower = ats.toLowerCase()
