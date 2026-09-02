@@ -510,7 +510,7 @@ export function DashboardContent() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    topup_minute: parseInt(topUpMinutes),
+                    quantity: parseInt(topUpMinutes),
                     payment_method_id: selectedPmForTopUp.id
                 })
             });
