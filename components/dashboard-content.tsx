@@ -410,9 +410,10 @@ export function DashboardContent() {
 
     // Sync selected plan with current subscription status
     useEffect(() => {
-        const currentPlanId = currentSubscription?.plan || orgData?.current_plan;
-        if (currentPlanId && fetchedPlans.length > 0) {
+        const currentPlanId = currentSubscription?.plan ?? orgData?.current_plan;
+        if (currentPlanId !== undefined && currentPlanId !== null && fetchedPlans.length > 0) {
             const matchedPlan = fetchedPlans.find(p =>
+                String(p.id) === String(currentPlanId) ||
                 p.name.toLowerCase() === String(currentPlanId).toLowerCase()
             );
             if (matchedPlan) {
@@ -1070,8 +1071,13 @@ export function DashboardContent() {
             return;
         }
 
-        if (selectedPlan.toLowerCase() === (currentSubscription?.plan ? String(currentSubscription.plan).toLowerCase() : "") ||
-            selectedPlan.toLowerCase() === (orgData?.current_plan ? String(orgData.current_plan).toLowerCase() : "")) {
+        const matchedPlan = fetchedPlans.find(p => p.name === selectedPlan || p.id === selectedPlan || String(p.id) === String(selectedPlan));
+
+        if (
+            (matchedPlan?.id && currentSubscription?.plan && String(matchedPlan.id) === String(currentSubscription.plan)) ||
+            selectedPlan.toLowerCase() === (currentSubscription?.plan ? String(currentSubscription.plan).toLowerCase() : "") ||
+            selectedPlan.toLowerCase() === (orgData?.current_plan ? String(orgData.current_plan).toLowerCase() : "")
+        ) {
             setErrorDetail("You are already on this plan. Please select a different plan to update.");
             return;
         }
