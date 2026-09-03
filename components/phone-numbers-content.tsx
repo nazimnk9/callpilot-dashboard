@@ -155,7 +155,7 @@ export function PhoneNumbersContent() {
 
     useEffect(() => {
         const initStripe = async () => {
-             const stripeInstance = await loadStripe('pk_live_51T28pa5zlEk8k5ZE1lbopSBYCwSD9Q8zSAxwbscuXBkqkpCvCyiuom6TrkZNxq22vBtUIbxQGZpzMc39q3xXxpo700Ylnyg6YU')
+             const stripeInstance = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
             setStripe(stripeInstance)
         }
         initStripe()
