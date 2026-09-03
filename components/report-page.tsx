@@ -446,11 +446,11 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                                     {/* <TableCell className="text-sm">{formatDate(row.started_at)}</TableCell> */}
                                     {/* <TableCell className="text-sm">{row.status}</TableCell> */}
                                     <TableCell className="text-sm">
-                                        {row.ai_decision === "user_disconnect"
-                                            ? "Incomplete"
-                                            : row.ai_decision === "machine_detected"
-                                            ? "Machine Detected"
-                                            : row.ai_decision}
+                                        {row.ai_decision?.toLowerCase() === "successful"
+                                            ? "Successful"
+                                            : row.ai_decision?.toLowerCase() === "unsuccessful"
+                                            ? "Unsuccessful"
+                                            : "No Answer"}
                                     </TableCell>
                                     <TableCell className="text-sm">{formatDate(row.updated_at)}</TableCell>
                                     <TableCell className="text-sm">
