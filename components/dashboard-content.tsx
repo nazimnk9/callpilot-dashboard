@@ -800,6 +800,15 @@ export function DashboardContent() {
             iconColor: 'text-purple-600 dark:text-purple-400',
             bgColor: 'bg-purple-50 dark:bg-purple-900/20',
         },
+        {
+            title: 'Screening Call Credits',
+            value: orgData?.screening_call_credit !== undefined && orgData?.screening_call_credit !== null
+                ? `${orgData.screening_call_credit} Credits`
+                : '0 Credits',
+            icon: Users,
+            iconColor: 'text-green-600 dark:text-green-400',
+            bgColor: 'bg-green-50 dark:bg-green-900/20',
+        },
     ];
     const getTimeAgo = (dateString: string) => {
         if (!dateString) return "";
@@ -1265,9 +1274,9 @@ export function DashboardContent() {
                 </div>
 
                 {/* 3 cards in same row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {isLoading ? (
-                        Array(2).fill(0).map((_, i) => (
+                        Array(3).fill(0).map((_, i) => (
                             <div key={i} className="h-32 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                             </div>
