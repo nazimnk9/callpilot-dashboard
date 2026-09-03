@@ -167,6 +167,7 @@ export function DashboardContent() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectedPmForDelete, setSelectedPmForDelete] = useState<any>(null);
     const [isContactSalesSubmitting, setIsContactSalesSubmitting] = useState(false);
+    const [modalPlanType, setModalPlanType] = useState<"screening" | "calls">("calls");
     const enterpriseSectionRef = useRef<HTMLDivElement>(null);
     const enterpriseSectionUpdateRef = useRef<HTMLDivElement>(null);
 
@@ -284,10 +285,11 @@ export function DashboardContent() {
         }
     };
 
-    const fetchPlans = async () => {
+    const fetchPlans = async (type?: string) => {
+        const planType = type || (modalPlanType === "screening" ? "SCREENING_CALL" : "AI_CALL");
         setIsFetchingPlans(true);
         try {
-            const response = await fetch(`${BASE_URL}/payment/subscriptions/plans`);
+            const response = await fetch(`${BASE_URL}/payment/subscriptions/plans?type=${planType}`);
             if (response.ok) {
                 const data = await response.json();
                 setFetchedPlans(data.results || []);
@@ -398,6 +400,11 @@ export function DashboardContent() {
         };
         fetchUserCountry();
     }, []);
+
+    useEffect(() => {
+        const type = modalPlanType === "screening" ? "SCREENING_CALL" : "AI_CALL";
+        fetchPlans(type);
+    }, [modalPlanType]);
 
     // Sync selected plan with current subscription status
     useEffect(() => {
@@ -767,34 +774,6 @@ export function DashboardContent() {
         }
     };
 
-    const dynamicPricingTiers = fetchedPlans.map((plan: any) => ({
-        name: plan.name,
-        price: `$${parseFloat(plan.price).toFixed(0)}`,
-        unit: "/mo",
-        icon: plan.name === "Starter" ? Rocket : (plan.name === "Pro" ? Zap : Zap), // Default to Zap for others
-        description: plan.description || (plan.name === "Starter" ? "Perfect for getting started with AI voice calls." : ""),
-        minimumMinutes: `Includes ${plan.limit} minutes`,
-        features: plan.des_list || [],
-        cta: `Select ${plan.name}`,
-        popular: plan.name === "Pro", // Matches the "Medium" (Growing) popular status
-        disabled: false,
-    }));
-
-    const enterpriseTier = {
-        name: "Enterprise",
-        price: "Custom Pricing",
-        unit: "",
-        icon: Building2,
-        description: "Tailored solutions for large-scale operations.",
-        minimumMinutes: "Custom AI Call Minutes",
-        features: ["Unlimited Minutes", "Custom AI Models", "Dedicated Manager", "24/7 Phone Support"],
-        cta: "Contact Sales",
-        popular: false,
-        disabled: true,
-    };
-
-    // const pricingTiers = [...dynamicPricingTiers, enterpriseTier];
-
     const filteredCountries = countries.filter(c =>
         c.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
         c.country_code.toLowerCase().includes(countrySearch.toLowerCase())
@@ -864,13 +843,132 @@ export function DashboardContent() {
         },
     ];
 
-    const pricingTiers = STATIC_PRICING_PLANS.map(plan => ({
+    const staticTemplates: Record<string, any> = {
+        starter: {
+            description: "Designed for small businesses starting AI voice calls.",
+            features: [
+                "Paid monthly in advance",
+                "Dedicated onboarding & customer support",
+                "$400 one-off setup fee",
+                "Setup fee returned as free minutes after 12 months",
+                "Additional minutes: $1.15 per minute"
+            ],
+            icon: Rocket,
+            popular: false
+        },
+        growth: {
+            description: "Designed for businesses scaling AI voice calls across teams.",
+            features: [
+                "Paid monthly in advance",
+                "Dedicated onboarding & customer support",
+                "$400 one-off setup fee",
+                "Setup fee returned as free minutes after 12 months",
+                "Additional minutes: $1.15 per minute"
+            ],
+            icon: Zap,
+            popular: false
+        },
+        growing: {
+            description: "Designed for businesses scaling AI voice calls across teams.",
+            features: [
+                "Paid monthly in advance",
+                "Dedicated onboarding & customer support",
+                "$400 one-off setup fee",
+                "Setup fee returned as free minutes after 12 months",
+                "Additional minutes: $1.15 per minute"
+            ],
+            icon: Zap,
+            popular: false
+        },
+        pro: {
+            description: "Built for organisations running high-volume automated AI calls.",
+            features: [
+                "Paid monthly in advance",
+                "Priority onboarding & support",
+                "$400 one-off setup fee",
+                "Setup fee returned as free minutes after 12 months",
+                "Additional minutes: $1.15 per minute"
+            ],
+            icon: Zap,
+            popular: true,
+            displayName: "Pro"
+        }
+    };
+
+    const enterpriseTier = {
+        id: 'enterprise',
+        name: "Enterprise",
+        price: "Custom Pricing",
+        unit: "",
+        minimumMinutes: "Custom AI Call Minutes",
+        description: "Custom AI automation plans designed for large-scale deployment.",
+        features: [
+            "Paid monthly in advance",
+            "Custom AI minute packages",
+            "Priority technical support",
+            "Volume discounts available",
+            "International calling packages",
+            "Custom API integrations"
+        ],
+        icon: Building2,
+        popular: false,
+        disabled: false,
+        cta: "Contact Sales"
+    };
+
+    const dynamicPricingTiers = fetchedPlans.map((plan: any) => {
+        const key = (plan.name || "").toLowerCase();
+        const template = staticTemplates[key] || {
+            description: plan.description || "Subscription plan for AI calls.",
+            features: [
+                "Paid monthly in advance",
+                "Dedicated onboarding & customer support",
+                "$400 one-off setup fee",
+                "Setup fee returned as free minutes after 12 months",
+                "Additional minutes: $1.15 per minute"
+            ],
+            icon: Zap,
+            popular: false
+        };
+
+        const numPrice = parseFloat(plan.price);
+        const formattedPrice = !isNaN(numPrice)
+            ? `$${numPrice.toLocaleString()}`
+            : (plan.price ? `$${plan.price}` : "$0");
+
+        const minutesText = plan.limit
+            ? `${Number(plan.limit).toLocaleString()} AI Voice Minutes`
+            : "AI Voice Minutes";
+
+        return {
+            id: plan.id,
+            name: plan.name,
+            displayName: template.displayName || plan.name,
+            price: formattedPrice,
+            unit: " / month + VAT",
+            minimumMinutes: minutesText,
+            description: template.description,
+            features: template.features,
+            icon: template.icon,
+            popular: template.popular,
+            disabled: false,
+            cta: `Select ${plan.name}`,
+            rawPlan: plan
+        };
+    });
+
+    const fallbackPricingTiers = STATIC_PRICING_PLANS.filter(p => p.name !== "Enterprise").map(plan => ({
         ...plan,
         price: plan.price.split(' ')[0],
         unit: plan.price.includes('/') ? ` / ${plan.price.split(' / ')[1]}` : "",
         minimumMinutes: plan.minutes,
-        cta: plan.name === "Enterprise" ? "Contact Sales" : `Select ${plan.name}`,
+        cta: `Select ${plan.name}`,
     }));
+
+    const pricingTiers = [
+        ...(dynamicPricingTiers.length > 0 ? dynamicPricingTiers : fallbackPricingTiers),
+        enterpriseTier
+    ];
 
     const handleCreateSubscription = async () => {
         if (!selectedPlan || !selectedPmForSubscription) {
@@ -882,6 +980,9 @@ export function DashboardContent() {
         setErrorDetail(null);
         try {
             const token = cookieUtils.get("access");
+            const matchedPlan = fetchedPlans.find(p => p.name === selectedPlan || p.id === selectedPlan || String(p.id) === String(selectedPlan));
+            const planId = matchedPlan?.id ?? selectedPlan;
+
             const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
                 method: 'POST',
                 headers: {
@@ -889,7 +990,7 @@ export function DashboardContent() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    plan: selectedPlan,
+                    plan_id: planId,
                     payment_method_id: selectedPmForSubscription.id
                 })
             });
@@ -903,6 +1004,8 @@ export function DashboardContent() {
                 const errData = await response.json();
                 if (errData.details) {
                     setErrorDetail(errData.details);
+                } else if (errData.plan_id && Array.isArray(errData.plan_id)) {
+                    setErrorDetail(errData.plan_id[0]);
                 } else if (errData.plan && Array.isArray(errData.plan)) {
                     setErrorDetail(errData.plan[0]);
                 } else if (errData.detail) {
@@ -962,6 +1065,9 @@ export function DashboardContent() {
         setErrorDetail(null);
         try {
             const token = cookieUtils.get("access");
+            const matchedPlan = fetchedPlans.find(p => p.name === selectedPlan || p.id === selectedPlan || String(p.id) === String(selectedPlan));
+            const planId = matchedPlan?.id ?? selectedPlan;
+
             const response = await fetch(`${BASE_URL}/payment/subscriptions`, {
                 method: 'POST',
                 headers: {
@@ -969,7 +1075,7 @@ export function DashboardContent() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    plan: selectedPlan,
+                    plan_id: planId,
                     payment_method_id: selectedPmForSubscription.id
                 })
             });
@@ -983,6 +1089,8 @@ export function DashboardContent() {
                 const errData = await response.json();
                 if (errData.details) {
                     setErrorDetail(errData.details);
+                } else if (errData.plan_id && Array.isArray(errData.plan_id)) {
+                    setErrorDetail(errData.plan_id[0]);
                 } else if (errData.plan && Array.isArray(errData.plan)) {
                     setErrorDetail(errData.plan[0]);
                 } else if (errData.detail) {
@@ -1928,93 +2036,124 @@ export function DashboardContent() {
 
                 <Dialog open={isSubscriptionModalOpen} onOpenChange={setIsSubscriptionModalOpen}>
                     <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
-                        <DialogHeader>
+                        <DialogHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pr-8 text-left">
                             <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                 Create Subscription Plan
                             </DialogTitle>
+                            <div className="inline-flex items-center rounded-full border border-black dark:border-white p-1 bg-white dark:bg-gray-950 self-start sm:self-auto shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setModalPlanType("screening")}
+                                    className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+                                        modalPlanType === "screening"
+                                            ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
+                                            : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                    }`}
+                                >
+                                    AI Screening Calls
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setModalPlanType("calls")}
+                                    className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+                                        modalPlanType === "calls"
+                                            ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
+                                            : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                    }`}
+                                >
+                                    AI Calls
+                                </button>
+                            </div>
                         </DialogHeader>
 
                         <div className="space-y-10">
                             {/* Pricing Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
-                                {pricingTiers.map((tier) => {
-                                    const hidePopularHighlight = hoveredTier !== null && hoveredTier !== tier.name;
-                                    const isHighlighted = tier.popular ? !hidePopularHighlight : hoveredTier === tier.name;
-                                    const isSelected = selectedPlan === tier.name;
+                            {isFetchingPlans ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                                    <p className="text-gray-500 font-medium">Fetching plans...</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
+                                    {pricingTiers.map((tier) => {
+                                        const hidePopularHighlight = hoveredTier !== null && hoveredTier !== tier.name;
+                                        const isHighlighted = tier.popular ? !hidePopularHighlight : hoveredTier === tier.name;
+                                        const isSelected = selectedPlan === tier.name;
 
-                                    return (
-                                        <div
-                                            key={tier.name}
-                                            onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
-                                            onMouseLeave={() => setHoveredTier(null)}
-                                            onClick={() => {
-                                                if (!tier.disabled) {
-                                                    setSelectedPlan(tier.name);
-                                                }
-                                            }}
-                                            className={[
-                                                "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
-                                                isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
-                                                !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
-                                            ].join(" ")}
+                                        return (
+                                            <div
+                                                key={tier.name}
+                                                onMouseEnter={() => !tier.disabled && setHoveredTier(tier.name)}
+                                                onMouseLeave={() => setHoveredTier(null)}
+                                                onClick={() => {
+                                                    if (!tier.disabled) {
+                                                        setSelectedPlan(tier.name);
+                                                    }
+                                                }}
+                                                className={[
+                                                    "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
+                                                    isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
+                                                    !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
+                                                ].join(" ")}
 
-                                        >
-                                            {tier.popular && !isSelected && (
-                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black text-white dark:bg-white dark:text-gray-900">
-                                                        Most Popular
-                                                    </span>
+                                            >
+                                                {tier.popular && !isSelected && (
+                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black text-white dark:bg-white dark:text-gray-900">
+                                                            Most Popular
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className={[
+                                                        "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                                                        isSelected ? "bg-black/10 dark:bg-white/10" : "bg-gray-100 dark:bg-gray-800",
+                                                    ].join(" ")}>
+                                                        <tier.icon className={[
+                                                            "w-5 h-5 transition-colors",
+                                                            isSelected ? "text-black dark:text-white" : "text-gray-500",
+                                                        ].join(" ")} />
+                                                    </div>
+                                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
                                                 </div>
-                                            )}
 
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className={[
-                                                    "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
-                                                    isSelected ? "bg-black/10 dark:bg-white/10" : "bg-gray-100 dark:bg-gray-800",
-                                                ].join(" ")}>
-                                                    <tier.icon className={[
-                                                        "w-5 h-5 transition-colors",
-                                                        isSelected ? "text-black dark:text-white" : "text-gray-500",
-                                                    ].join(" ")} />
+                                                <div className="mb-2">
+                                                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tier.price}</span>
+                                                    <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
                                                 </div>
-                                                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
+
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{tier.minimumMinutes}</p>
+                                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
+
+                                                <ul className="space-y-3 mb-8 flex-grow">
+                                                    {tier.features.map((feature: string) => (
+                                                        <li key={feature} className="flex items-start gap-2">
+                                                            <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                                            <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+
+                                                {tier.name === "Enterprise" && (
+                                                    <Button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleContactSales();
+                                                        }}
+                                                        disabled={isContactSalesSubmitting}
+                                                        className="w-full bg-[#1a1c1e] hover:bg-black text-white py-3 rounded-xl font-bold transition-all dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2"
+                                                    >
+                                                        {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                        {tier.cta}
+                                                    </Button>
+                                                )}
                                             </div>
 
-                                            <div className="mb-2">
-                                                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tier.price}</span>
-                                                <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
-                                            </div>
-
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{tier.minimumMinutes}</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
-
-                                            <ul className="space-y-3 mb-8 flex-grow">
-                                                {tier.features.map((feature: string) => (
-                                                    <li key={feature} className="flex items-start gap-2">
-                                                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                                        <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-
-                                            {tier.name === "Enterprise" && (
-                                                <Button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleContactSales();
-                                                    }}
-                                                    disabled={isContactSalesSubmitting}
-                                                    className="w-full bg-[#1a1c1e] hover:bg-black text-white py-3 rounded-xl font-bold transition-all dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2"
-                                                >
-                                                    {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                                    {tier.cta}
-                                                </Button>
-                                            )}
-                                        </div>
-
-                                    );
-                                })}
-                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
                             {selectedPlan === 'Enterprise' ? (
                                 <div ref={enterpriseSectionRef} className="flex flex-col items-center justify-center space-y-4 pt-6">
@@ -2142,10 +2281,34 @@ export function DashboardContent() {
 
                 <Dialog open={isUpdateSubscriptionModalOpen} onOpenChange={setIsUpdateSubscriptionModalOpen}>
                     <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
-                        <DialogHeader>
+                        <DialogHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pr-8 text-left">
                             <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                 Update Subscription Plan
                             </DialogTitle>
+                            <div className="inline-flex items-center rounded-full border border-black dark:border-white p-1 bg-white dark:bg-gray-950 self-start sm:self-auto shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setModalPlanType("screening")}
+                                    className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+                                        modalPlanType === "screening"
+                                            ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
+                                            : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                    }`}
+                                >
+                                    AI Screening Calls
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setModalPlanType("calls")}
+                                    className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${
+                                        modalPlanType === "calls"
+                                            ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
+                                            : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                    }`}
+                                >
+                                    AI Calls
+                                </button>
+                            </div>
                         </DialogHeader>
 
                         <div className="space-y-10">
