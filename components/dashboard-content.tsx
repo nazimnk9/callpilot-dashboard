@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone, Minus, CheckCircle2, Users } from 'lucide-react';
+import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone, Minus, CheckCircle2, Users, RotateCcw } from 'lucide-react';
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
 import { profileService } from "@/services/profile-service";
@@ -181,6 +181,9 @@ export function DashboardContent() {
     const [myFlows, setMyFlows] = useState<any[]>([]);
     const [screeningAnalytics, setScreeningAnalytics] = useState<any>(null);
     const [isScreeningLoading, setIsScreeningLoading] = useState(false);
+    const [screeningPeriod, setScreeningPeriod] = useState<string>("all");
+    const [screeningStartDate, setScreeningStartDate] = useState<string>("");
+    const [screeningEndDate, setScreeningEndDate] = useState<string>("");
 
     const setupSteps = [
         { label: 'Account Created', key: 'account_created', path: '' },
@@ -334,11 +337,21 @@ export function DashboardContent() {
         }
     };
 
-    const fetchScreeningAnalytics = async () => {
+    const fetchScreeningAnalytics = async (period = screeningPeriod, startDate = screeningStartDate, endDate = screeningEndDate) => {
         try {
             setIsScreeningLoading(true);
             const token = cookieUtils.get("access");
-            const response = await fetch(`${BASE_URL}/interview/analytics`, {
+            const params = new URLSearchParams();
+            if (period) {
+                params.append("period", period);
+            }
+            if (period === "custom") {
+                if (startDate) params.append("start_date", startDate);
+                if (endDate) params.append("end_date", endDate);
+            }
+            const queryString = params.toString();
+            const url = `${BASE_URL}/interview/analytics${queryString ? `?${queryString}` : ''}`;
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -352,6 +365,13 @@ export function DashboardContent() {
         } finally {
             setIsScreeningLoading(false);
         }
+    };
+
+    const handleResetScreeningFilter = () => {
+        setScreeningPeriod("all");
+        setScreeningStartDate("");
+        setScreeningEndDate("");
+        fetchScreeningAnalytics("all", "", "");
     };
 
     const fetchCurrentSubscription = async () => {
@@ -1740,8 +1760,83 @@ export function DashboardContent() {
                         {/* AI Applicant Screening Call Report Section */}
                         {hasScreeningFlow && (
                             <div className="mt-8 space-y-6">
-                                <div>
-                                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Applicant Screening Call - Report</h1>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div>
+                                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Applicant Screening Call - Report</h1>
+                                    </div>
+
+                                    {/* Period Filter */}
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        {screeningPeriod === "custom" && (
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">From:</span>
+                                                    <input
+                                                        type="date"
+                                                        value={screeningStartDate}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setScreeningStartDate(val);
+                                                            fetchScreeningAnalytics("custom", val, screeningEndDate);
+                                                        }}
+                                                        className="h-9 px-2.5 py-1 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">To:</span>
+                                                    <input
+                                                        type="date"
+                                                        value={screeningEndDate}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setScreeningEndDate(val);
+                                                            fetchScreeningAnalytics("custom", screeningStartDate, val);
+                                                        }}
+                                                        className="h-9 px-2.5 py-1 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="w-[140px] sm:w-[150px]">
+                                            <Select
+                                                value={screeningPeriod}
+                                                onValueChange={(value) => {
+                                                    setScreeningPeriod(value);
+                                                    if (value !== "custom") {
+                                                        fetchScreeningAnalytics(value, screeningStartDate, screeningEndDate);
+                                                    } else {
+                                                        fetchScreeningAnalytics("custom", screeningStartDate, screeningEndDate);
+                                                    }
+                                                }}
+                                            >
+                                                <SelectTrigger className="h-9 rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-900 dark:text-gray-100">
+                                                    <SelectValue placeholder="Select Period" />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                                                    <SelectItem value="today" className="text-xs">Today</SelectItem>
+                                                    <SelectItem value="daily" className="text-xs">Daily</SelectItem>
+                                                    <SelectItem value="weekly" className="text-xs">Weekly</SelectItem>
+                                                    <SelectItem value="monthly" className="text-xs">Monthly</SelectItem>
+                                                    <SelectItem value="quarterly" className="text-xs">Quarterly</SelectItem>
+                                                    <SelectItem value="yearly" className="text-xs">Yearly</SelectItem>
+                                                    <SelectItem value="all" className="text-xs">All</SelectItem>
+                                                    <SelectItem value="custom" className="text-xs">Custom</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleResetScreeningFilter}
+                                            className="h-9 px-3 rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1.5 shadow-none"
+                                        >
+                                            <RotateCcw className="h-3.5 w-3.5" />
+                                            <span>Reset</span>
+                                        </Button>
+                                    </div>
                                 </div>
 
                                 {isScreeningLoading ? (
