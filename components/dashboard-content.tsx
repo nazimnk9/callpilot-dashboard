@@ -1863,7 +1863,7 @@ export function DashboardContent() {
                                                 bgColor: "bg-green-50 dark:bg-green-900/20",
                                             },
                                             {
-                                                title: "Green Applicants",
+                                                title: "Link Sent",
                                                 value: String(screeningAnalytics?.green_candidates ?? 0),
                                                 icon: Users,
                                                 iconColor: "text-purple-600 dark:text-purple-400",
