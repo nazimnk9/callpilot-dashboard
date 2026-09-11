@@ -2391,7 +2391,7 @@ export function DashboardContent() {
                                             : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
                                         }`}
                                 >
-                                    AI Screening Calls
+                                    Screening
                                 </button>
                                 <button
                                     type="button"
@@ -2401,7 +2401,7 @@ export function DashboardContent() {
                                             : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
                                         }`}
                                 >
-                                    AI Calls
+                                    Minutes
                                 </button>
                             </div>
                         </DialogHeader>
@@ -2708,7 +2708,7 @@ export function DashboardContent() {
                                             : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
                                         }`}
                                 >
-                                    AI Screening Calls
+                                    Screening
                                 </button>
                                 <button
                                     type="button"
@@ -2718,7 +2718,7 @@ export function DashboardContent() {
                                             : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
                                         }`}
                                 >
-                                    AI Calls
+                                    Minutes
                                 </button>
                             </div>
                         </DialogHeader>
