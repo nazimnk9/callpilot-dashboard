@@ -66,11 +66,37 @@ export function PricingPlanPage({ featureUid }: PricingPlanPageProps) {
         }
     }, [featureUid])
 
+    const PLAN_ORDER_MAP: Record<string, number> = {
+        starter: 1,
+        growth: 2,
+        Growth: 2,
+        pro: 3,
+        professional: 3,
+        enterprise: 4,
+    }
+
+    const getPlanOrderRank = (name: string = ""): number => {
+        const lower = name.toLowerCase().trim()
+        for (const [key, rank] of Object.entries(PLAN_ORDER_MAP)) {
+            if (lower.includes(key)) return rank
+        }
+        return 99
+    }
+
+    const formatPlanName = (name: any): string => {
+        if (!name || typeof name !== "string") return ""
+        if (name.toLowerCase().trim() === "growing") return "Growth"
+        return name
+    }
+
     const fetchPlans = async () => {
         try {
             setIsLoading(true)
             const response = await flowService.getPricingPlans(featureUid!)
-            setPlans(response.data.results || [])
+            const results = (response.data.results || []).slice().sort((a: PricingPlan, b: PricingPlan) => {
+                return getPlanOrderRank(a.name) - getPlanOrderRank(b.name)
+            })
+            setPlans(results)
             setIsLoading(false)
         } catch (err: any) {
             console.error("Error fetching plans:", err)
@@ -179,7 +205,7 @@ export function PricingPlanPage({ featureUid }: PricingPlanPageProps) {
 
                                 {/* Plan Content */}
                                 <div className="mb-6 text-center">
-                                    <h3 className="text-2xl font-bold text-[#111827] mb-2">{plan.name}</h3>
+                                    <h3 className="text-2xl font-bold text-[#111827] mb-2">{formatPlanName(plan.name)}</h3>
                                 </div>
 
                                 {/* Divider */}
