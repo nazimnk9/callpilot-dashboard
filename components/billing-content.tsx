@@ -175,7 +175,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
     const [fetchedPlans, setFetchedPlans] = useState<any[]>([]);
     const [isFetchingPlans, setIsFetchingPlans] = useState(false);
     const [isContactSalesSubmitting, setIsContactSalesSubmitting] = useState(false);
-    const [modalPlanType, setModalPlanType] = useState<"screening" | "calls">("calls");
+    const [modalPlanType, setModalPlanType] = useState<"screening" | "calls">("screening");
     const enterpriseSectionRef = useRef<HTMLDivElement>(null);
     const enterpriseSectionUpdateRef = useRef<HTMLDivElement>(null);
 
@@ -1128,6 +1128,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                                         {orgData?.role !== "STAFF" && (
                                             <button
                                                 onClick={() => {
+                                                    setModalPlanType("screening");
                                                     if (orgData?.current_plan) {
                                                         fetchCurrentSubscription();
                                                         setIsUpdateSubscriptionModalOpen(true);
@@ -1920,7 +1921,10 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={isSubscriptionModalOpen} onOpenChange={setIsSubscriptionModalOpen}>
+            <Dialog open={isSubscriptionModalOpen} onOpenChange={(open) => {
+                setIsSubscriptionModalOpen(open);
+                if (open) setModalPlanType("screening");
+            }}>
                 <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
                     <DialogHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pr-8 text-left">
                         <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -2178,7 +2182,10 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={isUpdateSubscriptionModalOpen} onOpenChange={setIsUpdateSubscriptionModalOpen}>
+            <Dialog open={isUpdateSubscriptionModalOpen} onOpenChange={(open) => {
+                setIsUpdateSubscriptionModalOpen(open);
+                if (open) setModalPlanType("screening");
+            }}>
                 <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
                     <DialogHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pr-8 text-left">
                         <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
