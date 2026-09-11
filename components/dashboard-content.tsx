@@ -31,12 +31,13 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-const STATIC_PRICING_PLANS = [
+const STATIC_AI_CALL_PLANS = [
     {
         name: "Starter",
-        price: "$400 / month + VAT",
-        minutes: "350 AI Voice Minutes",
-        description: "Designed for small businesses starting AI voice calls.",
+        price: "$400",
+        unit: " / month + VAT",
+        minutes: "350 AI voice minutes",
+        description: "Small businesses starting with AI voice calls.",
         features: [
             "Paid monthly in advance",
             "Dedicated onboarding & customer support",
@@ -49,9 +50,10 @@ const STATIC_PRICING_PLANS = [
     },
     {
         name: "Growth",
-        price: "$1,000 / month + VAT",
-        minutes: "900 AI Voice Minutes",
-        description: "Designed for businesses scaling AI voice calls across teams.",
+        price: "$1,000",
+        unit: " / month + VAT",
+        minutes: "900 AI voice minutes",
+        description: "Businesses scaling AI voice calls across teams.",
         features: [
             "Paid monthly in advance",
             "Dedicated onboarding & customer support",
@@ -64,9 +66,10 @@ const STATIC_PRICING_PLANS = [
     },
     {
         name: "Pro",
-        price: "$1,500 / month + VAT",
-        minutes: "1,400 AI Voice Minutes",
-        description: "Built for organisations running high-volume automated AI calls.",
+        price: "$1,500",
+        unit: " / month + VAT",
+        minutes: "1,400 AI voice minutes",
+        description: "High-volume automated AI calls.",
         features: [
             "Paid monthly in advance",
             "Priority onboarding & support",
@@ -81,8 +84,9 @@ const STATIC_PRICING_PLANS = [
     {
         name: "Enterprise",
         price: "Custom Pricing",
-        minutes: "Custom AI Call Minutes",
-        description: "Custom AI automation plans designed for large-scale deployment.",
+        unit: "",
+        minutes: "Custom AI call minutes",
+        description: "Large teams — custom minutes, volume discounts, and integrations scoped to you.",
         features: [
             "Paid monthly in advance",
             "Custom AI minute packages",
@@ -96,6 +100,80 @@ const STATIC_PRICING_PLANS = [
         disabled: false
     }
 ];
+
+const STATIC_SCREENING_PLANS = [
+    {
+        name: "Starter",
+        price: "$395",
+        unit: " / month",
+        minutes: "100 screenings • $3.95 each",
+        screeningsNote: "100 screenings • $3.95 each",
+        topUpNote: "Top-up $4.45 per screening",
+        bestFor: "Getting started with AI screening.",
+        description: "Getting started with AI screening.",
+        features: [
+            "100 screenings • $3.95 each",
+            "Top-up $4.45 per screening",
+            "BEST FOR: Getting started with AI screening."
+        ],
+        icon: Rocket,
+        popular: false
+    },
+    {
+        name: "Growth",
+        price: "$1,400",
+        unit: " / month",
+        minutes: "400 screenings • $3.50 each",
+        screeningsNote: "400 screenings • $3.50 each",
+        topUpNote: "Top-up $3.90 per screening",
+        bestFor: "Active hiring — 4x the volume at a lower rate per screening.",
+        description: "Active hiring — 4x the volume at a lower rate per screening.",
+        features: [
+            "400 screenings • $3.50 each",
+            "Top-up $3.90 per screening",
+            "BEST FOR: Active hiring — 4x the volume at a lower rate per screening."
+        ],
+        icon: Zap,
+        popular: true
+    },
+    {
+        name: "Pro",
+        price: "$2,950",
+        unit: " / month",
+        minutes: "1,000 screenings • $2.95 each",
+        screeningsNote: "1,000 screenings • $2.95 each",
+        topUpNote: "Top-up $2.95 per screening",
+        bestFor: "High-volume hiring — the lowest cost per screening.",
+        description: "High-volume hiring — the lowest cost per screening.",
+        features: [
+            "1,000 screenings • $2.95 each",
+            "Top-up $2.95 per screening",
+            "BEST FOR: High-volume hiring — the lowest cost per screening."
+        ],
+        icon: Zap,
+        popular: false
+    },
+    {
+        name: "Enterprise",
+        price: "Custom Pricing",
+        unit: "",
+        minutes: "2,000+ screenings",
+        screeningsNote: "2,000+ screenings",
+        topUpNote: "High-volume screening with custom terms",
+        bestFor: "Large teams — integrations, volume, and terms scoped to you.",
+        description: "Large teams — integrations, volume, and terms scoped to you.",
+        features: [
+            "2,000+ screenings",
+            "High-volume screening with custom terms",
+            "BEST FOR: Large teams — integrations, volume, and terms scoped to you."
+        ],
+        icon: Building2,
+        popular: false,
+        disabled: false
+    }
+];
+
+const STATIC_PRICING_PLANS = STATIC_AI_CALL_PLANS;
 
 export function DashboardContent() {
     const router = useRouter();
@@ -886,65 +964,33 @@ export function DashboardContent() {
         },
     ];
 
-    const staticTemplates: Record<string, any> = {
-        starter: {
-            description: "Designed for small businesses starting AI voice calls.",
-            features: [
-                "Paid monthly in advance",
-                "Dedicated onboarding & customer support",
-                "$400 one-off setup fee",
-                "Setup fee returned as free minutes after 12 months",
-                "Additional minutes: $1.15 per minute"
-            ],
-            icon: Rocket,
-            popular: false
-        },
-        growth: {
-            description: "Designed for businesses scaling AI voice calls across teams.",
-            features: [
-                "Paid monthly in advance",
-                "Dedicated onboarding & customer support",
-                "$400 one-off setup fee",
-                "Setup fee returned as free minutes after 12 months",
-                "Additional minutes: $1.15 per minute"
-            ],
-            icon: Zap,
-            popular: false
-        },
-        Growth: {
-            description: "Designed for businesses scaling AI voice calls across teams.",
-            features: [
-                "Paid monthly in advance",
-                "Dedicated onboarding & customer support",
-                "$400 one-off setup fee",
-                "Setup fee returned as free minutes after 12 months",
-                "Additional minutes: $1.15 per minute"
-            ],
-            icon: Zap,
-            popular: false
-        },
-        pro: {
-            description: "Built for organisations running high-volume automated AI calls.",
-            features: [
-                "Paid monthly in advance",
-                "Priority onboarding & support",
-                "$400 one-off setup fee",
-                "Setup fee returned as free minutes after 12 months",
-                "Additional minutes: $1.15 per minute"
-            ],
-            icon: Zap,
-            popular: true,
-            displayName: "Pro"
-        }
-    };
-
-    const enterpriseTier = {
+    const enterpriseTier = modalPlanType === "screening" ? {
         id: 'enterprise',
         name: "Enterprise",
         price: "Custom Pricing",
         unit: "",
-        minimumMinutes: "Custom AI Call Minutes",
-        description: "Custom AI automation plans designed for large-scale deployment.",
+        minimumMinutes: "2,000+ screenings",
+        screeningsNote: "2,000+ screenings",
+        topUpNote: "High-volume screening with custom terms",
+        bestFor: "Large teams — integrations, volume, and terms scoped to you.",
+        description: "Large teams — integrations, volume, and terms scoped to you.",
+        features: [
+            "2,000+ screenings",
+            "High-volume screening with custom terms",
+            "BEST FOR: Large teams — integrations, volume, and terms scoped to you."
+        ],
+        icon: Building2,
+        popular: false,
+        disabled: false,
+        cta: "Contact Sales"
+    } : {
+        id: 'enterprise',
+        name: "Enterprise",
+        price: "Custom Pricing",
+        unit: "",
+        minimumMinutes: "Custom AI call minutes",
+        description: "Large teams — custom minutes, volume discounts, and integrations scoped to you.",
+        audience: "Large teams — custom minutes, volume discounts, and integrations scoped to you.",
         features: [
             "Paid monthly in advance",
             "Custom AI minute packages",
@@ -963,44 +1009,85 @@ export function DashboardContent() {
         const rawName = plan.name || "";
         const formattedName = formatPlanName(rawName);
         const key = rawName.toLowerCase();
-        const templateKey = Object.keys(staticTemplates).find(k => key.includes(k.toLowerCase())) || key;
-        const template = staticTemplates[templateKey] || {
-            description: plan.description || "Subscription plan for AI calls.",
-            features: [
+        const numPrice = parseFloat(plan.price);
+        const limit = Number(plan.limit) || 0;
+
+        if (modalPlanType === "screening") {
+            const rawPrice = !isNaN(numPrice) ? numPrice : 0;
+            const perRate = limit > 0 ? (rawPrice / limit).toFixed(2) : "1.99";
+
+            let topUpNote = "Top-up $4.45 per screening";
+            let bestFor = "Getting started with AI screening.";
+
+            if (key.includes("grow")) {
+                topUpNote = "Top-up $3.90 per screening";
+                bestFor = "Active hiring — 4x the volume at a lower rate per screening.";
+            } else if (key.includes("pro")) {
+                topUpNote = "Top-up $2.95 per screening";
+                bestFor = "High-volume hiring — the lowest cost per screening.";
+            }
+
+            const screeningsNote = limit > 0 ? `${limit.toLocaleString()} screenings • $${perRate} each` : `${limit.toLocaleString()} screenings`;
+            const formattedPrice = !isNaN(numPrice) ? `$${numPrice.toLocaleString()}` : (plan.price ? `$${plan.price}` : "$0");
+
+            return {
+                id: plan.id,
+                name: plan.name,
+                displayName: formattedName,
+                price: formattedPrice,
+                unit: " / month",
+                minimumMinutes: screeningsNote,
+                screeningsNote: screeningsNote,
+                topUpNote: topUpNote,
+                bestFor: bestFor,
+                description: bestFor,
+                features: [
+                    topUpNote,
+                    `BEST FOR: ${bestFor}`
+                ],
+                icon: key.includes("starter") ? Rocket : (key.includes("enterp") ? Building2 : Zap),
+                popular: key.includes("grow"),
+                disabled: false,
+                cta: `Select ${formattedName}`,
+                rawPlan: plan
+            };
+        } else {
+            const isPro = key.includes("pro");
+            const defaultFeatures = [
                 "Paid monthly in advance",
-                "Dedicated onboarding & customer support",
+                isPro ? "Priority onboarding & support" : "Dedicated onboarding & customer support",
                 "$400 one-off setup fee",
                 "Setup fee returned as free minutes after 12 months",
                 "Additional minutes: $1.15 per minute"
-            ],
-            icon: Zap,
-            popular: false
-        };
+            ];
 
-        const numPrice = parseFloat(plan.price);
-        const formattedPrice = !isNaN(numPrice)
-            ? `$${numPrice.toLocaleString()}`
-            : (plan.price ? `$${plan.price}` : "$0");
+            let audience = "Small businesses starting with AI voice calls.";
+            if (key.includes("grow")) {
+                audience = "Businesses scaling AI voice calls across teams.";
+            } else if (isPro) {
+                audience = "High-volume automated AI calls.";
+            }
 
-        const minutesText = plan.limit
-            ? `${Number(plan.limit).toLocaleString()} AI Voice Minutes`
-            : "AI Voice Minutes";
+            const formattedPrice = !isNaN(numPrice) ? `$${numPrice.toLocaleString()}` : (plan.price ? `$${plan.price}` : "$0");
+            const minutesText = limit > 0 ? `${limit.toLocaleString()} AI voice minutes` : "AI voice minutes";
 
-        return {
-            id: plan.id,
-            name: plan.name,
-            displayName: template.displayName || formattedName,
-            price: formattedPrice,
-            unit: " / month + VAT",
-            minimumMinutes: minutesText,
-            description: template.description,
-            features: template.features,
-            icon: template.icon,
-            popular: template.popular,
-            disabled: false,
-            cta: `Select ${formattedName}`,
-            rawPlan: plan
-        };
+            return {
+                id: plan.id,
+                name: plan.name,
+                displayName: isPro ? "Pro" : formattedName,
+                price: formattedPrice,
+                unit: " / month + VAT",
+                minimumMinutes: minutesText,
+                description: audience,
+                audience: audience,
+                features: (plan.des_list && plan.des_list.length > 0) ? plan.des_list : defaultFeatures,
+                icon: key.includes("starter") ? Rocket : (key.includes("enterp") ? Building2 : Zap),
+                popular: isPro,
+                disabled: false,
+                cta: `Select ${formattedName}`,
+                rawPlan: plan
+            };
+        }
     });
 
     const PLAN_ORDER_MAP: Record<string, number> = {
@@ -1020,11 +1107,9 @@ export function DashboardContent() {
         return 99;
     };
 
-    const fallbackPricingTiers = STATIC_PRICING_PLANS.filter(p => p.name !== "Enterprise").map(plan => ({
+    const staticFallbackList = modalPlanType === "screening" ? STATIC_SCREENING_PLANS : STATIC_AI_CALL_PLANS;
+    const fallbackPricingTiers = staticFallbackList.filter(p => p.name !== "Enterprise").map(plan => ({
         ...plan,
-        price: plan.price.split(' ')[0],
-        unit: plan.price.includes('/') ? ` / ${plan.price.split(' / ')[1]}` : "",
-        minimumMinutes: plan.minutes,
         cta: `Select ${plan.name}`,
     }));
 
@@ -2321,7 +2406,35 @@ export function DashboardContent() {
                             </div>
                         </DialogHeader>
 
-                        <div className="space-y-10">
+                        <div className="space-y-8">
+                            {modalPlanType === "screening" ? (
+                                <div className="flex flex-col items-center gap-2 text-center">
+                                    <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                                        AI Applicant Call Plans
+                                    </h2>
+                                    <div className="w-14 h-1 bg-gray-900 dark:bg-gray-100 rounded-full mx-auto my-1" />
+                                    <p className="m-0 text-base sm:text-[17px] text-gray-600 dark:text-gray-400 font-medium max-w-xl">
+                                        No Call. No Charge.
+                                    </p>
+                                    <p className="m-0 text-[13px] sm:text-[14px] text-gray-500 dark:text-gray-400 font-normal">
+                                        WhatsApp + SMS document requests &middot; Auto ATS sync &middot; Recruiter alerts
+                                    </p>
+                                    <div className="inline-block bg-black text-white dark:bg-white dark:text-gray-900 text-[13px] font-semibold px-5 py-1.5 rounded-full mt-1">
+                                        New clients: your first 100 AI screening calls are free
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-2 text-center">
+                                    <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                                        AI Call Plans
+                                    </h2>
+                                    <div className="w-14 h-1 bg-gray-900 dark:bg-gray-100 rounded-full mx-auto my-1" />
+                                    <p className="m-0 text-base sm:text-[17px] text-gray-600 dark:text-gray-400 font-medium max-w-xl">
+                                        Monthly AI voice minutes, scaled to your call volume.
+                                    </p>
+                                </div>
+                            )}
+
                             {/* Pricing Grid */}
                             {isFetchingPlans ? (
                                 <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -2378,17 +2491,42 @@ export function DashboardContent() {
                                                     <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
                                                 </div>
 
-                                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{tier.minimumMinutes}</p>
-                                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
-
-                                                <ul className="space-y-3 mb-8 flex-grow">
-                                                    {tier.features.map((feature: string) => (
-                                                        <li key={feature} className="flex items-start gap-2">
-                                                            <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                                            <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                                {modalPlanType === "screening" ? (
+                                                    <>
+                                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                                            {(tier as any).screeningsNote || tier.minimumMinutes}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                                            {(tier as any).topUpNote}
+                                                        </p>
+                                                        <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                                                            BEST FOR
+                                                        </p>
+                                                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-6 flex-grow leading-relaxed">
+                                                            {(tier as any).bestFor || tier.description}
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                                                            {tier.minimumMinutes}
+                                                        </p>
+                                                        <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                                                            INCLUDES
+                                                        </p>
+                                                        <ul className="space-y-2.5 mb-4">
+                                                            {tier.features.map((feature: string) => (
+                                                                <li key={feature} className="flex items-start gap-2">
+                                                                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                                                    <span className="text-gray-600 dark:text-gray-300 text-sm leading-tight">{feature}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 flex-grow leading-relaxed">
+                                                            {(tier as any).audience || tier.description}
+                                                        </p>
+                                                    </>
+                                                )}
 
                                                 {tier.name === "Enterprise" && (
                                                     <Button
@@ -2408,6 +2546,24 @@ export function DashboardContent() {
                                         );
                                     })}
                                 </div>
+                            )}
+
+                            {modalPlanType === "screening" ? (
+                                <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-normal flex-wrap text-center">
+                                    <span>1 credit covers a call of up to 2 minutes</span>
+                                    <span>•</span>
+                                    <span>Automatic top-ups and plan upgrades</span>
+                                    <span>•</span>
+                                    <span>AI number $10/month, or connect a compatible number</span>
+                                </p>
+                            ) : (
+                                <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium flex-wrap text-center">
+                                    <span>Prices shown exclude VAT</span>
+                                    <span>•</span>
+                                    <span>$400 setup fee applies to Starter, Growth &amp; Pro — returned as free minutes after 12 months</span>
+                                    <span>•</span>
+                                    <span>Additional minutes on Starter/Growth/Pro billed at $1.15/min</span>
+                                </p>
                             )}
 
                             {selectedPlan === 'Enterprise' ? (
@@ -2575,6 +2731,34 @@ export function DashboardContent() {
                                 </div>
                             ) : (
                                 <>
+                                    {modalPlanType === "screening" ? (
+                                        <div className="flex flex-col items-center gap-2 text-center">
+                                            <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                                                AI Applicant Call Plans
+                                            </h2>
+                                            <div className="w-14 h-1 bg-gray-900 dark:bg-gray-100 rounded-full mx-auto my-1" />
+                                            <p className="m-0 text-base sm:text-[17px] text-gray-600 dark:text-gray-400 font-medium max-w-xl">
+                                                No Call. No Charge.
+                                            </p>
+                                            <p className="m-0 text-[13px] sm:text-[14px] text-gray-500 dark:text-gray-400 font-normal">
+                                                WhatsApp + SMS document requests &middot; Auto ATS sync &middot; Recruiter alerts
+                                            </p>
+                                            <div className="inline-block bg-black text-white dark:bg-white dark:text-gray-900 text-[13px] font-semibold px-5 py-1.5 rounded-full mt-1">
+                                                New clients: your first 100 AI screening calls are free
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-center">
+                                            <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                                                AI Call Plans
+                                            </h2>
+                                            <div className="w-14 h-1 bg-gray-900 dark:bg-gray-100 rounded-full mx-auto my-1" />
+                                            <p className="m-0 text-base sm:text-[17px] text-gray-600 dark:text-gray-400 font-medium max-w-xl">
+                                                Monthly AI voice minutes, scaled to your call volume.
+                                            </p>
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
                                         {pricingTiers.map((tier) => {
                                             const hidePopularHighlight = hoveredTier !== null && hoveredTier !== tier.name;
@@ -2623,17 +2807,42 @@ export function DashboardContent() {
                                                         <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
                                                     </div>
 
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{tier.minimumMinutes}</p>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">{tier.description}</p>
-
-                                                    <ul className="space-y-3 mb-8 flex-grow">
-                                                        {tier.features.map((feature: string) => (
-                                                            <li key={feature} className="flex items-start gap-2">
-                                                                <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                                                <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                                    {modalPlanType === "screening" ? (
+                                                        <>
+                                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                                                                {(tier as any).screeningsNote || tier.minimumMinutes}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                                                {(tier as any).topUpNote}
+                                                            </p>
+                                                            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                                                                BEST FOR
+                                                            </p>
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300 mb-6 flex-grow leading-relaxed">
+                                                                {(tier as any).bestFor || tier.description}
+                                                            </p>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                                                                {tier.minimumMinutes}
+                                                            </p>
+                                                            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                                                                INCLUDES
+                                                            </p>
+                                                            <ul className="space-y-2.5 mb-4">
+                                                                {tier.features.map((feature: string) => (
+                                                                    <li key={feature} className="flex items-start gap-2">
+                                                                        <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                                                        <span className="text-gray-600 dark:text-gray-300 text-sm leading-tight">{feature}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 flex-grow leading-relaxed">
+                                                                {(tier as any).audience || tier.description}
+                                                            </p>
+                                                        </>
+                                                    )}
 
                                                     {tier.name === "Enterprise" && (
                                                         <Button
@@ -2652,6 +2861,24 @@ export function DashboardContent() {
                                             );
                                         })}
                                     </div>
+
+                                    {modalPlanType === "screening" ? (
+                                        <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-normal flex-wrap text-center">
+                                            <span>1 credit covers a call of up to 2 minutes</span>
+                                            <span>•</span>
+                                            <span>Automatic top-ups and plan upgrades</span>
+                                            <span>•</span>
+                                            <span>AI number $10/month, or connect a compatible number</span>
+                                        </p>
+                                    ) : (
+                                        <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium flex-wrap text-center">
+                                            <span>Prices shown exclude VAT</span>
+                                            <span>•</span>
+                                            <span>$400 setup fee applies to Starter, Growth &amp; Pro — returned as free minutes after 12 months</span>
+                                            <span>•</span>
+                                            <span>Additional minutes on Starter/Growth/Pro billed at $1.15/min</span>
+                                        </p>
+                                    )}
 
                                     {selectedPlan === 'Enterprise' ? (
                                         <div ref={enterpriseSectionUpdateRef} className="flex flex-col items-center justify-center space-y-4 pt-6">
