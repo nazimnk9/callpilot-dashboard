@@ -258,7 +258,7 @@ export function DashboardContent() {
     // Product Entitlement Flags
     // Defaults: ai_applicant_calls_active = true, ai_calls_active = false
     const aiApplicantCallsActive = orgData?.ai_applicant_calls_active !== undefined ? Boolean(orgData.ai_applicant_calls_active) : true;
-    const aiCallsActive = orgData?.ai_calls_active !== undefined ? Boolean(orgData.ai_calls_active) : false;
+    const aiCallsActive = orgData?.ai_calls_active !== undefined ? Boolean(orgData.ai_calls_active) : true;
 
     // AI Applicant Screening Call Analytics States
     const [myFlows, setMyFlows] = useState<any[]>([]);
