@@ -2126,7 +2126,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                                             {modalPlanType === "screening" ? (
                                                 <>
                                                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                                        {(tier as any).screeningsNote || (tier as any).minimumMinutes || (tier as any).minutes}
+                                                        {(tier as any).screeningsNote || tier.minimumMinutes}
                                                     </p>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                                                         {(tier as any).topUpNote}
@@ -2141,7 +2141,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                                             ) : (
                                                 <>
                                                     <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
-                                                        {(tier as any).minimumMinutes || (tier as any).minutes}
+                                                        {tier.minimumMinutes}
                                                     </p>
                                                     <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                                                         INCLUDES
@@ -2444,7 +2444,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                                                 {modalPlanType === "screening" ? (
                                                     <>
                                                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                                            {(tier as any).screeningsNote || (tier as any).minimumMinutes || (tier as any).minutes}
+                                                            {(tier as any).screeningsNote || tier.minimumMinutes}
                                                         </p>
                                                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                                                             {(tier as any).topUpNote}
@@ -2459,7 +2459,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                                                 ) : (
                                                     <>
                                                         <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
-                                                            {(tier as any).minimumMinutes || (tier as any).minutes}
+                                                            {tier.minimumMinutes}
                                                         </p>
                                                         <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                                                             INCLUDES
