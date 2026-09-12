@@ -255,6 +255,11 @@ export function DashboardContent() {
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
     const [isCheckingVerification, setIsCheckingVerification] = useState(false);
 
+    // Product Entitlement Flags
+    // Defaults: ai_applicant_calls_active = true, ai_calls_active = false
+    const aiApplicantCallsActive = orgData?.ai_applicant_calls_active !== undefined ? Boolean(orgData.ai_applicant_calls_active) : true;
+    const aiCallsActive = orgData?.ai_calls_active !== undefined ? Boolean(orgData.ai_calls_active) : false;
+
     // AI Applicant Screening Call Analytics States
     const [myFlows, setMyFlows] = useState<any[]>([]);
     const [screeningAnalytics, setScreeningAnalytics] = useState<any>(null);
@@ -609,6 +614,16 @@ export function DashboardContent() {
             return;
         }
 
+        if (topUpType === "screening_credit" && !aiApplicantCallsActive) {
+            toast.error("Screening credit top-up is not allowed because AI Applicant Calls is not active on your account.");
+            return;
+        }
+
+        if (topUpType === "ai_call_minutes" && !aiCallsActive) {
+            toast.error("AI Call Minutes top-up is not allowed because AI Calls is not active on your account.");
+            return;
+        }
+
         setIsTopUpSubmitting(true);
         try {
             const token = cookieUtils.get("access");
@@ -893,6 +908,7 @@ export function DashboardContent() {
 
     const cards = [
         {
+            key: 'current_plan',
             title: 'Current Plan',
             value: formatPlanName(orgData?.current_plan) || 'No Active Plan',
             icon: Rocket,
@@ -900,20 +916,28 @@ export function DashboardContent() {
             bgColor: 'bg-blue-50 dark:bg-blue-900/20',
         },
         {
-            title: 'Minutes Remaining',
-            value: orgData?.wallet_minutes ? `${orgData.wallet_minutes} Minutes` : '0 Minutes',
-            icon: Zap,
-            iconColor: 'text-purple-600 dark:text-purple-400',
-            bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-        },
-        {
+            key: 'screening_calls',
             title: 'Screening Call Credits',
-            value: orgData?.screening_call_credit !== undefined && orgData?.screening_call_credit !== null
-                ? `${orgData.screening_call_credit} Credits`
-                : '0 Credits',
+            value: aiApplicantCallsActive
+                ? (orgData?.screening_call_credit !== undefined && orgData?.screening_call_credit !== null
+                    ? `${orgData.screening_call_credit} Credits`
+                    : '0 Credits')
+                : 'Not Active',
             icon: Users,
             iconColor: 'text-green-600 dark:text-green-400',
             bgColor: 'bg-green-50 dark:bg-green-900/20',
+        },
+        {
+            key: 'ai_calls',
+            title: 'AI Calls',
+            value: aiCallsActive
+                ? (orgData?.wallet_minutes !== undefined && orgData?.wallet_minutes !== null
+                    ? `${orgData.wallet_minutes} Minutes`
+                    : '0 Minutes')
+                : 'Not Active',
+            icon: Zap,
+            iconColor: 'text-purple-600 dark:text-purple-400',
+            bgColor: 'bg-purple-50 dark:bg-purple-900/20',
         },
     ];
     const getTimeAgo = (dateString: string) => {
@@ -1414,10 +1438,10 @@ export function DashboardContent() {
                 </div>
 
                 {/* 3 cards in same row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {isLoading ? (
                         Array(3).fill(0).map((_, i) => (
-                            <div key={i} className="h-32 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
+                            <div key={i} className="h-48 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                             </div>
                         ))
@@ -1425,8 +1449,7 @@ export function DashboardContent() {
                         cards.map((card, index) => (
                             <div
                                 key={index}
-                                // onClick={() => router.push('/dashboard/billing')}
-                                className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8 flex flex-col items-center justify-between text-center min-h-[220px]"
                             >
                                 {/* soft gradient glow */}
                                 <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
@@ -1438,347 +1461,365 @@ export function DashboardContent() {
                                     <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.35)_1px,transparent_0)] dark:bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.35)_1px,transparent_0)] [background-size:14px_14px]" />
                                 </div>
 
-                                <div className="relative p-6">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex items-center gap-4">
-                                            {/* icon container */}
-                                            <div
-                                                className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
-                                            >
-                                                <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
-                                                <card.icon size={22} />
-                                            </div>
-
-                                            <div className="min-w-0">
-                                                <div className="flex items-start mt-1">
-                                                    <div>
-                                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                                                            {card.title}
-                                                        </p>
-                                                        <p className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
-                                                            {card.value}
-                                                        </p>
-
-                                                        {card.title === 'Minutes Remaining' && orgData?.role !== "STAFF" && orgData?.current_plan && orgData?.current_plan !== 'No Active Plan' && (
-                                                            <div className="mt-4">
-                                                                <Dialog
-                                                                    open={isTopUpOpen}
-                                                                    onOpenChange={(open) => {
-                                                                        setIsTopUpOpen(open);
-                                                                        if (!open) {
-                                                                            setTopUpType("");
-                                                                            setTopUpMinutes("");
-                                                                            setTopUpAmount("");
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <DialogTrigger asChild>
-                                                                        <button
-                                                                            onClick={(e) => e.stopPropagation()}
-                                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98]"
-                                                                        >
-                                                                            Top-up
-                                                                        </button>
-                                                                    </DialogTrigger>
-                                                                    <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
-                                                                        <DialogHeader className="p-0">
-                                                                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
-                                                                                Add Minutes
-                                                                            </DialogTitle>
-                                                                        </DialogHeader>
-
-                                                                        <div className="space-y-6">
-                                                                            {/* Choice Field Section */}
-                                                                            <div className="space-y-2">
-                                                                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                                                    Top-up type
-                                                                                </label>
-                                                                                <Select
-                                                                                    value={topUpType}
-                                                                                    onValueChange={(val) => {
-                                                                                        setTopUpType(val);
-                                                                                        if (!topUpMinutes) {
-                                                                                            setTopUpAmount("");
-                                                                                            return;
-                                                                                        }
-                                                                                        const count = parseInt(topUpMinutes);
-                                                                                        if (isNaN(count)) {
-                                                                                            setTopUpAmount("");
-                                                                                            return;
-                                                                                        }
-                                                                                        if (val === "screening_credit") {
-                                                                                            setTopUpAmount((count * 3.45).toFixed(2));
-                                                                                        } else if (val === "ai_call_minutes") {
-                                                                                            if (orgData?.top_up_min_per_dol) {
-                                                                                                const rate = parseFloat(orgData.top_up_min_per_dol);
-                                                                                                if (rate > 0) {
-                                                                                                    const costPerMin = Math.round((1 / rate) * 100) / 100;
-                                                                                                    setTopUpAmount((count * costPerMin).toFixed(2));
-                                                                                                } else {
-                                                                                                    setTopUpAmount("0.00");
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                    }}
-                                                                                >
-                                                                                    <SelectTrigger className="w-full py-6 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
-                                                                                        <SelectValue placeholder="Select top-up type" />
-                                                                                    </SelectTrigger>
-                                                                                    <SelectContent className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50">
-                                                                                        <SelectItem value="ai_call_minutes" className="text-[14px] font-medium cursor-pointer py-3 rounded-xl">
-                                                                                            AI Call Minutes
-                                                                                        </SelectItem>
-                                                                                        <SelectItem value="screening_credit" className="text-[14px] font-medium cursor-pointer py-3 rounded-xl">
-                                                                                            Screening Credits
-                                                                                        </SelectItem>
-                                                                                    </SelectContent>
-                                                                                </Select>
-                                                                            </div>
-
-                                                                            {/* Amount Section for ai_call_minutes */}
-                                                                            {topUpType === "ai_call_minutes" && (
-                                                                                <div className="space-y-2">
-                                                                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                                                        Minutes to add
-                                                                                    </label>
-                                                                                    <div className="relative">
-                                                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
-                                                                                            <div className="w-5 h-5 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
-                                                                                                <Zap size={10} className="text-blue-600 dark:text-blue-400 fill-current" />
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <input
-                                                                                            type="number"
-                                                                                            value={topUpMinutes}
-                                                                                            onChange={(e) => {
-                                                                                                const val = e.target.value;
-                                                                                                if (val === "") {
-                                                                                                    setTopUpMinutes("");
-                                                                                                    setTopUpAmount("");
-                                                                                                    return;
-                                                                                                }
-                                                                                                const mins = Math.floor(parseInt(val));
-                                                                                                if (isNaN(mins)) return;
-
-                                                                                                setTopUpMinutes(mins.toString());
-                                                                                                if (orgData?.top_up_min_per_dol) {
-                                                                                                    const rate = parseFloat(orgData.top_up_min_per_dol);
-                                                                                                    if (rate > 0) {
-                                                                                                        const costPerMin = Math.round((1 / rate) * 100) / 100;
-                                                                                                        const total = (mins * costPerMin).toFixed(2);
-                                                                                                        setTopUpAmount(total);
-                                                                                                    } else {
-                                                                                                        setTopUpAmount("0.00");
-                                                                                                    }
-                                                                                                }
-                                                                                            }}
-                                                                                            placeholder="Enter minutes"
-                                                                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                                                                                        />
-                                                                                    </div>
-                                                                                    <div className="flex items-center justify-between px-1">
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <BarChart3 size={14} className="text-blue-500" />
-                                                                                            <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
-                                                                                                Total Cost: ${topUpAmount || "0.00"}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <Info size={14} className="text-gray-400" />
-                                                                                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
-                                                                                                Cost per minute: ${orgData?.top_up_min_per_dol && parseFloat(orgData.top_up_min_per_dol) > 0 ? (1 / parseFloat(orgData.top_up_min_per_dol)).toFixed(2) : "0.00"}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {/* Amount Section for screening_credit */}
-                                                                            {topUpType === "screening_credit" && (
-                                                                                <div className="space-y-2">
-                                                                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                                                        Screening calls to add
-                                                                                    </label>
-                                                                                    <div className="relative">
-                                                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
-                                                                                            <div className="w-5 h-5 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
-                                                                                                <Zap size={10} className="text-blue-600 dark:text-blue-400 fill-current" />
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <input
-                                                                                            type="number"
-                                                                                            value={topUpMinutes}
-                                                                                            onChange={(e) => {
-                                                                                                const val = e.target.value;
-                                                                                                if (val === "") {
-                                                                                                    setTopUpMinutes("");
-                                                                                                    setTopUpAmount("");
-                                                                                                    return;
-                                                                                                }
-                                                                                                const count = Math.floor(parseInt(val));
-                                                                                                if (isNaN(count)) return;
-
-                                                                                                setTopUpMinutes(count.toString());
-                                                                                                const total = (count * 3.45).toFixed(2);
-                                                                                                setTopUpAmount(total);
-                                                                                            }}
-                                                                                            placeholder="Enter credits"
-                                                                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                                                                                        />
-                                                                                    </div>
-                                                                                    <div className="flex items-center justify-between px-1">
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <BarChart3 size={14} className="text-blue-500" />
-                                                                                            <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
-                                                                                                Total Cost: ${topUpAmount || "0.00"}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <Info size={14} className="text-gray-400" />
-                                                                                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
-                                                                                                Cost per screening call: $3.45
-                                                                                            </p>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {/* Payment Method Selector */}
-                                                                            <div className="space-y-2">
-                                                                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                                                    Payment method
-                                                                                </label>
-                                                                                <div className="relative">
-                                                                                    <div
-                                                                                        onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
-                                                                                        className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-gray-50 dark:bg-gray-900 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-850 transition-all duration-200"
-                                                                                    >
-                                                                                        <div className="flex items-center gap-3">
-                                                                                            <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
-                                                                                                {selectedPmForTopUp?.card.brand === 'visa' ? (
-                                                                                                    <span className="text-white font-bold italic text-[8px]">VISA</span>
-                                                                                                ) : (
-                                                                                                    <div className="flex -space-x-1.5">
-                                                                                                        <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                                                                        <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
-                                                                                                    </div>
-                                                                                                )}
-                                                                                            </div>
-                                                                                            <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
-                                                                                                {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card.last4}` : 'Select card'}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                        <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
-                                                                                            <ChevronUp size={16} />
-                                                                                            <ChevronDown size={16} />
-                                                                                        </div>
-                                                                                    </div>
-
-                                                                                    {isPmSelectorOpen && (
-                                                                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl z-[60] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                                                            <div className="max-h-[240px] overflow-y-auto p-2">
-                                                                                                {paymentMethods.map((pm) => (
-                                                                                                    <div
-                                                                                                        key={pm.id}
-                                                                                                        onClick={() => {
-                                                                                                            setSelectedPmForTopUp(pm);
-                                                                                                            setIsPmSelectorOpen(false);
-                                                                                                        }}
-                                                                                                        className="px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 rounded-2xl cursor-pointer transition-colors"
-                                                                                                    >
-                                                                                                        <div className="flex items-center gap-3">
-                                                                                                            <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
-                                                                                                                {pm.card.brand === 'visa' ? (
-                                                                                                                    <span className="text-white font-bold italic text-[6px]">VISA</span>
-                                                                                                                ) : (
-                                                                                                                    <div className="flex -space-x-1">
-                                                                                                                        <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                                                                        <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
-                                                                                                                    </div>
-                                                                                                                )}
-                                                                                                            </div>
-                                                                                                            <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
-                                                                                                        </div>
-                                                                                                        {selectedPmForTopUp?.id === pm.id && (
-                                                                                                            <Check size={16} className="text-gray-900 dark:text-gray-100" />
-                                                                                                        )}
-                                                                                                    </div>
-                                                                                                ))}
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="flex justify-start px-1">
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        setIsTopUpOpen(false)
-                                                                                        setIsAddPaymentOpen(true)
-                                                                                    }}
-                                                                                    className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2"
-                                                                                >
-                                                                                    <span className="text-lg">+</span> Add payment method
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                                                                            <Button
-                                                                                onClick={() => setIsTopUpOpen(false)}
-                                                                                className="w-full sm:flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold px-6 py-4 rounded-2xl border-none shadow-none text-[15px] transition-colors h-auto"
-                                                                            >
-                                                                                Cancel
-                                                                            </Button>
-                                                                            <Button
-                                                                                onClick={handleTopUp}
-                                                                                disabled={isTopUpSubmitting || !topUpType || !topUpMinutes || !topUpAmount || !selectedPmForTopUp}
-                                                                                className="w-full sm:flex-1 bg-[#1a1c1e] hover:bg-black text-white px-6 py-4 rounded-2xl text-[15px] font-bold transition-all h-auto flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none"
-                                                                            >
-                                                                                {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                                                                Continue
-                                                                            </Button>
-                                                                        </div>
-                                                                    </DialogContent>
-                                                                </Dialog>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                {card.title === 'Current Plan' && orgData?.role !== "STAFF" && (
-                                                    <div className="flex flex-row gap-2 mt-4">
-                                                        <button
-                                                            disabled={isCheckingVerification}
-                                                            onClick={handleUpgradePlanClick}
-                                                            className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
-                                                        >
-                                                            {isCheckingVerification ? (
-                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                            ) : (
-                                                                orgData?.current_plan ? "Upgrade Plan" : "Upgrade Plan"
-                                                            )}
-                                                        </button>
-
-                                                        {/* {orgData?.current_plan && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setIsCancelPlanModalOpen(true);
-                                                                }}
-                                                                className="text-[9px] md:text-[10px] font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 text-center w-[100px] md:w-[110px] sm:w-[15%] px-1 py-1 md:px-1 md:py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-2xl"
-                                                            >
-                                                                Cancel Subscription
-                                                            </button>
-                                                        )} */}
-                                                    </div>
-                                                )}
-                                            </div>
+                                <div className="relative w-full flex flex-col items-center flex-1 justify-between gap-6">
+                                    <div className="flex flex-col items-center">
+                                        {/* icon container */}
+                                        <div
+                                            className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10 mb-3`}
+                                        >
+                                            <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
+                                            <card.icon size={22} />
                                         </div>
+
+                                        {/* title & value */}
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                                {card.title}
+                                            </p>
+                                            <p className={`text-xl md:text-2xl font-bold tracking-tight ${card.value === 'Not Active' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                                                {card.value}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <div className="w-full">
+                                        {card.key === 'current_plan' && (
+                                            <button
+                                                disabled={isCheckingVerification}
+                                                onClick={handleUpgradePlanClick}
+                                                className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all duration-200 shadow-sm flex items-center justify-center cursor-pointer"
+                                            >
+                                                {isCheckingVerification ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    orgData?.current_plan?.toLowerCase().includes("enterprise") ? "Manage Plan" : "Upgrade Plan"
+                                                )}
+                                            </button>
+                                        )}
+
+                                        {card.key === 'screening_calls' && (
+                                            <button
+                                                disabled={!aiApplicantCallsActive}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setTopUpType("screening_credit");
+                                                    setTopUpMinutes("");
+                                                    setTopUpAmount("");
+                                                    setIsTopUpOpen(true);
+                                                }}
+                                                className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                                                    aiApplicantCallsActive
+                                                        ? 'border border-gray-900 dark:border-gray-200 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 shadow-sm cursor-pointer'
+                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border-none'
+                                                }`}
+                                            >
+                                                Top-up
+                                            </button>
+                                        )}
+
+                                        {card.key === 'ai_calls' && (
+                                            <button
+                                                disabled={!aiCallsActive}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (aiCallsActive) {
+                                                        setTopUpType("ai_call_minutes");
+                                                        setTopUpMinutes("");
+                                                        setTopUpAmount("");
+                                                        setIsTopUpOpen(true);
+                                                    }
+                                                }}
+                                                className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                                                    aiCallsActive
+                                                        ? 'border border-gray-900 dark:border-gray-200 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 shadow-sm cursor-pointer'
+                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border-none'
+                                                }`}
+                                            >
+                                                Top-up
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         ))
                     )}
                 </div>
+
+                {/* Standalone Top Up Dialog */}
+                <Dialog
+                    open={isTopUpOpen}
+                    onOpenChange={(open) => {
+                        setIsTopUpOpen(open);
+                        if (!open) {
+                            setTopUpType("");
+                            setTopUpMinutes("");
+                            setTopUpAmount("");
+                        }
+                    }}
+                >
+                    <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
+                        <DialogHeader className="p-0">
+                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                                {topUpType === "screening_credit" ? "Add Screening Credits" : "Add Minutes"}
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-6">
+                            {/* Choice Field Section only shown if both products are active */}
+                            {aiCallsActive && aiApplicantCallsActive && (
+                                <div className="space-y-2">
+                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                        Top-up type
+                                    </label>
+                                    <Select
+                                        value={topUpType}
+                                        onValueChange={(val) => {
+                                            setTopUpType(val);
+                                            if (!topUpMinutes) {
+                                                setTopUpAmount("");
+                                                return;
+                                            }
+                                            const count = parseInt(topUpMinutes);
+                                            if (isNaN(count)) {
+                                                setTopUpAmount("");
+                                                return;
+                                            }
+                                            if (val === "screening_credit") {
+                                                setTopUpAmount((count * 3.45).toFixed(2));
+                                            } else if (val === "ai_call_minutes") {
+                                                if (orgData?.top_up_min_per_dol) {
+                                                    const rate = parseFloat(orgData.top_up_min_per_dol);
+                                                    if (rate > 0) {
+                                                        const costPerMin = Math.round((1 / rate) * 100) / 100;
+                                                        setTopUpAmount((count * costPerMin).toFixed(2));
+                                                    } else {
+                                                        setTopUpAmount("0.00");
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full py-6 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                                            <SelectValue placeholder="Select top-up type" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50">
+                                            <SelectItem value="screening_credit" className="text-[14px] font-medium cursor-pointer py-3 rounded-xl">
+                                                Screening Credits
+                                            </SelectItem>
+                                            <SelectItem value="ai_call_minutes" className="text-[14px] font-medium cursor-pointer py-3 rounded-xl">
+                                                AI Call Minutes
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+
+                            {/* Amount Section for ai_call_minutes */}
+                            {topUpType === "ai_call_minutes" && (
+                                <div className="space-y-2">
+                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                        Minutes to add
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
+                                            <div className="w-5 h-5 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
+                                                <Zap size={10} className="text-blue-600 dark:text-blue-400 fill-current" />
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={topUpMinutes}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (val === "") {
+                                                    setTopUpMinutes("");
+                                                    setTopUpAmount("");
+                                                    return;
+                                                }
+                                                const mins = Math.floor(parseInt(val));
+                                                if (isNaN(mins)) return;
+
+                                                setTopUpMinutes(mins.toString());
+                                                if (orgData?.top_up_min_per_dol) {
+                                                    const rate = parseFloat(orgData.top_up_min_per_dol);
+                                                    if (rate > 0) {
+                                                        const costPerMin = Math.round((1 / rate) * 100) / 100;
+                                                        const total = (mins * costPerMin).toFixed(2);
+                                                        setTopUpAmount(total);
+                                                    } else {
+                                                        setTopUpAmount("0.00");
+                                                    }
+                                                }
+                                            }}
+                                            placeholder="Enter minutes"
+                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="flex items-center gap-2">
+                                            <BarChart3 size={14} className="text-blue-500" />
+                                            <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
+                                                Total Cost: ${topUpAmount || "0.00"}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Info size={14} className="text-gray-400" />
+                                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+                                                Cost per minute: ${orgData?.top_up_min_per_dol && parseFloat(orgData.top_up_min_per_dol) > 0 ? (1 / parseFloat(orgData.top_up_min_per_dol)).toFixed(2) : "0.00"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Amount Section for screening_credit */}
+                            {topUpType === "screening_credit" && (
+                                <div className="space-y-2">
+                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                        Screening calls to add
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
+                                            <div className="w-5 h-5 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center">
+                                                <Zap size={10} className="text-blue-600 dark:text-blue-400 fill-current" />
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={topUpMinutes}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (val === "") {
+                                                    setTopUpMinutes("");
+                                                    setTopUpAmount("");
+                                                    return;
+                                                }
+                                                const count = Math.floor(parseInt(val));
+                                                if (isNaN(count)) return;
+
+                                                setTopUpMinutes(count.toString());
+                                                const total = (count * 3.45).toFixed(2);
+                                                setTopUpAmount(total);
+                                            }}
+                                            placeholder="Enter credits"
+                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="flex items-center gap-2">
+                                            <BarChart3 size={14} className="text-blue-500" />
+                                            <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
+                                                Total Cost: ${topUpAmount || "0.00"}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Info size={14} className="text-gray-400" />
+                                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+                                                Cost per screening call: $3.45
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Payment Method Selector */}
+                            <div className="space-y-2">
+                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                    Payment method
+                                </label>
+                                <div className="relative">
+                                    <div
+                                        onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
+                                        className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-gray-50 dark:bg-gray-900 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-850 transition-all duration-200"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
+                                                {selectedPmForTopUp?.card?.brand === 'visa' ? (
+                                                    <span className="text-white font-bold italic text-[8px]">VISA</span>
+                                                ) : (
+                                                    <div className="flex -space-x-1.5">
+                                                        <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
+                                                        <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card?.last4}` : 'Select card'}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col -space-y-1 text-gray-400 dark:text-gray-500">
+                                            <ChevronUp size={16} />
+                                            <ChevronDown size={16} />
+                                        </div>
+                                    </div>
+
+                                    {isPmSelectorOpen && (
+                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl z-[60] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="max-h-[240px] overflow-y-auto p-2">
+                                                {paymentMethods.map((pm) => (
+                                                    <div
+                                                        key={pm.id}
+                                                        onClick={() => {
+                                                            setSelectedPmForTopUp(pm);
+                                                            setIsPmSelectorOpen(false);
+                                                        }}
+                                                        className="px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-900 rounded-2xl cursor-pointer transition-colors"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-5 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden shrink-0">
+                                                                {pm.card?.brand === 'visa' ? (
+                                                                    <span className="text-white font-bold italic text-[6px]">VISA</span>
+                                                                ) : (
+                                                                    <div className="flex -space-x-1">
+                                                                        <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
+                                                                        <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card?.last4}</span>
+                                                        </div>
+                                                        {selectedPmForTopUp?.id === pm.id && (
+                                                            <Check size={16} className="text-gray-900 dark:text-gray-100" />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex justify-start px-1">
+                                <button
+                                    onClick={() => {
+                                        setIsTopUpOpen(false)
+                                        setIsAddPaymentOpen(true)
+                                    }}
+                                    className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer"
+                                >
+                                    <span className="text-lg">+</span> Add payment method
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                            <Button
+                                onClick={() => setIsTopUpOpen(false)}
+                                className="w-full sm:flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold px-6 py-4 rounded-2xl border-none shadow-none text-[15px] transition-colors h-auto cursor-pointer"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleTopUp}
+                                disabled={isTopUpSubmitting || !topUpType || !topUpMinutes || !topUpAmount || !selectedPmForTopUp}
+                                className="w-full sm:flex-1 bg-[#1a1c1e] hover:bg-black text-white px-6 py-4 rounded-2xl text-[15px] font-bold transition-all h-auto flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none cursor-pointer disabled:cursor-not-allowed"
+                            >
+                                {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Continue
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
                 {isAllCompleted && (
                     <>
                         <div>
@@ -2382,28 +2423,30 @@ export function DashboardContent() {
                             <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                 Create Subscription Plan
                             </DialogTitle>
-                            <div className="inline-flex items-center rounded-full border border-black dark:border-white p-1 bg-white dark:bg-gray-950 self-start sm:self-auto shrink-0">
-                                <button
-                                    type="button"
-                                    onClick={() => setModalPlanType("screening")}
-                                    className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "screening"
-                                            ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
-                                            : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
-                                        }`}
-                                >
-                                    Screening
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setModalPlanType("calls")}
-                                    className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "calls"
-                                            ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
-                                            : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
-                                        }`}
-                                >
-                                    Minutes
-                                </button>
-                            </div>
+                            {aiCallsActive && (
+                                <div className="inline-flex items-center rounded-full border border-black dark:border-white p-1 bg-white dark:bg-gray-950 self-start sm:self-auto shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalPlanType("screening")}
+                                        className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "screening"
+                                                ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
+                                                : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                            }`}
+                                    >
+                                        Screening
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalPlanType("calls")}
+                                        className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "calls"
+                                                ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
+                                                : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                            }`}
+                                    >
+                                        Minutes
+                                    </button>
+                                </div>
+                            )}
                         </DialogHeader>
 
                         <div className="space-y-8">
@@ -2494,7 +2537,7 @@ export function DashboardContent() {
                                                 {modalPlanType === "screening" ? (
                                                     <>
                                                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                                            {(tier as any).screeningsNote || tier.minimumMinutes}
+                                                            {(tier as any).screeningsNote || (tier as any).minimumMinutes || (tier as any).minutes}
                                                         </p>
                                                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                                                             {(tier as any).topUpNote}
@@ -2509,7 +2552,7 @@ export function DashboardContent() {
                                                 ) : (
                                                     <>
                                                         <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
-                                                            {tier.minimumMinutes}
+                                                            {(tier as any).minimumMinutes || (tier as any).minutes}
                                                         </p>
                                                         <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                                                             INCLUDES
@@ -2699,28 +2742,30 @@ export function DashboardContent() {
                             <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                 Update Subscription Plan
                             </DialogTitle>
-                            <div className="inline-flex items-center rounded-full border border-black dark:border-white p-1 bg-white dark:bg-gray-950 self-start sm:self-auto shrink-0">
-                                <button
-                                    type="button"
-                                    onClick={() => setModalPlanType("screening")}
-                                    className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "screening"
-                                            ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
-                                            : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
-                                        }`}
-                                >
-                                    Screening
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setModalPlanType("calls")}
-                                    className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "calls"
-                                            ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
-                                            : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
-                                        }`}
-                                >
-                                    Minutes
-                                </button>
-                            </div>
+                            {aiCallsActive && (
+                                <div className="inline-flex items-center rounded-full border border-black dark:border-white p-1 bg-white dark:bg-gray-950 self-start sm:self-auto shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalPlanType("screening")}
+                                        className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "screening"
+                                                ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
+                                                : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                            }`}
+                                    >
+                                        Screening
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setModalPlanType("calls")}
+                                        className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "calls"
+                                                ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
+                                                : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                            }`}
+                                    >
+                                        Minutes
+                                    </button>
+                                </div>
+                            )}
                         </DialogHeader>
 
                         <div className="space-y-10">
@@ -2810,7 +2855,7 @@ export function DashboardContent() {
                                                     {modalPlanType === "screening" ? (
                                                         <>
                                                             <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                                                {(tier as any).screeningsNote || tier.minimumMinutes}
+                                                                {(tier as any).screeningsNote || (tier as any).minimumMinutes || (tier as any).minutes}
                                                             </p>
                                                             <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                                                                 {(tier as any).topUpNote}
@@ -2825,7 +2870,7 @@ export function DashboardContent() {
                                                     ) : (
                                                         <>
                                                             <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
-                                                                {tier.minimumMinutes}
+                                                                {(tier as any).minimumMinutes || (tier as any).minutes}
                                                             </p>
                                                             <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                                                                 INCLUDES
