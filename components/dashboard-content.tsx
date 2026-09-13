@@ -255,10 +255,13 @@ export function DashboardContent() {
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
     const [isCheckingVerification, setIsCheckingVerification] = useState(false);
 
-    // Product Entitlement Flags
-    // Defaults: ai_applicant_calls_active = true, ai_calls_active = false
-    const aiApplicantCallsActive = orgData?.ai_applicant_calls_active !== undefined ? Boolean(orgData.ai_applicant_calls_active) : true;
-    const aiCallsActive = orgData?.ai_calls_active !== undefined ? Boolean(orgData.ai_calls_active) : true;
+    // Product Entitlement Flags based on current_plan_type
+    const aiApplicantCallsActive = Boolean(
+        orgData?.current_plan_type && String(orgData.current_plan_type).toUpperCase() === "SCREENING_CALL"
+    );
+    const aiCallsActive = Boolean(
+        orgData?.current_plan_type && String(orgData.current_plan_type).toUpperCase() === "AI_CALL"
+    );
 
     // AI Applicant Screening Call Analytics States
     const [myFlows, setMyFlows] = useState<any[]>([]);
@@ -2423,7 +2426,7 @@ export function DashboardContent() {
                             <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                 Create Subscription Plan
                             </DialogTitle>
-                            {aiCallsActive && (
+                            
                                 <div className="inline-flex items-center rounded-full border border-black dark:border-white p-1 bg-white dark:bg-gray-950 self-start sm:self-auto shrink-0">
                                     <button
                                         type="button"
@@ -2446,7 +2449,7 @@ export function DashboardContent() {
                                         Minutes
                                     </button>
                                 </div>
-                            )}
+                            
                         </DialogHeader>
 
                         <div className="space-y-8">
@@ -2742,7 +2745,7 @@ export function DashboardContent() {
                             <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                 Update Subscription Plan
                             </DialogTitle>
-                            {aiCallsActive && (
+                            
                                 <div className="inline-flex items-center rounded-full border border-black dark:border-white p-1 bg-white dark:bg-gray-950 self-start sm:self-auto shrink-0">
                                     <button
                                         type="button"
@@ -2765,7 +2768,7 @@ export function DashboardContent() {
                                         Minutes
                                     </button>
                                 </div>
-                            )}
+                           
                         </DialogHeader>
 
                         <div className="space-y-10">
