@@ -139,19 +139,31 @@ export function PhoneCallFlowsContent() {
                     </div>
 
                     <div className="flex flex-row md:flex-row lg:flex-row gap-2.5 mt-auto">
-                        <Button
-                            className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm w-full "
-                            onClick={() => handleConfigureClick(item.uid, flow.name, flow.code)}
-                        >
-                            Configure
-                        </Button>
-                        <Link href={flow.code === "AICALL191" ? `/dashboard/report?code=${flow.code}` : `/dashboard/report/${item.uid}`} className="w-full">
-                            <Button
-                                className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none w-full"
-                            >
-                                {flow.code === "AICALL191" ? "Reservations" : "Reports"}
-                            </Button>
-                        </Link>
+                        {flow.name?.toUpperCase() === "VOIP" ? (
+                            <Link href={`/dashboard/voip/${item.uid}`} className="w-full">
+                                <Button
+                                    className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm w-full"
+                                >
+                                    Dashboard
+                                </Button>
+                            </Link>
+                        ) : (
+                            <>
+                                <Button
+                                    className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm w-full "
+                                    onClick={() => handleConfigureClick(item.uid, flow.name, flow.code)}
+                                >
+                                    Configure
+                                </Button>
+                                <Link href={flow.code === "AICALL191" ? `/dashboard/report?code=${flow.code}` : `/dashboard/report/${item.uid}`} className="w-full">
+                                    <Button
+                                        className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none w-full"
+                                    >
+                                        {flow.code === "AICALL191" ? "Reservations" : "Reports"}
+                                    </Button>
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -274,14 +286,18 @@ export function PhoneCallFlowsContent() {
                                             <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">How It Works</h3>
                                         </div>
                                         <ul className="space-y-3">
-                                            {selectedFlow.how_works.map((step, index) => (
-                                                <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
-                                                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-semibold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                                        {index + 1}
-                                                    </span>
-                                                    <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal text-left">{step}</span>
-                                                </li>
-                                            ))}
+                                            {(selectedFlow.how_works || []).length === 0 ? (
+                                                <li className="text-xs text-gray-500 italic">No specific steps defined.</li>
+                                            ) : (
+                                                (selectedFlow.how_works || []).map((step, index) => (
+                                                    <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
+                                                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-semibold mt-0.5 border border-blue-600/20 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                            {index + 1}
+                                                        </span>
+                                                        <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal text-left">{step}</span>
+                                                    </li>
+                                                ))
+                                            )}
                                         </ul>
                                     </div>
 
@@ -294,14 +310,18 @@ export function PhoneCallFlowsContent() {
                                             <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">Required Resources</h3>
                                         </div>
                                         <ul className="space-y-3">
-                                            {selectedFlow.required_resources.map((resource, index) => (
-                                                <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
-                                                    <div className="mt-1 flex-shrink-0">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500/60 group-hover:bg-green-500 transition-colors" />
-                                                    </div>
-                                                    <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal text-left">{resource}</span>
-                                                </li>
-                                            ))}
+                                            {(selectedFlow.required_resources || []).length === 0 ? (
+                                                <li className="text-xs text-gray-500 italic">No additional resources required.</li>
+                                            ) : (
+                                                (selectedFlow.required_resources || []).map((resource, index) => (
+                                                    <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
+                                                        <div className="mt-1 flex-shrink-0">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500/60 group-hover:bg-green-500 transition-colors" />
+                                                        </div>
+                                                        <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal text-left">{resource}</span>
+                                                    </li>
+                                                ))
+                                            )}
                                         </ul>
                                     </div>
                                 </div>
