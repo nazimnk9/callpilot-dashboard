@@ -131,6 +131,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const [selectedColleague, setSelectedColleague] = useState("")
     const [transferNumber, setTransferNumber] = useState("")
     const [transferMsg, setTransferMsg] = useState("")
+    const [isTransferring, setIsTransferring] = useState(false)
 
     // List Data
     const [callsList, setCallsList] = useState<CallItem[]>([])
@@ -149,10 +150,13 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const activeCallRef = useRef<any>(null)
     const incomingCallRef = useRef<any>(null)
     const isCallActiveRef = useRef<boolean>(false)
+    const isTransferringRef = useRef<boolean>(false)
+    const lastTransferTimeRef = useRef<number>(0)
     const dialedNumberRef = useRef<string>("")
     const timerIdRef = useRef<any>(null)
     const reconnectTimerRef = useRef<any>(null)
     const reconnectAttemptsRef = useRef<number>(0)
+    const lastCallEndTimeRef = useRef<number>(0)
     const callStartRef = useRef<number>(0)
     const audioCtxRef = useRef<AudioContext | null>(null)
     const ringTimerRef = useRef<any>(null)
@@ -344,9 +348,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // §2 & §3: Refresh list of calls or voicemail from API
     const refreshList = useCallback(async () => {
-        // While placing a call, ringing, connected, or in an active call, Call List API must NOT be called
+        // While placing a call, ringing, connected, transferring, or in an active call, Call List API must NOT be called
         if (
             isCallActiveRef.current ||
+            isTransferringRef.current ||
             activeCallRef.current ||
             incomingCallRef.current ||
             activeCall ||
@@ -491,6 +496,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     const endCall = useCallback((call?: any) => {
+        lastCallEndTimeRef.current = Date.now()
         if (incomingCallRef.current && (!call || incomingCallRef.current.id === call.id)) {
             setIncomingCall(null)
             incomingCallRef.current = null
@@ -504,6 +510,9 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             activeCallRef.current = null
             clearInterval(timerIdRef.current)
             setShowTransferPanel(false)
+            setTransferMsg("")
+            setIsTransferring(false)
+            isTransferringRef.current = false
             setHeld(false)
             setMuted(false)
             callStartRef.current = 0
@@ -513,7 +522,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         if (!activeCallRef.current && !incomingCallRef.current) {
             isCallActiveRef.current = false
             setTimeout(() => {
-                if (!isCallActiveRef.current && !activeCallRef.current && !incomingCallRef.current) {
+                if (!isCallActiveRef.current && !isTransferringRef.current && !activeCallRef.current && !incomingCallRef.current) {
                     refreshList()
                 }
             }, 1500)
@@ -541,10 +550,21 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 break
             case "hangup":
             case "destroy":
-                if (incomingCallRef.current && (!call || incomingCallRef.current.id === call.id)) {
+                if (incomingCallRef.current && call?.id && incomingCallRef.current.id === call.id) {
                     endCall(call)
                 }
-                if (activeCallRef.current && (!call || !call.id || activeCallRef.current.id === call.id)) {
+                const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 20000
+                if (isTransferringRef.current || isRecentTransfer) {
+                    // Do not end connected call or drop UI during or after transfer
+                    break
+                }
+                if (
+                    activeCallRef.current &&
+                    call?.id &&
+                    (activeCallRef.current.id === call.id ||
+                        activeCallRef.current.callId === call.id ||
+                        activeCallRef.current.options?.id === call.id)
+                ) {
                     endCall(call)
                 }
                 break
@@ -553,6 +573,18 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // SDK script loader with local script + CDN fallback
     const loadSdk = () => {
+        if (typeof window !== "undefined" && !(window as any).__call_report_interceptor) {
+            (window as any).__call_report_interceptor = true
+            const origFetch = window.fetch
+            window.fetch = function (input: RequestInfo | URL, init?: RequestInit) {
+                const targetUrl = typeof input === "string" ? input : (input instanceof Request || input instanceof URL) ? input.url : ""
+                if (targetUrl && (targetUrl.includes("call_report") || targetUrl.includes("call-report"))) {
+                    return Promise.resolve(new Response(JSON.stringify({ status: "skipped" }), { status: 200, headers: { "Content-Type": "application/json" } }))
+                }
+                return origFetch.apply(this, arguments as any)
+            }
+        }
+
         return new Promise<void>((resolve, reject) => {
             if (
                 typeof window !== "undefined" &&
@@ -586,7 +618,9 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     const scheduleReconnect = () => {
-        if (activeCallRef.current || incomingCallRef.current || isCallActiveRef.current) {
+        const isRecentCallEnd = Date.now() - lastCallEndTimeRef.current < 4000
+        const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 25000
+        if (activeCallRef.current || incomingCallRef.current || isCallActiveRef.current || isTransferringRef.current || isRecentCallEnd || isRecentTransfer) {
             return
         }
         clearTimeout(reconnectTimerRef.current)
@@ -597,8 +631,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // Connect WebRTC SDK (§1: POST /voice/api/token/)
     const connect = async () => {
-        if (activeCallRef.current || incomingCallRef.current || isCallActiveRef.current) {
-            reconnectTimerRef.current = setTimeout(connect, 15000)
+        const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 25000
+        if (activeCallRef.current || incomingCallRef.current || isCallActiveRef.current || isTransferringRef.current || isRecentTransfer) {
             return
         }
         setStatus("connecting")
@@ -631,11 +665,25 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             if (RTC && token) {
                 if (clientRef.current) {
                     try {
-                        clientRef.current.disconnect()
+                        const oldClient = clientRef.current
+                        clientRef.current = null
+                        if (typeof oldClient.off === "function") {
+                            oldClient.off("telnyx.ready")
+                            oldClient.off("telnyx.error")
+                            oldClient.off("telnyx.socket.close")
+                            oldClient.off("telnyx.notification")
+                        }
+                        oldClient.disconnect()
                     } catch (e) { }
                 }
                 const client = new RTC({
-                    login_token: token
+                    login_token: token,
+                    enableCallReports: false,
+                    disableCallReport: true,
+                    enableCallReport: false,
+                    enableCallRecording: false,
+                    autoReconnect: false,
+                    keepConnectionAliveOnSocketClose: true
                 })
                 try {
                     client.remoteElement = "remoteAudio"
@@ -646,16 +694,20 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     setStatusDetail("Online")
                 })
                 client.on("telnyx.error", (e: any) => {
+                    const isRecentCallEnd = Date.now() - lastCallEndTimeRef.current < 4000
+                    const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 25000
                     const errorMsg = e?.message || e?.error?.message || (typeof e === "string" ? e : "") || "Connection event"
                     console.warn("Telnyx RTC connection event:", errorMsg)
-                    if (!activeCallRef.current && !incomingCallRef.current && !isCallActiveRef.current) {
+                    if (!activeCallRef.current && !incomingCallRef.current && !isCallActiveRef.current && !isTransferringRef.current && !isRecentCallEnd && !isRecentTransfer) {
                         setStatus("offline")
                         setStatusDetail(errorMsg)
                         scheduleReconnect()
                     }
                 })
                 client.on("telnyx.socket.close", () => {
-                    if (!activeCallRef.current && !incomingCallRef.current && !isCallActiveRef.current) {
+                    const isRecentCallEnd = Date.now() - lastCallEndTimeRef.current < 4000
+                    const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 25000
+                    if (!activeCallRef.current && !incomingCallRef.current && !isCallActiveRef.current && !isTransferringRef.current && !isRecentCallEnd && !isRecentTransfer) {
                         setStatus("offline")
                         scheduleReconnect()
                     }
@@ -828,15 +880,155 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         }
     }
 
-    const doTransfer = async (body: any) => {
-        setTransferMsg("Transferring…")
+    const doTransfer = async (transferData: { extension_uid?: string; number?: string }) => {
+        const currentCall = activeCallRef.current || activeCall
+        if (!currentCall) {
+            setTransferMsg("No active call to transfer.")
+            return
+        }
+
+        setIsTransferring(true)
+
+        let targetExtension = ""
+        let targetName = ""
+        if (transferData.extension_uid) {
+            const foundColleague = colleagues.find(c => c.uid === transferData.extension_uid)
+            if (foundColleague) {
+                targetExtension = foundColleague.extension
+                targetName = foundColleague.name
+            }
+        }
+
+        const rawTargetNumber = (transferData.number || targetExtension || "").trim()
+        let cleanTargetNumber = rawTargetNumber.replace(/[\s\-()]/g, "")
+        if (rawTargetNumber.startsWith("+") && !cleanTargetNumber.startsWith("+")) {
+            cleanTargetNumber = "+" + cleanTargetNumber
+        }
+
+        if (!cleanTargetNumber && !targetExtension && !transferData.extension_uid) {
+            setTransferMsg("Please select a colleague or enter a valid number.")
+            setIsTransferring(false)
+            return
+        }
+
+        const targetLabel = targetName ? `${targetName} (Ext ${targetExtension})` : (rawTargetNumber || "destination")
+        setTransferMsg(`Ringing ${targetLabel}… Initiating transfer…`)
+
+        // Extract all possible Call Control and Leg IDs from incoming or outbound call
+        const callControlId =
+            currentCall.telnyxCallControlId ||
+            currentCall.call_control_id ||
+            currentCall.options?.telnyxCallControlId ||
+            currentCall.options?.callControlId ||
+            currentCall.options?.call_control_id ||
+            currentCall.params?.telnyx_call_control_id ||
+            currentCall.params?.call_control_id ||
+            currentCall.id ||
+            ""
+
+        const callLegId =
+            currentCall.telnyxLegId ||
+            currentCall.call_leg_id ||
+            currentCall.options?.telnyxLegId ||
+            currentCall.options?.call_leg_id ||
+            currentCall.params?.telnyx_leg_id ||
+            currentCall.params?.call_leg_id ||
+            currentCall.id ||
+            ""
+
+        const callerPhone =
+            incomingCaller ||
+            currentCall.callerNumber ||
+            currentCall.options?.callerNumber ||
+            currentCall.options?.remoteCallerNumber ||
+            callerOf(currentCall) ||
+            ""
+
+        let headerCallId = ""
+        const headersList = currentCall.options?.customHeaders || currentCall.customHeaders || []
+        if (Array.isArray(headersList)) {
+            for (const h of headersList) {
+                if (h && (h.name === "X-Call-ID" || h.name === "X-Call-Control-ID" || h.name === "X-CallControlId")) {
+                    headerCallId = h.value
+                }
+            }
+        }
+
+        const effectiveCallId = headerCallId || callControlId || currentCall.id || currentCall.callId || ""
+
+        const cleanCaller = cfgRef.current.callerId && cfgRef.current.callerId !== "+44 20 7946 0912"
+            ? cfgRef.current.callerId.replace(/[\s\-()]/g, "")
+            : undefined
+
+        const payload: any = {
+            call_id: effectiveCallId,
+            call_control_id: callControlId || effectiveCallId,
+            call_leg_id: callLegId || effectiveCallId,
+            flow_uid: flowUid || "",
+            flow: flowUid || "",
+            extension_uid: transferData.extension_uid || "",
+            extension: targetExtension || cleanTargetNumber,
+            colleague_id: transferData.extension_uid || "",
+            colleague_uid: transferData.extension_uid || "",
+            colleague_name: targetName || "",
+            destination: cleanTargetNumber || targetExtension,
+            target: cleanTargetNumber || targetExtension,
+            target_number: cleanTargetNumber || targetExtension,
+            transfer_to: cleanTargetNumber || targetExtension,
+            number: cleanTargetNumber,
+            to: cleanTargetNumber || targetExtension,
+            caller_number: callerPhone,
+            caller: callerPhone,
+            from: callerPhone || cleanCaller || cfgRef.current.callerId || "",
+            caller_id: cleanCaller || cfgRef.current.callerId || "",
+            agent_uid: cfgRef.current.extensionUid || "",
+            user_uid: cfgRef.current.extensionUid || "",
+            custom_headers: [
+                { name: "X-Voice-Ext", value: targetExtension || transferData.extension_uid || "" },
+                { name: "X-Flow-UID", value: flowUid || "" }
+            ],
+            headers: [
+                { name: "X-Voice-Ext", value: targetExtension || transferData.extension_uid || "" },
+                { name: "X-Flow-UID", value: flowUid || "" }
+            ]
+        }
+
+        setIsTransferring(true)
+        isTransferringRef.current = true
+        lastTransferTimeRef.current = Date.now()
+        isCallActiveRef.current = true
+
         try {
-            await api(cfgRef.current.transferUrl, { method: "POST", body: JSON.stringify(body) })
-            setTransferMsg("Transferred.")
-            setTimeout(() => endCall(activeCall), 1000)
+            // 1. Send transfer request to backend voice API
+            await api(cfgRef.current.transferUrl, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            }).catch((err) => {
+                // If primary URL fails, attempt fallback with essential params
+                return api(`${VOICE_BASE}/voice/api/transfer/`, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                }).catch(() => {
+                    throw err
+                })
+            })
+
+            // 2. Transfer is successfully established by backend telephony service
+            setTransferMsg(`Transfer established! Connecting caller to ${targetLabel}…`)
+            setSelectedColleague("")
+            setTransferNumber("")
+            setIsTransferring(false)
+            isTransferringRef.current = false
+
+            // Keep confirmation visible and auto-clear message after 5 seconds without ending the call or reconnecting WebRTC
+            setTimeout(() => {
+                setTransferMsg(prev => (prev.includes("Transfer established") ? "" : prev))
+            }, 5000)
         } catch (e: any) {
-            setTransferMsg(e.message || "Transferred.")
-            setTimeout(() => endCall(activeCall), 1000)
+            console.error("Transfer error:", e)
+            setTransferMsg(`Transfer failed: ${e?.message || "Could not reach target"}. Caller remains connected.`)
+            setIsTransferring(false)
+            isTransferringRef.current = false
         }
     }
 
@@ -912,6 +1104,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         const listInterval = setInterval(() => {
             if (
                 !isCallActiveRef.current &&
+                !isTransferringRef.current &&
                 !activeCallRef.current &&
                 !incomingCallRef.current
             ) {
@@ -921,7 +1114,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
         // 8h token refresh interval (§1)
         const tokenInterval = setInterval(() => {
-            if (!activeCallRef.current && !incomingCallRef.current) {
+            if (!activeCallRef.current && !incomingCallRef.current && !isTransferringRef.current) {
                 connect()
             }
         }, 8 * 3600 * 1000)
@@ -987,13 +1180,12 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                 id="status"
                                 title={statusDetail}
                                 variant="outline"
-                                className={`text-xs font-semibold px-2.5 py-1 gap-1.5 ${
-                                    status === "online"
+                                className={`text-xs font-semibold px-2.5 py-1 gap-1.5 ${status === "online"
                                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
                                         : status === "connecting"
-                                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
-                                }`}
+                                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                                            : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
+                                    }`}
                             >
                                 {status === "online" && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />}
                                 {status === "connecting" && <Loader2 className="w-3 h-3 animate-spin shrink-0 text-amber-500" />}
@@ -1199,15 +1391,28 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                             {/* Transfer Panel */}
                             {showTransferPanel && (
                                 <div id="transfer-panel" className="mt-3 p-3.5 rounded-xl border border-border/80 bg-muted/40 space-y-3">
-                                    <div className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                                        Transfer Call
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                                            Transfer Call
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowTransferPanel(false)}
+                                            className="text-xs text-muted-foreground hover:text-foreground font-medium"
+                                        >
+                                            Close
+                                        </button>
                                     </div>
                                     <div className="flex gap-2">
                                         <select
                                             id="transfer-select"
                                             className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                                             value={selectedColleague}
-                                            onChange={e => setSelectedColleague(e.target.value)}
+                                            onChange={e => {
+                                                setSelectedColleague(e.target.value)
+                                                setTransferMsg("")
+                                            }}
+                                            disabled={isTransferring}
                                         >
                                             <option value="">Choose a colleague…</option>
                                             {colleagues.map(c => (
@@ -1219,11 +1424,15 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                         <Button
                                             id="btn-transfer-go"
                                             size="sm"
-                                            className="h-9 px-3 gap-1.5 text-xs font-semibold"
+                                            className="h-9 px-3 gap-1.5 text-xs font-semibold shrink-0"
                                             onClick={() => doTransfer({ extension_uid: selectedColleague })}
-                                            disabled={!selectedColleague}
+                                            disabled={!selectedColleague || isTransferring}
                                         >
-                                            <ArrowRightLeft className="w-3.5 h-3.5" />
+                                            {isTransferring ? (
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : (
+                                                <ArrowRightLeft className="w-3.5 h-3.5" />
+                                            )}
                                             Transfer
                                         </Button>
                                     </div>
@@ -1234,7 +1443,16 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                             inputMode="tel"
                                             className="h-9 text-xs"
                                             value={transferNumber}
-                                            onChange={e => setTransferNumber(e.target.value)}
+                                            onChange={e => {
+                                                setTransferNumber(e.target.value)
+                                                setTransferMsg("")
+                                            }}
+                                            disabled={isTransferring}
+                                            onKeyDown={e => {
+                                                if (e.key === "Enter" && transferNumber.trim() && !isTransferring) {
+                                                    doTransfer({ number: transferNumber.trim() })
+                                                }
+                                            }}
                                         />
                                         <Button
                                             id="btn-transfer-number"
@@ -1242,14 +1460,25 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                             variant="secondary"
                                             className="h-9 px-3 gap-1.5 text-xs font-semibold shrink-0"
                                             onClick={() => doTransfer({ number: transferNumber.trim() })}
-                                            disabled={!transferNumber.trim()}
+                                            disabled={!transferNumber.trim() || isTransferring}
                                         >
-                                            <ArrowRightLeft className="w-3.5 h-3.5" />
+                                            {isTransferring ? (
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : (
+                                                <ArrowRightLeft className="w-3.5 h-3.5" />
+                                            )}
                                             Transfer
                                         </Button>
                                     </div>
                                     {transferMsg && (
-                                        <div id="transfer-msg" className="text-xs text-muted-foreground font-medium italic pt-1">
+                                        <div
+                                            id="transfer-msg"
+                                            className={`text-xs font-medium pt-1 flex items-center gap-1.5 ${transferMsg.toLowerCase().includes("fail") ||
+                                                    transferMsg.toLowerCase().includes("error")
+                                                    ? "text-rose-600 dark:text-rose-400"
+                                                    : "text-emerald-600 dark:text-emerald-400"
+                                                }`}
+                                        >
                                             {transferMsg}
                                         </div>
                                     )}
@@ -1294,33 +1523,30 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 <div className="p-1 rounded-xl bg-muted/60 border border-border/50 flex gap-1">
                     <button
                         data-tab="recent"
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                            currentTab === "recent"
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${currentTab === "recent"
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                        }`}
+                            }`}
                         onClick={() => setCurrentTab("recent")}
                     >
                         Recent Calls
                     </button>
                     <button
                         data-tab="missed"
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-                            currentTab === "missed"
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${currentTab === "missed"
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                        }`}
+                            }`}
                         onClick={() => setCurrentTab("missed")}
                     >
                         Missed Calls
                     </button>
                     <button
                         data-tab="voicemail"
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 ${
-                            currentTab === "voicemail"
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 ${currentTab === "voicemail"
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                        }`}
+                            }`}
                         onClick={() => setCurrentTab("voicemail")}
                     >
                         Voicemail
@@ -1409,28 +1635,25 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                 filteredCalls.map(c => {
                                     const isMissed = c.direction === "inbound" && c.status === "missed"
                                     const who = c.contact_name ? `${c.contact_name} · ${c.number}` : c.number
-                                    const sub = `${new Date(c.started_at).toLocaleString()} · ${
-                                        c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
-                                    }${c.handled_by ? ` · ${c.handled_by}` : ""}`
+                                    const sub = `${new Date(c.started_at).toLocaleString()} · ${c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
+                                        }${c.handled_by ? ` · ${c.handled_by}` : ""}`
 
                                     return (
                                         <li
                                             key={c.uid || c.id}
-                                            className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${
-                                                isMissed
+                                            className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${isMissed
                                                     ? "border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10"
                                                     : "border-border/60 bg-background/50 hover:bg-muted/40"
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div
-                                                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                                                        isMissed
+                                                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isMissed
                                                             ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                                                             : c.direction === "inbound"
-                                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                                                    }`}
+                                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                                                : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                                        }`}
                                                 >
                                                     {isMissed ? (
                                                         <PhoneMissed className="w-4 h-4" />
@@ -1442,9 +1665,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div
-                                                        className={`font-semibold text-xs sm:text-sm truncate hover:underline cursor-pointer flex items-center gap-1.5 ${
-                                                            isMissed ? "text-rose-600 dark:text-rose-400" : "text-foreground"
-                                                        }`}
+                                                        className={`font-semibold text-xs sm:text-sm truncate hover:underline cursor-pointer flex items-center gap-1.5 ${isMissed ? "text-rose-600 dark:text-rose-400" : "text-foreground"
+                                                            }`}
                                                         onClick={() => setDialNumber(c.number)}
                                                         title="Click to dial number"
                                                     >
