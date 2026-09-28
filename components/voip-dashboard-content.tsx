@@ -5,7 +5,32 @@ import { useRouter } from "next/navigation"
 import { BASE_URL } from "@/lib/baseUrl"
 import { cookieUtils } from "@/services/auth-service"
 import { profileService } from "@/services/profile-service"
-import { ArrowLeft } from "lucide-react"
+import {
+    ArrowLeft,
+    Phone,
+    PhoneCall,
+    PhoneIncoming,
+    PhoneOutgoing,
+    PhoneMissed,
+    PhoneOff,
+    Mic,
+    MicOff,
+    Pause,
+    Play,
+    ArrowRightLeft,
+    Volume2,
+    User,
+    Clock,
+    Loader2,
+    UserCheck,
+    AlertCircle,
+    Voicemail,
+    Radio
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface CallItem {
     uid?: string;
@@ -123,6 +148,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const clientRef = useRef<any>(null)
     const activeCallRef = useRef<any>(null)
     const incomingCallRef = useRef<any>(null)
+    const isCallActiveRef = useRef<boolean>(false)
     const dialedNumberRef = useRef<string>("")
     const timerIdRef = useRef<any>(null)
     const reconnectTimerRef = useRef<any>(null)
@@ -134,11 +160,21 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     // Keep refs in sync with state for callbacks
     useEffect(() => {
         activeCallRef.current = activeCall
-    }, [activeCall])
+        if (activeCall) {
+            isCallActiveRef.current = true
+        } else if (!incomingCall) {
+            isCallActiveRef.current = false
+        }
+    }, [activeCall, incomingCall])
 
     useEffect(() => {
         incomingCallRef.current = incomingCall
-    }, [incomingCall])
+        if (incomingCall) {
+            isCallActiveRef.current = true
+        } else if (!activeCall) {
+            isCallActiveRef.current = false
+        }
+    }, [incomingCall, activeCall])
 
     useEffect(() => {
         currentTabRef.current = currentTab
@@ -305,350 +341,19 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         }
     }
 
-    // Call UI handlers
-    const showIncoming = (call: any) => {
-        setIncomingCall(call)
-        const caller = callerOf(call)
-        setIncomingCaller(caller)
-        if (caller && caller !== "Unknown") {
-            lookupCandidate(caller)
-        }
-        startRinger()
-        if (typeof document !== "undefined") {
-            document.title = "📞 Incoming call"
-        }
-    }
-
-    const showActive = (call: any, stateText: string) => {
-        if (incomingCallRef.current && incomingCallRef.current.id === call?.id) {
-            setIncomingCall(null)
-            stopRinger()
-        }
-        const first = !activeCallRef.current
-        setActiveCall(call)
-        const resolvedCaller = callerOf(call)
-        const targetNumber = (resolvedCaller !== "Unknown" && !isPlaceholder(resolvedCaller))
-            ? resolvedCaller
-            : (dialedNumberRef.current || call?.destinationNumber || call?.options?.destinationNumber || call?.number || dialNumber || "Active Call")
-        setActiveWho(targetNumber)
-
-        if (stateText === "Connected") {
-            if (first || !callStartRef.current) {
-                callStartRef.current = Date.now()
-                clearInterval(timerIdRef.current)
-                setActiveStateText("Connected 0:00")
-                timerIdRef.current = setInterval(() => {
-                    const elapsed = Math.floor((Date.now() - callStartRef.current) / 1000)
-                    setActiveStateText(`Connected ${mmss(elapsed)}`)
-                }, 1000)
-            }
-        } else {
-            setActiveStateText(stateText)
-            if (first) {
-                callStartRef.current = Date.now()
-            }
-        }
-    }
-
-    const endCall = useCallback((call?: any) => {
-        if (incomingCallRef.current && (!call || incomingCallRef.current.id === call.id)) {
-            setIncomingCall(null)
-            stopRinger()
-            if (typeof document !== "undefined") {
-                document.title = document.title.replace("📞 ", "")
-            }
-        }
-        if (activeCallRef.current && (!call || activeCallRef.current.id === call.id)) {
-            setActiveCall(null)
-            clearInterval(timerIdRef.current)
-            setShowTransferPanel(false)
-            setHeld(false)
-            setMuted(false)
-            callStartRef.current = 0
-            dialedNumberRef.current = ""
-            setCandidateLookup(null)
-            setTimeout(() => {
-                refreshList()
-            }, 1500)
-        }
-    }, [])
-
-    // Event notification handler from Telnyx RTC SDK (§0)
-    const onNotification = (n: any) => {
-        if (n.type !== "callUpdate" || !n.call) return
-        const call = n.call
-        if (call.state === "active" || call.state === "hangup" || call.state === "destroy") {
-            stopRinger()
-        }
-        switch (call.state) {
-            case "ringing":
-                if (call.direction === "inbound") showIncoming(call)
-                else showActive(call, "Ringing…")
-                break
-            case "requesting":
-            case "trying":
-                if (call.direction === "outbound") showActive(call, "Calling…")
-                break
-            case "active":
-                showActive(call, "Connected")
-                break
-            case "hangup":
-            case "destroy":
-                endCall(call)
-                break
-        }
-    }
-
-    // SDK script loader with local script + CDN fallback
-    const loadSdk = () => {
-        return new Promise<void>((resolve, reject) => {
-            if (
-                typeof window !== "undefined" &&
-                ((window as any).TelnyxRTC || (window as any).TelnyxWebRTC)
-            ) {
-                return resolve()
-            }
-            const scriptUrls = [
-                "/js/telnyx-webrtc.js",
-                "https://unpkg.com/@telnyx/webrtc@2.27.10/lib/bundle.js"
-            ]
-            let index = 0
-
-            const tryLoadScript = () => {
-                if (index >= scriptUrls.length) {
-                    return reject(new Error("Could not load the Telnyx WebRTC SDK from local or CDN"))
-                }
-                const url = scriptUrls[index++]
-                const s = document.createElement("script")
-                s.src = url
-                s.onload = () => resolve()
-                s.onerror = () => {
-                    console.warn(`Failed loading SDK from ${url}, trying fallback...`)
-                    tryLoadScript()
-                }
-                document.head.appendChild(s)
-            }
-
-            tryLoadScript()
-        })
-    }
-
-    const scheduleReconnect = () => {
-        clearTimeout(reconnectTimerRef.current)
-        reconnectTimerRef.current = setTimeout(connect, 5000)
-    }
-
-    // Connect WebRTC SDK (§1: POST /voice/api/token/)
-    const connect = async () => {
-        if (activeCallRef.current || incomingCallRef.current) {
-            reconnectTimerRef.current = setTimeout(connect, 15000)
-            return
-        }
-        setStatus("connecting")
-        setStatusDetail("")
-        try {
-            await loadSdk()
-            const RTC =
-                (window as any).TelnyxRTC?.TelnyxRTC ||
-                (window as any).TelnyxRTC ||
-                (window as any).TelnyxWebRTC?.TelnyxRTC ||
-                (window as any).TelnyxWebRTC
-
-            // Fetch live login_token (tries backend endpoint, falls back to server-side Next.js route /api/voice/token)
-            let token: string | null = null
-            try {
-                const res = await api(cfgRef.current.tokenUrl, { method: "POST" })
-                token = res.token
-            } catch (err: any) {
-                try {
-                    const fallbackRes = await fetch("/api/voice/token", { method: "POST" })
-                    if (fallbackRes.ok) {
-                        const fallbackData = await fallbackRes.json()
-                        token = fallbackData.token
-                    }
-                } catch (e: any) {
-                    console.warn("Fallback token endpoint note:", e)
-                }
-            }
-
-            if (RTC && token) {
-                if (clientRef.current) {
-                    try {
-                        clientRef.current.disconnect()
-                    } catch (e) { }
-                }
-                const client = new RTC({
-                    login_token: token
-                })
-                try {
-                    client.remoteElement = "remoteAudio"
-                } catch (e) { }
-                client.on("telnyx.ready", () => {
-                    setStatus("online")
-                    setStatusDetail("Online")
-                })
-                client.on("telnyx.error", (e: any) => {
-                    console.error("telnyx.error", e)
-                    setStatus("offline")
-                    scheduleReconnect()
-                })
-                client.on("telnyx.socket.close", () => {
-                    setStatus("offline")
-                    scheduleReconnect()
-                })
-                client.on("telnyx.notification", onNotification)
-                client.connect()
-                clientRef.current = client
-            } else {
-                // Standalone ready fallback
-                setStatus("online")
-            }
-        } catch (e: any) {
-            console.error(e)
-            setStatus("offline")
-            setStatusDetail(e.message)
-            scheduleReconnect()
-        }
-    }
-
-    // Button actions: Answer, Decline, Hangup, Hold, Mute (§0: SDK methods)
-    const handleAnswer = () => {
-        if (incomingCall) {
-            stopRinger()
-            if (typeof incomingCall.answer === "function") {
-                incomingCall.answer()
-            } else {
-                showActive({ id: "sim-in-" + Date.now(), options: { remoteCallerNumber: incomingCaller } }, "Connected")
-                setIncomingCall(null)
-            }
-        }
-    }
-
-    const handleDecline = () => {
-        if (incomingCall) {
-            stopRinger()
-            if (typeof incomingCall.hangup === "function") {
-                incomingCall.hangup()
-            }
-            setIncomingCall(null)
-            if (typeof document !== "undefined") {
-                document.title = document.title.replace("📞 ", "")
-            }
-        }
-    }
-
-    const handleHangup = () => {
-        if (activeCall) {
-            if (typeof activeCall.hangup === "function") {
-                activeCall.hangup()
-            }
-            endCall(activeCall)
-        }
-    }
-
-    const handleHold = () => {
-        if (!activeCall) return
-        const next = !held
-        setHeld(next)
-        if (typeof activeCall.hold === "function") {
-            next ? activeCall.hold() : activeCall.unhold()
-        }
-    }
-
-    const handleMute = () => {
-        if (!activeCall) return
-        const next = !muted
-        setMuted(next)
-        if (typeof activeCall.muteAudio === "function") {
-            next ? activeCall.muteAudio() : activeCall.unmuteAudio()
-        }
-    }
-
-    // §7: Outbound calls with custom header X-Voice-Ext
-    const dial = (number?: string) => {
-        const target = (number || dialNumber || "").trim()
-        if (!target) return
-        if (status === "offline") {
-            alert("Phone is offline. Wait for the Online badge.")
-            return
-        }
-
-        dialedNumberRef.current = target
-        setCandidateLookup(null)
-        lookupCandidate(target)
-
-        // Display active call immediately on UI with the specific target number
-        const simCall = {
-            id: "call-" + Date.now(),
-            number: target,
-            destinationNumber: target,
-            options: { destinationNumber: target }
-        }
-        showActive(simCall, "Calling…")
-
-        if (clientRef.current) {
-            try {
-                const call = clientRef.current.newCall({
-                    destinationNumber: target,
-                    callerNumber: mainNumber || cfgRef.current.callerId || undefined,
-                    remoteElement: "remoteAudio",
-                    customHeaders: [
-                        { name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }
-                    ]
-                })
-                if (call) {
-                    setActiveCall(call)
-                }
-            } catch (err: any) {
-                console.error("Telnyx newCall error:", err)
-            }
-        }
-
-        // Transition to Connected after ringing
-        setTimeout(() => {
-            if (activeCallRef.current) {
-                showActive(activeCallRef.current, "Connected")
-            }
-        }, 1200)
-
-        setDialNumber("")
-    }
-
-    // §4 & §5: Transfer toggle & doTransfer
-    const handleTransferToggle = async () => {
-        const next = !showTransferPanel
-        setShowTransferPanel(next)
-        setTransferMsg("")
-        if (next) {
-            try {
-                const res = await api(cfgRef.current.colleaguesUrl)
-                if (res && res.colleagues && Array.isArray(res.colleagues)) {
-                    setColleagues(res.colleagues)
-                }
-            } catch (e: any) {
-                setColleagues([
-                    { uid: "col-1", name: "Support Team", extension: "102" },
-                    { uid: "col-2", name: "Recruitment Consultant", extension: "103" },
-                    { uid: "col-3", name: "Operations Lead", extension: "104" }
-                ])
-            }
-        }
-    }
-
-    const doTransfer = async (body: any) => {
-        setTransferMsg("Transferring…")
-        try {
-            await api(cfgRef.current.transferUrl, { method: "POST", body: JSON.stringify(body) })
-            setTransferMsg("Transferred.")
-            setTimeout(() => endCall(activeCall), 1000)
-        } catch (e: any) {
-            setTransferMsg(e.message || "Transferred.")
-            setTimeout(() => endCall(activeCall), 1000)
-        }
-    }
-
     // §2 & §3: Refresh list of calls or voicemail from API
     const refreshList = useCallback(async () => {
+        // While placing a call, ringing, connected, or in an active call, Call List API must NOT be called
+        if (
+            isCallActiveRef.current ||
+            activeCallRef.current ||
+            incomingCallRef.current ||
+            activeCall ||
+            incomingCall
+        ) {
+            return
+        }
+
         setListErrorMessage(null)
         try {
             if (currentTabRef.current === "voicemail") {
@@ -733,7 +438,384 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         } catch (e: any) {
             setListErrorMessage(e.message)
         }
-    }, [VOICE_BASE])
+    }, [VOICE_BASE, activeCall, incomingCall])
+
+    // Call UI handlers
+    const showIncoming = (call: any) => {
+        isCallActiveRef.current = true
+        incomingCallRef.current = call
+        setIncomingCall(call)
+        const caller = callerOf(call)
+        setIncomingCaller(caller)
+        if (caller && caller !== "Unknown") {
+            lookupCandidate(caller)
+        }
+        startRinger()
+        if (typeof document !== "undefined") {
+            document.title = "📞 Incoming call"
+        }
+    }
+
+    const showActive = (call: any, stateText: string) => {
+        isCallActiveRef.current = true
+        activeCallRef.current = call
+        if (incomingCallRef.current && incomingCallRef.current.id === call?.id) {
+            setIncomingCall(null)
+            incomingCallRef.current = null
+            stopRinger()
+        }
+        setActiveCall(call)
+        const resolvedCaller = callerOf(call)
+        const targetNumber = (resolvedCaller !== "Unknown" && !isPlaceholder(resolvedCaller))
+            ? resolvedCaller
+            : (dialedNumberRef.current || call?.destinationNumber || call?.options?.destinationNumber || call?.number || dialNumber || "Active Call")
+        setActiveWho(targetNumber)
+
+        if (stateText === "Connected") {
+            if (!callStartRef.current) {
+                callStartRef.current = Date.now()
+            }
+            clearInterval(timerIdRef.current)
+            const getDuration = () => Math.floor((Date.now() - callStartRef.current) / 1000)
+            setActiveStateText(`Connected ${mmss(getDuration())}`)
+            timerIdRef.current = setInterval(() => {
+                setActiveStateText(`Connected ${mmss(getDuration())}`)
+            }, 1000)
+        } else {
+            setActiveStateText(stateText)
+            if (!callStartRef.current) {
+                callStartRef.current = Date.now()
+            }
+        }
+    }
+
+    const endCall = useCallback((call?: any) => {
+        if (incomingCallRef.current && (!call || incomingCallRef.current.id === call.id)) {
+            setIncomingCall(null)
+            incomingCallRef.current = null
+            stopRinger()
+            if (typeof document !== "undefined") {
+                document.title = document.title.replace("📞 ", "")
+            }
+        }
+        if (activeCallRef.current && (!call || !call.id || activeCallRef.current.id === call.id)) {
+            setActiveCall(null)
+            activeCallRef.current = null
+            clearInterval(timerIdRef.current)
+            setShowTransferPanel(false)
+            setHeld(false)
+            setMuted(false)
+            callStartRef.current = 0
+            dialedNumberRef.current = ""
+            setCandidateLookup(null)
+        }
+        if (!activeCallRef.current && !incomingCallRef.current) {
+            isCallActiveRef.current = false
+            setTimeout(() => {
+                if (!isCallActiveRef.current && !activeCallRef.current && !incomingCallRef.current) {
+                    refreshList()
+                }
+            }, 1500)
+        }
+    }, [refreshList])
+
+    // Event notification handler from Telnyx RTC SDK (§0)
+    const onNotification = (n: any) => {
+        if (n.type !== "callUpdate" || !n.call) return
+        const call = n.call
+        if (call.state === "active" || call.state === "hangup" || call.state === "destroy") {
+            stopRinger()
+        }
+        switch (call.state) {
+            case "ringing":
+                if (call.direction === "inbound") showIncoming(call)
+                else showActive(call, "Ringing…")
+                break
+            case "requesting":
+            case "trying":
+                if (call.direction === "outbound") showActive(call, "Calling…")
+                break
+            case "active":
+                showActive(call, "Connected")
+                break
+            case "hangup":
+            case "destroy":
+                // Only end incoming call if caller cancelled before answering
+                if (incomingCallRef.current && (!call || incomingCallRef.current.id === call.id)) {
+                    endCall(call)
+                }
+                break
+        }
+    }
+
+    // SDK script loader with local script + CDN fallback
+    const loadSdk = () => {
+        return new Promise<void>((resolve, reject) => {
+            if (
+                typeof window !== "undefined" &&
+                ((window as any).TelnyxRTC || (window as any).TelnyxWebRTC)
+            ) {
+                return resolve()
+            }
+            const scriptUrls = [
+                "/js/telnyx-webrtc.js",
+                "https://unpkg.com/@telnyx/webrtc@2.27.10/lib/bundle.js"
+            ]
+            let index = 0
+
+            const tryLoadScript = () => {
+                if (index >= scriptUrls.length) {
+                    return reject(new Error("Could not load the Telnyx WebRTC SDK from local or CDN"))
+                }
+                const url = scriptUrls[index++]
+                const s = document.createElement("script")
+                s.src = url
+                s.onload = () => resolve()
+                s.onerror = () => {
+                    console.warn(`Failed loading SDK from ${url}, trying fallback...`)
+                    tryLoadScript()
+                }
+                document.head.appendChild(s)
+            }
+
+            tryLoadScript()
+        })
+    }
+
+    const scheduleReconnect = () => {
+        if (activeCallRef.current || incomingCallRef.current || isCallActiveRef.current) {
+            return
+        }
+        clearTimeout(reconnectTimerRef.current)
+        reconnectTimerRef.current = setTimeout(connect, 5000)
+    }
+
+    // Connect WebRTC SDK (§1: POST /voice/api/token/)
+    const connect = async () => {
+        if (activeCallRef.current || incomingCallRef.current || isCallActiveRef.current) {
+            reconnectTimerRef.current = setTimeout(connect, 15000)
+            return
+        }
+        setStatus("connecting")
+        setStatusDetail("")
+        try {
+            await loadSdk()
+            const RTC =
+                (window as any).TelnyxRTC?.TelnyxRTC ||
+                (window as any).TelnyxRTC ||
+                (window as any).TelnyxWebRTC?.TelnyxRTC ||
+                (window as any).TelnyxWebRTC
+
+            // Fetch live login_token (tries backend endpoint, falls back to server-side Next.js route /api/voice/token)
+            let token: string | null = null
+            try {
+                const res = await api(cfgRef.current.tokenUrl, { method: "POST" })
+                token = res.token
+            } catch (err: any) {
+                try {
+                    const fallbackRes = await fetch("/api/voice/token", { method: "POST" })
+                    if (fallbackRes.ok) {
+                        const fallbackData = await fallbackRes.json()
+                        token = fallbackData.token
+                    }
+                } catch (e: any) {
+                    console.warn("Fallback token endpoint note:", e)
+                }
+            }
+
+            if (RTC && token) {
+                if (clientRef.current) {
+                    try {
+                        clientRef.current.disconnect()
+                    } catch (e) { }
+                }
+                const client = new RTC({
+                    login_token: token
+                })
+                try {
+                    client.remoteElement = "remoteAudio"
+                } catch (e) { }
+                client.on("telnyx.ready", () => {
+                    setStatus("online")
+                    setStatusDetail("Online")
+                })
+                client.on("telnyx.error", (e: any) => {
+                    console.error("telnyx.error", e)
+                    setStatus("offline")
+                    scheduleReconnect()
+                })
+                client.on("telnyx.socket.close", () => {
+                    setStatus("offline")
+                    scheduleReconnect()
+                })
+                client.on("telnyx.notification", onNotification)
+                client.connect()
+                clientRef.current = client
+            } else {
+                // Standalone ready fallback
+                setStatus("online")
+            }
+        } catch (e: any) {
+            console.error(e)
+            setStatus("offline")
+            setStatusDetail(e.message)
+            scheduleReconnect()
+        }
+    }
+
+    // Button actions: Answer, Decline, Hangup, Hold, Mute (§0: SDK methods)
+    const handleAnswer = () => {
+        if (incomingCall) {
+            stopRinger()
+            isCallActiveRef.current = true
+            if (typeof incomingCall.answer === "function") {
+                incomingCall.answer()
+            } else {
+                const simCall = { id: "sim-in-" + Date.now(), options: { remoteCallerNumber: incomingCaller } }
+                activeCallRef.current = simCall
+                incomingCallRef.current = null
+                showActive(simCall, "Connected")
+                setIncomingCall(null)
+            }
+        }
+    }
+
+    const handleDecline = () => {
+        if (incomingCall) {
+            stopRinger()
+            if (typeof incomingCall.hangup === "function") {
+                incomingCall.hangup()
+            }
+            setIncomingCall(null)
+            incomingCallRef.current = null
+            if (!activeCallRef.current) {
+                isCallActiveRef.current = false
+            }
+            if (typeof document !== "undefined") {
+                document.title = document.title.replace("📞 ", "")
+            }
+        }
+    }
+
+    const handleHangup = () => {
+        const callToEnd = activeCallRef.current || activeCall
+        if (callToEnd) {
+            if (typeof callToEnd.hangup === "function") {
+                try {
+                    callToEnd.hangup()
+                } catch (e) { }
+            }
+            endCall(callToEnd)
+        }
+    }
+
+    const handleHold = () => {
+        if (!activeCall) return
+        const next = !held
+        setHeld(next)
+        if (typeof activeCall.hold === "function") {
+            next ? activeCall.hold() : activeCall.unhold()
+        }
+    }
+
+    const handleMute = () => {
+        if (!activeCall) return
+        const next = !muted
+        setMuted(next)
+        if (typeof activeCall.muteAudio === "function") {
+            next ? activeCall.muteAudio() : activeCall.unmuteAudio()
+        }
+    }
+
+    // §7: Outbound calls with custom header X-Voice-Ext
+    const dial = (number?: string) => {
+        const target = (number || dialNumber || "").trim()
+        if (!target) return
+        if (status === "offline") {
+            alert("Phone is offline. Wait for the Online badge.")
+            return
+        }
+
+        // Immediately pause / stop automatic Call List API polling & fetching
+        isCallActiveRef.current = true
+        dialedNumberRef.current = target
+        setCandidateLookup(null)
+        lookupCandidate(target)
+
+        clearInterval(timerIdRef.current)
+        callStartRef.current = 0
+
+        // Display active call immediately on UI with the specific target number
+        const simCall = {
+            id: "call-" + Date.now(),
+            number: target,
+            destinationNumber: target,
+            options: { destinationNumber: target }
+        }
+        activeCallRef.current = simCall
+        showActive(simCall, "Calling…")
+
+        if (clientRef.current) {
+            try {
+                const call = clientRef.current.newCall({
+                    destinationNumber: target,
+                    callerNumber: mainNumber || cfgRef.current.callerId || undefined,
+                    remoteElement: "remoteAudio",
+                    customHeaders: [
+                        { name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }
+                    ]
+                })
+                if (call) {
+                    activeCallRef.current = call
+                    setActiveCall(call)
+                }
+            } catch (err: any) {
+                console.error("Telnyx newCall error:", err)
+            }
+        }
+
+        // Transition to Connected after ringing
+        setTimeout(() => {
+            if (activeCallRef.current) {
+                showActive(activeCallRef.current, "Connected")
+            }
+        }, 1200)
+
+        setDialNumber("")
+    }
+
+    // §4 & §5: Transfer toggle & doTransfer
+    const handleTransferToggle = async () => {
+        const next = !showTransferPanel
+        setShowTransferPanel(next)
+        setTransferMsg("")
+        if (next) {
+            try {
+                const res = await api(cfgRef.current.colleaguesUrl)
+                if (res && res.colleagues && Array.isArray(res.colleagues)) {
+                    setColleagues(res.colleagues)
+                }
+            } catch (e: any) {
+                setColleagues([
+                    { uid: "col-1", name: "Support Team", extension: "102" },
+                    { uid: "col-2", name: "Recruitment Consultant", extension: "103" },
+                    { uid: "col-3", name: "Operations Lead", extension: "104" }
+                ])
+            }
+        }
+    }
+
+    const doTransfer = async (body: any) => {
+        setTransferMsg("Transferring…")
+        try {
+            await api(cfgRef.current.transferUrl, { method: "POST", body: JSON.stringify(body) })
+            setTransferMsg("Transferred.")
+            setTimeout(() => endCall(activeCall), 1000)
+        } catch (e: any) {
+            setTransferMsg(e.message || "Transferred.")
+            setTimeout(() => endCall(activeCall), 1000)
+        }
+    }
 
     // Initial lifecycle, audio unlock & polling intervals
     useEffect(() => {
@@ -805,7 +887,13 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
         // 15s refresh interval (§3)
         const listInterval = setInterval(() => {
-            refreshList()
+            if (
+                !isCallActiveRef.current &&
+                !activeCallRef.current &&
+                !incomingCallRef.current
+            ) {
+                refreshList()
+            }
         }, 15000)
 
         // 8h token refresh interval (§1)
@@ -830,7 +918,6 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         refreshList()
     }, [currentTab, refreshList])
 
-    const arrow = { inbound: "↙", outbound: "↗" }
     const filteredCalls = currentTab === "missed" ? callsList.filter(c => c.direction === "inbound" && c.status === "missed") : callsList
 
     // Helper to format audio URL (§3b)
@@ -841,579 +928,537 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#f4f5f7] dark:bg-gray-950 p-4 min-h-screen text-[#1c1f26] dark:text-gray-100 font-sans">
-            {/* Embedded styles mirroring portal.css */}
-            <style jsx global>{`
-                .phone-container {
-                    max-width: 30rem;
-                    margin: 0 auto;
-                    padding: 1rem 0;
-                }
-                .portal-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-                .portal-h1 {
-                    font-size: 1.25rem;
-                    letter-spacing: .06em;
-                    margin: .2rem 0;
-                    font-weight: 700;
-                }
-                .portal-meta {
-                    margin: .2rem 0 1rem;
-                    color: #444;
-                    font-size: 0.95rem;
-                }
-                .dark .portal-meta {
-                    color: #9ca3af;
-                }
-                .portal-card {
-                    background: #fff;
-                    border-radius: 12px;
-                    padding: 1rem;
-                    margin-bottom: .8rem;
-                    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-                }
-                .dark .portal-card {
-                    background: #1f2937;
-                    border: 1px solid #374151;
-                }
-                .portal-card.ring {
-                    border: 2px solid #16a34a;
-                    animation: pulse 1s infinite;
-                }
-                @keyframes pulse {
-                    50% { box-shadow: 0 0 0 6px rgba(22,163,74,.18); }
-                }
-                .portal-dial {
-                    display: flex;
-                    gap: .5rem;
-                }
-                .portal-row {
-                    display: flex;
-                    gap: .5rem;
-                    margin-top: .6rem;
-                    flex-wrap: wrap;
-                }
-                .portal-input, .portal-select {
-                    flex: 1;
-                    min-width: 0;
-                    padding: .7rem;
-                    border: 1px solid #cfd4dc;
-                    border-radius: 8px;
-                    font-size: 1rem;
-                    background: #fff;
-                    color: #1c1f26;
-                }
-                .dark .portal-input, .dark .portal-select {
-                    background: #111827;
-                    border-color: #4b5563;
-                    color: #f3f4f6;
-                }
-                .portal-btn {
-                    padding: .7rem 1rem;
-                    border: 0;
-                    border-radius: 8px;
-                    background: #e5e7eb;
-                    color: #1c1f26;
-                    font-size: 1rem;
-                    cursor: pointer;
-                    font-weight: 500;
-                    transition: background 0.15s;
-                }
-                .dark .portal-btn {
-                    background: #374151;
-                    color: #f3f4f6;
-                }
-                .portal-btn:hover {
-                    opacity: 0.9;
-                }
-                .portal-btn.green {
-                    background: #16a34a;
-                    color: #fff;
-                }
-                .portal-btn.red {
-                    background: #dc2626;
-                    color: #fff;
-                }
-                .portal-btn.on {
-                    background: #1c1f26;
-                    color: #fff;
-                }
-                .dark .portal-btn.on {
-                    background: #f3f4f6;
-                    color: #111827;
-                }
-                .portal-tabs {
-                    display: flex;
-                    gap: .4rem;
-                    margin: .8rem 0 .4rem;
-                }
-                .portal-tabs button {
-                    flex: 1;
-                    font-size: .9rem;
-                    padding: .6rem .3rem;
-                    border: 0;
-                    border-radius: 8px;
-                    background: #e5e7eb;
-                    color: #1c1f26;
-                    cursor: pointer;
-                    font-weight: 500;
-                }
-                .dark .portal-tabs button {
-                    background: #374151;
-                    color: #d1d5db;
-                }
-                .portal-list {
-                    list-style: none;
-                    margin: 0;
-                    padding: 0;
-                }
-                .portal-list li {
-                    background: #fff;
-                    border-radius: 10px;
-                    padding: .7rem .9rem;
-                    margin-bottom: .4rem;
-                    display: flex;
-                    justify-content: space-between;
-                    gap: .6rem;
-                    align-items: center;
-                }
-                .dark .portal-list li {
-                    background: #1f2937;
-                    border: 1px solid #374151;
-                }
-                .portal-list .num {
-                    font-weight: 600;
-                    cursor: pointer;
-                }
-                .portal-list .num:hover {
-                    text-decoration: underline;
-                }
-                .portal-list .sub {
-                    color: #6b7280;
-                    font-size: .85rem;
-                }
-                .dark .portal-list .sub {
-                    color: #9ca3af;
-                }
-                .portal-tag {
-                    background: #fde68a;
-                    color: #78350f;
-                    border-radius: 99px;
-                    padding: 0 .5rem;
-                    font-size: .75rem;
-                    margin-left: .3rem;
-                    font-weight: 500;
-                }
-                .portal-missed .num {
-                    color: #dc2626;
-                }
-                .portal-pill {
-                    padding: .15rem .6rem;
-                    border-radius: 99px;
-                    font-size: .8rem;
-                    background: #fee2e2;
-                    color: #991b1b;
-                    font-weight: 600;
-                }
-                .portal-pill.online {
-                    background: #dcfce7;
-                    color: #166534;
-                }
-                .portal-pill.connecting {
-                    background: #fef3c7;
-                    color: #92400e;
-                }
-                .portal-banner {
-                    background: #fef3c7;
-                    color: #92400e;
-                    padding: .6rem;
-                    border-radius: 8px;
-                    margin-bottom: .8rem;
-                    font-size: 0.9rem;
-                }
-                .dark .portal-banner {
-                    background: #78350f;
-                    color: #fef3c7;
-                }
-                .portal-big {
-                    font-size: 1.2rem;
-                    font-weight: 600;
-                }
-                .portal-muted {
-                    color: #6b7280;
-                    font-size: 0.9rem;
-                }
-                .dark .portal-muted {
-                    color: #9ca3af;
-                }
-                .portal-foot {
-                    color: #6b7280;
-                    font-size: .8rem;
-                    text-align: center;
-                    margin-top: 1.5rem;
-                }
-                .dark .portal-foot {
-                    color: #9ca3af;
-                }
-                .portal-badge {
-                    background: #dc2626;
-                    color: #fff;
-                    border-radius: 99px;
-                    padding: 0 .45rem;
-                    font-size: .75rem;
-                    font-weight: 700;
-                    margin-left: 0.2rem;
-                }
-                .portal-audio {
-                    width: 100%;
-                    margin-top: .3rem;
-                }
-            `}</style>
-
-            {/* Back link */}
-            <div className="max-w-[30rem] mx-auto mb-2">
-                <button
-                    onClick={() => router.push("/dashboard/phone-call-flows")}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    Back to Call Flows
-                </button>
-            </div>
-
-            {/* Exact portal.html main.phone layout */}
-            <main className="phone-container">
-                <header className="portal-header">
-                    <h1 className="portal-h1">{orgName.toUpperCase()} PHONE</h1>
-                    <span
-                        id="status"
-                        title={statusDetail}
-                        className={`portal-pill ${status === "online" ? "online" : status === "connecting" ? "connecting" : "offline"
-                            }`}
+        <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8 min-h-screen text-foreground font-sans">
+            <div className="max-w-xl mx-auto space-y-4">
+                {/* Back link */}
+                <div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push("/dashboard/phone-call-flows")}
+                        className="text-muted-foreground hover:text-foreground -ml-2 h-8 px-2 gap-1.5 text-xs font-medium"
                     >
-                        {status === "online" ? "Online" : status === "connecting" ? "Connecting…" : "Offline"}
-                    </span>
-                </header>
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to Call Flows
+                    </Button>
+                </div>
 
-                <p className="portal-meta">
-                    Logged in: <strong>{userName}</strong> (ext {extension})<br />
-                    Main Number: <strong>{mainNumber}</strong>
-                </p>
+                {/* Header Card */}
+                <Card className="border border-border/70 bg-card shadow-sm">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                    <PhoneCall className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h1 className="text-lg font-bold tracking-tight text-foreground">
+                                        {orgName.toUpperCase()} PHONE
+                                    </h1>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        WebRTC Softphone & VoIP Station
+                                    </p>
+                                </div>
+                            </div>
+                            <Badge
+                                id="status"
+                                title={statusDetail}
+                                variant="outline"
+                                className={`text-xs font-semibold px-2.5 py-1 gap-1.5 ${
+                                    status === "online"
+                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                                        : status === "connecting"
+                                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
+                                }`}
+                            >
+                                {status === "online" && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />}
+                                {status === "connecting" && <Loader2 className="w-3 h-3 animate-spin shrink-0 text-amber-500" />}
+                                {status === "offline" && <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />}
+                                {status === "online" ? "Online" : status === "connecting" ? "Connecting…" : "Offline"}
+                            </Badge>
+                        </div>
 
+                        <div className="mt-4 pt-3 border-t border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                                <User className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
+                                <span className="truncate">Logged in: <strong className="text-foreground font-semibold">{userName}</strong> <span className="text-muted-foreground/80">(ext {extension})</span></span>
+                            </div>
+                            <div className="flex items-center gap-1.5 sm:justify-end">
+                                <Phone className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
+                                <span className="truncate">Main Number: <strong className="text-foreground font-semibold">{mainNumber}</strong></span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Sound Permission Alert Banner */}
                 {soundBannerVisible && (
-                    <div id="sound-banner" className="portal-banner">
-                        Click anywhere on this page to enable ringing sound.
+                    <div
+                        id="sound-banner"
+                        className="flex items-center gap-2.5 p-3.5 rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-xs font-medium shadow-sm transition-all animate-fade-in cursor-pointer"
+                    >
+                        <Volume2 className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span>Click anywhere on this page to enable telephone ringtone sound.</span>
                     </div>
                 )}
 
-                {/* Section: Incoming Call (§0: SDK handled) */}
+                {/* Section: Incoming Call */}
                 {incomingCall && (
-                    <section id="incoming" className="portal-card ring">
-                        {candidateLookup && (
-                            <div className="mb-2.5 pb-2 border-b border-green-200 dark:border-green-800/50">
-                                {candidateLookup.loading ? (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 italic">
-                                        Looking up candidate…
-                                    </div>
-                                ) : candidateLookup.jobadderConnected === false ? (
-                                    <div className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1.5 rounded-md">
-                                        JobAdder is not connected
-                                    </div>
-                                ) : candidateLookup.found === false ? (
-                                    <div className="text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 px-2.5 py-1.5 rounded-md">
-                                        Candidate not found
-                                    </div>
-                                ) : candidateLookup.candidate ? (
-                                    <div>
-                                        <div className="text-[11px] font-bold uppercase tracking-wider text-green-700 dark:text-green-400 mb-0.5">
-                                            Candidate
+                    <Card id="incoming" className="border-2 border-emerald-500/80 bg-emerald-500/5 shadow-lg shadow-emerald-500/10 animate-pulse">
+                        <CardContent className="p-5 space-y-4">
+                            {candidateLookup && (
+                                <div className="pb-3 border-b border-emerald-500/20">
+                                    {candidateLookup.loading ? (
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground italic">
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                                            Looking up candidate…
                                         </div>
-                                        <div className="text-base font-bold text-gray-900 dark:text-gray-100">
-                                            {[candidateLookup.candidate.firstName, candidateLookup.candidate.lastName].filter(Boolean).join(" ")}
-                                        </div>
-                                        {candidateLookup.candidate.phone && (
-                                            <div className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                                                {candidateLookup.candidate.phone}
+                                    ) : candidateLookup.jobadderConnected === false ? (
+                                        <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1.5">
+                                            <AlertCircle className="w-3.5 h-3.5" /> JobAdder is not connected
+                                        </Badge>
+                                    ) : candidateLookup.found === false ? (
+                                        <Badge variant="outline" className="text-xs bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30 gap-1.5">
+                                            <AlertCircle className="w-3.5 h-3.5" /> Candidate not found
+                                        </Badge>
+                                    ) : candidateLookup.candidate ? (
+                                        <div className="space-y-1">
+                                            <Badge variant="outline" className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1 text-[11px] font-bold uppercase tracking-wider">
+                                                <UserCheck className="w-3 h-3" /> Candidate Match
+                                            </Badge>
+                                            <div className="text-base font-bold text-foreground">
+                                                {[candidateLookup.candidate.firstName, candidateLookup.candidate.lastName].filter(Boolean).join(" ")}
                                             </div>
-                                        )}
+                                            {candidateLookup.candidate.phone && (
+                                                <div className="text-xs font-medium text-muted-foreground">
+                                                    {candidateLookup.candidate.phone}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : null}
+                                </div>
+                            )}
+
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                                    <PhoneIncoming className="w-6 h-6 animate-bounce" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                        Incoming Call
                                     </div>
-                                ) : null}
+                                    <div id="incoming-from" className="text-lg font-bold text-foreground truncate">
+                                        {incomingCaller || "Unknown Caller"}
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                        <div className="portal-big" id="incoming-from">
-                            Incoming call: {incomingCaller || "Unknown"}
-                        </div>
-                        <div className="portal-row">
-                            <button id="btn-answer" className="portal-btn green" onClick={handleAnswer}>
-                                Answer
-                            </button>
-                            <button id="btn-decline" className="portal-btn red" onClick={handleDecline}>
-                                Decline
-                            </button>
-                        </div>
-                    </section>
+
+                            <div className="grid grid-cols-2 gap-2.5 pt-1">
+                                <Button
+                                    id="btn-answer"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 h-10 shadow-sm"
+                                    onClick={handleAnswer}
+                                >
+                                    <Phone className="w-4 h-4" />
+                                    Answer
+                                </Button>
+                                <Button
+                                    id="btn-decline"
+                                    variant="destructive"
+                                    className="font-semibold gap-2 h-10 shadow-sm"
+                                    onClick={handleDecline}
+                                >
+                                    <PhoneOff className="w-4 h-4" />
+                                    Decline
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
 
-                {/* Section: Active Call (§0: SDK handled + §5: Transfer) */}
+                {/* Section: Active Call */}
                 {activeCall && (
-                    <section id="active" className="portal-card">
-                        {candidateLookup && (
-                            <div className="mb-2.5 pb-2 border-b border-blue-100 dark:border-blue-900/40">
-                                {candidateLookup.loading ? (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 italic">
-                                        Looking up candidate…
-                                    </div>
-                                ) : candidateLookup.jobadderConnected === false ? (
-                                    <div className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1.5 rounded-md">
-                                        JobAdder is not connected
-                                    </div>
-                                ) : candidateLookup.found === false ? (
-                                    <div className="text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 px-2.5 py-1.5 rounded-md">
-                                        Candidate not found
-                                    </div>
-                                ) : candidateLookup.candidate ? (
-                                    <div>
-                                        <div className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-0.5">
-                                            Candidate
+                    <Card id="active" className="border border-primary/40 bg-card shadow-md">
+                        <CardContent className="p-5 space-y-4">
+                            {candidateLookup && (
+                                <div className="pb-3 border-b border-border/60">
+                                    {candidateLookup.loading ? (
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground italic">
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                                            Looking up candidate…
                                         </div>
-                                        <div className="text-base font-bold text-gray-900 dark:text-gray-100">
-                                            {[candidateLookup.candidate.firstName, candidateLookup.candidate.lastName].filter(Boolean).join(" ")}
-                                        </div>
-                                        {candidateLookup.candidate.phone && (
-                                            <div className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                                                {candidateLookup.candidate.phone}
+                                    ) : candidateLookup.jobadderConnected === false ? (
+                                        <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1.5">
+                                            <AlertCircle className="w-3.5 h-3.5" /> JobAdder is not connected
+                                        </Badge>
+                                    ) : candidateLookup.found === false ? (
+                                        <Badge variant="outline" className="text-xs bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30 gap-1.5">
+                                            <AlertCircle className="w-3.5 h-3.5" /> Candidate not found
+                                        </Badge>
+                                    ) : candidateLookup.candidate ? (
+                                        <div className="space-y-1">
+                                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1 text-[11px] font-bold uppercase tracking-wider">
+                                                <UserCheck className="w-3 h-3" /> Candidate Match
+                                            </Badge>
+                                            <div className="text-base font-bold text-foreground">
+                                                {[candidateLookup.candidate.firstName, candidateLookup.candidate.lastName].filter(Boolean).join(" ")}
                                             </div>
-                                        )}
-                                    </div>
-                                ) : null}
-                            </div>
-                        )}
-                        <div className="portal-big" id="active-who">
-                            {activeWho}
-                        </div>
-                        <div id="active-state" className="portal-muted">
-                            {activeStateText}
-                        </div>
-                        <div className="portal-row">
-                            <button id="btn-hold" className="portal-btn" onClick={handleHold}>
-                                {held ? "Resume" : "Hold"}
-                            </button>
-                            <button id="btn-mute" className="portal-btn" onClick={handleMute}>
-                                {muted ? "Unmute" : "Mute"}
-                            </button>
-                            <button
-                                id="btn-transfer-toggle"
-                                className="portal-btn"
-                                onClick={handleTransferToggle}
-                            >
-                                Transfer
-                            </button>
-                            <button id="btn-hangup" className="portal-btn red" onClick={handleHangup}>
-                                Hang up
-                            </button>
-                        </div>
+                                            {candidateLookup.candidate.phone && (
+                                                <div className="text-xs font-medium text-muted-foreground">
+                                                    {candidateLookup.candidate.phone}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : null}
+                                </div>
+                            )}
 
-                        {showTransferPanel && (
-                            <div id="transfer-panel">
-                                <div className="portal-row">
-                                    <select
-                                        id="transfer-select"
-                                        className="portal-select"
-                                        value={selectedColleague}
-                                        onChange={e => setSelectedColleague(e.target.value)}
-                                    >
-                                        <option value="">Choose a colleague…</option>
-                                        {colleagues.map(c => (
-                                            <option key={c.uid} value={c.uid}>
-                                                {c.name} ({c.extension})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <button
-                                        id="btn-transfer-go"
-                                        className="portal-btn"
-                                        onClick={() => doTransfer({ extension_uid: selectedColleague })}
-                                        disabled={!selectedColleague}
-                                    >
-                                        Transfer
-                                    </button>
-                                </div>
-                                <div className="portal-row">
-                                    <input
-                                        id="transfer-number"
-                                        className="portal-input"
-                                        placeholder="…or an outside number"
-                                        inputMode="tel"
-                                        value={transferNumber}
-                                        onChange={e => setTransferNumber(e.target.value)}
-                                    />
-                                    <button
-                                        id="btn-transfer-number"
-                                        className="portal-btn"
-                                        onClick={() => doTransfer({ number: transferNumber.trim() })}
-                                        disabled={!transferNumber.trim()}
-                                    >
-                                        Transfer
-                                    </button>
-                                </div>
-                                {transferMsg && (
-                                    <div id="transfer-msg" className="portal-muted mt-1">
-                                        {transferMsg}
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        Call In Progress
                                     </div>
-                                )}
+                                    <div id="active-who" className="text-xl font-bold text-foreground truncate mt-0.5">
+                                        {activeWho}
+                                    </div>
+                                </div>
+                                <Badge
+                                    id="active-state"
+                                    variant="secondary"
+                                    className="font-mono text-xs px-2.5 py-1 gap-1.5 bg-primary/10 text-primary border border-primary/20 shrink-0"
+                                >
+                                    <Radio className="w-3 h-3 animate-pulse text-primary shrink-0" />
+                                    {activeStateText}
+                                </Badge>
                             </div>
-                        )}
-                    </section>
+
+                            {/* Action Buttons Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                                <Button
+                                    id="btn-hold"
+                                    variant={held ? "default" : "outline"}
+                                    className={`gap-1.5 h-10 font-medium ${held ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-border/80"}`}
+                                    onClick={handleHold}
+                                >
+                                    {held ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                                    {held ? "Resume" : "Hold"}
+                                </Button>
+                                <Button
+                                    id="btn-mute"
+                                    variant={muted ? "default" : "outline"}
+                                    className={`gap-1.5 h-10 font-medium ${muted ? "bg-rose-600 hover:bg-rose-700 text-white" : "border-border/80"}`}
+                                    onClick={handleMute}
+                                >
+                                    {muted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                    {muted ? "Unmute" : "Mute"}
+                                </Button>
+                                <Button
+                                    id="btn-transfer-toggle"
+                                    variant={showTransferPanel ? "default" : "outline"}
+                                    className="gap-1.5 h-10 font-medium border-border/80"
+                                    onClick={handleTransferToggle}
+                                >
+                                    <ArrowRightLeft className="w-4 h-4" />
+                                    Transfer
+                                </Button>
+                                <Button
+                                    id="btn-hangup"
+                                    variant="destructive"
+                                    className="gap-1.5 h-10 font-semibold shadow-sm"
+                                    onClick={handleHangup}
+                                >
+                                    <PhoneOff className="w-4 h-4" />
+                                    Hang up
+                                </Button>
+                            </div>
+
+                            {/* Transfer Panel */}
+                            {showTransferPanel && (
+                                <div id="transfer-panel" className="mt-3 p-3.5 rounded-xl border border-border/80 bg-muted/40 space-y-3">
+                                    <div className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                                        Transfer Call
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <select
+                                            id="transfer-select"
+                                            className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                                            value={selectedColleague}
+                                            onChange={e => setSelectedColleague(e.target.value)}
+                                        >
+                                            <option value="">Choose a colleague…</option>
+                                            {colleagues.map(c => (
+                                                <option key={c.uid} value={c.uid}>
+                                                    {c.name} ({c.extension})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <Button
+                                            id="btn-transfer-go"
+                                            size="sm"
+                                            className="h-9 px-3 gap-1.5 text-xs font-semibold"
+                                            onClick={() => doTransfer({ extension_uid: selectedColleague })}
+                                            disabled={!selectedColleague}
+                                        >
+                                            <ArrowRightLeft className="w-3.5 h-3.5" />
+                                            Transfer
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="transfer-number"
+                                            placeholder="…or dial outside number"
+                                            inputMode="tel"
+                                            className="h-9 text-xs"
+                                            value={transferNumber}
+                                            onChange={e => setTransferNumber(e.target.value)}
+                                        />
+                                        <Button
+                                            id="btn-transfer-number"
+                                            size="sm"
+                                            variant="secondary"
+                                            className="h-9 px-3 gap-1.5 text-xs font-semibold shrink-0"
+                                            onClick={() => doTransfer({ number: transferNumber.trim() })}
+                                            disabled={!transferNumber.trim()}
+                                        >
+                                            <ArrowRightLeft className="w-3.5 h-3.5" />
+                                            Transfer
+                                        </Button>
+                                    </div>
+                                    {transferMsg && (
+                                        <div id="transfer-msg" className="text-xs text-muted-foreground font-medium italic pt-1">
+                                            {transferMsg}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 )}
 
-                {/* Section: Dial (§7: client.newCall) */}
-                <section className="portal-card portal-dial">
-                    <input
-                        id="dial-input"
-                        className="portal-input"
-                        placeholder="Enter telephone number"
-                        inputMode="tel"
-                        autoComplete="off"
-                        value={dialNumber}
-                        onChange={e => setDialNumber(e.target.value)}
-                        onKeyDown={e => {
-                            if (e.key === "Enter") dial(dialNumber)
-                        }}
-                    />
-                    <button id="btn-call" className="portal-btn green" onClick={() => dial(dialNumber)}>
-                        CALL
-                    </button>
-                </section>
+                {/* Section: Dial */}
+                <Card className="border border-border/70 bg-card shadow-sm">
+                    <CardContent className="p-4">
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Phone className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                                <Input
+                                    id="dial-input"
+                                    placeholder="Enter telephone number to dial…"
+                                    inputMode="tel"
+                                    autoComplete="off"
+                                    className="pl-9 h-11 text-base font-medium rounded-xl"
+                                    value={dialNumber}
+                                    onChange={e => setDialNumber(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === "Enter") dial(dialNumber)
+                                    }}
+                                />
+                            </div>
+                            <Button
+                                id="btn-call"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 px-6 rounded-xl gap-2 shadow-sm shrink-0"
+                                onClick={() => dial(dialNumber)}
+                            >
+                                <Phone className="w-4 h-4" />
+                                CALL
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                {/* Tabs (§2 & §3) */}
-                <nav className="portal-tabs">
+                {/* Tabs */}
+                <div className="p-1 rounded-xl bg-muted/60 border border-border/50 flex gap-1">
                     <button
                         data-tab="recent"
-                        className={currentTab === "recent" ? "on" : ""}
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                            currentTab === "recent"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
                         onClick={() => setCurrentTab("recent")}
                     >
                         Recent Calls
                     </button>
                     <button
                         data-tab="missed"
-                        className={currentTab === "missed" ? "on" : ""}
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                            currentTab === "missed"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
                         onClick={() => setCurrentTab("missed")}
                     >
                         Missed Calls
                     </button>
                     <button
                         data-tab="voicemail"
-                        className={currentTab === "voicemail" ? "on" : ""}
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 ${
+                            currentTab === "voicemail"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
                         onClick={() => setCurrentTab("voicemail")}
                     >
                         Voicemail
                         {unreadVoicemails > 0 && (
-                            <span id="vm-badge" className="portal-badge">
+                            <span id="vm-badge" className="bg-rose-500 text-white rounded-full px-1.5 py-0.2 text-[10px] font-bold leading-tight">
                                 {unreadVoicemails}
                             </span>
                         )}
                     </button>
-                </nav>
+                </div>
 
-                {/* List Container (§2 & §3) */}
-                <ul id="list" className="portal-list">
-                    {listErrorMessage ? (
-                        <li>
-                            <div>
-                                <div className="num">Could not load</div>
-                                <div className="sub">{listErrorMessage}</div>
-                            </div>
-                        </li>
-                    ) : currentTab === "voicemail" ? (
-                        voicemailsList.length === 0 ? (
-                            <li>
-                                <div>
-                                    <div className="num">No voicemail</div>
-                                </div>
-                            </li>
-                        ) : (
-                            voicemailsList.map(v => (
-                                <li key={v.uid || v.id}>
-                                    <div style={{ width: "100%" }}>
-                                        <div
-                                            className="num"
-                                            onClick={() => setDialNumber(v.from)}
-                                            title="Click to dial"
+                {/* List Container */}
+                <Card className="border border-border/70 bg-card shadow-sm overflow-hidden">
+                    <CardContent className="p-2">
+                        <ul id="list" className="space-y-1.5">
+                            {listErrorMessage ? (
+                                <li className="p-4 text-center rounded-xl bg-muted/30">
+                                    <div className="text-sm font-semibold text-rose-600">Could not load calls</div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">{listErrorMessage}</div>
+                                </li>
+                            ) : currentTab === "voicemail" ? (
+                                voicemailsList.length === 0 ? (
+                                    <li className="p-6 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+                                        <Voicemail className="w-8 h-8 text-muted-foreground/40" />
+                                        <span>No voicemail messages found.</span>
+                                    </li>
+                                ) : (
+                                    voicemailsList.map(v => (
+                                        <li
+                                            key={v.uid || v.id}
+                                            className="p-3 rounded-xl border border-border/60 bg-background/50 hover:bg-muted/40 transition-colors space-y-2"
                                         >
-                                            {v.from || "Unknown"}
-                                        </div>
-                                        <div className="sub">
-                                            {new Date(v.created_at).toLocaleString()} · {mmss(v.duration)}
-                                            {!v.is_read && " · NEW"}
-                                        </div>
-                                        {v.ready ? (
-                                            <audio
-                                                controls
-                                                preload="none"
-                                                src={formatAudioUrl(v.audio_url)}
-                                                className="portal-audio"
-                                                onPlay={() => {
-                                                    const readUrl = v.read_url || `${VOICE_BASE}/voice/api/voicemails/${v.uid || v.id}/read/`
-                                                    api(readUrl, { method: "POST" }).catch(() => { })
-                                                    setVoicemailsList(prev =>
-                                                        prev.map(item =>
-                                                            (item.uid === v.uid || item.id === v.id)
-                                                                ? { ...item, is_read: true }
-                                                                : item
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div
+                                                    className="font-semibold text-sm text-foreground hover:text-primary hover:underline cursor-pointer flex items-center gap-2"
+                                                    onClick={() => setDialNumber(v.from)}
+                                                    title="Click to dial number"
+                                                >
+                                                    <Voicemail className="w-4 h-4 text-muted-foreground" />
+                                                    <span>{v.from || "Unknown"}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                    {!v.is_read && (
+                                                        <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] font-bold px-1.5 py-0">
+                                                            NEW
+                                                        </Badge>
+                                                    )}
+                                                    <span className="font-mono text-[11px]">{mmss(v.duration)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                                <Clock className="w-3 h-3 text-muted-foreground/70" />
+                                                {new Date(v.created_at).toLocaleString()}
+                                            </div>
+                                            {v.ready ? (
+                                                <audio
+                                                    controls
+                                                    preload="none"
+                                                    src={formatAudioUrl(v.audio_url)}
+                                                    className="w-full h-8 mt-1.5 rounded-md"
+                                                    onPlay={() => {
+                                                        const readUrl = v.read_url || `${VOICE_BASE}/voice/api/voicemails/${v.uid || v.id}/read/`
+                                                        api(readUrl, { method: "POST" }).catch(() => { })
+                                                        setVoicemailsList(prev =>
+                                                            prev.map(item =>
+                                                                (item.uid === v.uid || item.id === v.id)
+                                                                    ? { ...item, is_read: true }
+                                                                    : item
+                                                            )
                                                         )
-                                                    )
-                                                    setUnreadVoicemails(prev => Math.max(0, prev - 1))
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="sub italic mt-1"> (processing…)</div>
-                                        )}
-                                    </div>
-                                </li>
-                            ))
-                        )
-                    ) : filteredCalls.length === 0 ? (
-                        <li>
-                            <div>
-                                <div className="num">
-                                    {currentTab === "missed" ? "No missed calls" : "No calls yet"}
-                                </div>
-                            </div>
-                        </li>
-                    ) : (
-                        filteredCalls.map(c => {
-                            const isMissed = c.direction === "inbound" && c.status === "missed"
-                            const who = c.contact_name ? `${c.contact_name} · ${c.number}` : c.number
-                            const sub = `${new Date(c.started_at).toLocaleString()} · ${c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
-                                }${c.handled_by ? ` · ${c.handled_by}` : ""}`
-
-                            return (
-                                <li key={c.uid || c.id} className={isMissed ? "portal-missed" : ""}>
-                                    <div>
-                                        <div
-                                            className="num"
-                                            onClick={() => setDialNumber(c.number)}
-                                            title="Click to dial"
-                                        >
-                                            {isMissed ? "✖ " : `${arrow[c.direction]} `}
-                                            {who}
-                                            {c.has_voicemail && (
-                                                <span className="portal-tag">voicemail</span>
+                                                        setUnreadVoicemails(prev => Math.max(0, prev - 1))
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="text-xs text-muted-foreground italic mt-1"> (Processing audio…)</div>
                                             )}
-                                        </div>
-                                        <div className="sub">{sub}</div>
-                                    </div>
+                                        </li>
+                                    ))
+                                )
+                            ) : filteredCalls.length === 0 ? (
+                                <li className="p-6 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+                                    <PhoneMissed className="w-8 h-8 text-muted-foreground/40" />
+                                    <span>{currentTab === "missed" ? "No missed calls found." : "No call logs yet."}</span>
                                 </li>
-                            )
-                        })
-                    )}
-                </ul>
+                            ) : (
+                                filteredCalls.map(c => {
+                                    const isMissed = c.direction === "inbound" && c.status === "missed"
+                                    const who = c.contact_name ? `${c.contact_name} · ${c.number}` : c.number
+                                    const sub = `${new Date(c.started_at).toLocaleString()} · ${
+                                        c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
+                                    }${c.handled_by ? ` · ${c.handled_by}` : ""}`
 
-                <p className="portal-foot">Not for emergency calls: dial 999 from your mobile.</p>
-            </main>
+                                    return (
+                                        <li
+                                            key={c.uid || c.id}
+                                            className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${
+                                                isMissed
+                                                    ? "border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10"
+                                                    : "border-border/60 bg-background/50 hover:bg-muted/40"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div
+                                                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                                        isMissed
+                                                            ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                                            : c.direction === "inbound"
+                                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                                    }`}
+                                                >
+                                                    {isMissed ? (
+                                                        <PhoneMissed className="w-4 h-4" />
+                                                    ) : c.direction === "inbound" ? (
+                                                        <PhoneIncoming className="w-4 h-4" />
+                                                    ) : (
+                                                        <PhoneOutgoing className="w-4 h-4" />
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div
+                                                        className={`font-semibold text-xs sm:text-sm truncate hover:underline cursor-pointer flex items-center gap-1.5 ${
+                                                            isMissed ? "text-rose-600 dark:text-rose-400" : "text-foreground"
+                                                        }`}
+                                                        onClick={() => setDialNumber(c.number)}
+                                                        title="Click to dial number"
+                                                    >
+                                                        <span className="truncate">{who}</span>
+                                                        {c.has_voicemail && (
+                                                            <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] font-semibold px-1.5 py-0">
+                                                                voicemail
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                                                        {sub}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => dial(c.number)}
+                                                className="h-8 px-2 text-xs text-muted-foreground hover:text-emerald-600 shrink-0"
+                                                title="Call this number"
+                                            >
+                                                <Phone className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </li>
+                                    )
+                                })
+                            )}
+                        </ul>
+                    </CardContent>
+                </Card>
+
+                {/* Footer Notice */}
+                <p className="text-center text-[11px] text-muted-foreground/80 py-2">
+                    Emergency calls (999/911/112) should be dialed directly from your mobile or landline device.
+                </p>
+            </div>
 
             <audio id="remoteAudio" autoPlay playsInline className="hidden" />
         </div>
