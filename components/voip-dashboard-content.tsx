@@ -132,6 +132,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const [transferNumber, setTransferNumber] = useState("")
     const [transferMsg, setTransferMsg] = useState("")
     const [isTransferring, setIsTransferring] = useState(false)
+    const [transferStatus, setTransferStatus] = useState<"idle" | "initiating" | "ringing" | "connecting" | "connected" | "completed" | "failed">("idle")
 
     // List Data
     const [callsList, setCallsList] = useState<CallItem[]>([])
@@ -151,6 +152,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const incomingCallRef = useRef<any>(null)
     const isCallActiveRef = useRef<boolean>(false)
     const isTransferringRef = useRef<boolean>(false)
+    const transferStatusRef = useRef<"idle" | "initiating" | "ringing" | "connecting" | "connected" | "completed" | "failed">("idle")
     const lastTransferTimeRef = useRef<number>(0)
     const dialedNumberRef = useRef<string>("")
     const timerIdRef = useRef<any>(null)
@@ -513,6 +515,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             setTransferMsg("")
             setIsTransferring(false)
             isTransferringRef.current = false
+            setTransferStatus("idle")
+            transferStatusRef.current = "idle"
             setHeld(false)
             setMuted(false)
             callStartRef.current = 0
@@ -540,6 +544,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             case "ringing":
                 if (call.direction === "inbound") showIncoming(call)
                 else showActive(call, "Ringing…")
+                if (isTransferringRef.current) {
+                    setTransferStatus("ringing")
+                    transferStatusRef.current = "ringing"
+                }
                 break
             case "requesting":
             case "trying":
@@ -547,16 +555,15 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 break
             case "active":
                 showActive(call, "Connected")
+                if (isTransferringRef.current && transferStatusRef.current === "ringing") {
+                    setTransferStatus("connected")
+                    transferStatusRef.current = "connected"
+                }
                 break
             case "hangup":
             case "destroy":
                 if (incomingCallRef.current && call?.id && incomingCallRef.current.id === call.id) {
                     endCall(call)
-                }
-                const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 20000
-                if (isTransferringRef.current || isRecentTransfer) {
-                    // Do not end connected call or drop UI during or after transfer
-                    break
                 }
                 if (
                     activeCallRef.current &&
@@ -565,6 +572,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                         activeCallRef.current.callId === call.id ||
                         activeCallRef.current.options?.id === call.id)
                 ) {
+                    // Call legitimately ended on provider side
                     endCall(call)
                 }
                 break
@@ -573,18 +581,6 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // SDK script loader with local script + CDN fallback
     const loadSdk = () => {
-        if (typeof window !== "undefined" && !(window as any).__call_report_interceptor) {
-            (window as any).__call_report_interceptor = true
-            const origFetch = window.fetch
-            window.fetch = function (input: RequestInfo | URL, init?: RequestInit) {
-                const targetUrl = typeof input === "string" ? input : (input instanceof Request || input instanceof URL) ? input.url : ""
-                if (targetUrl && (targetUrl.includes("call_report") || targetUrl.includes("call-report"))) {
-                    return Promise.resolve(new Response(JSON.stringify({ status: "skipped" }), { status: 200, headers: { "Content-Type": "application/json" } }))
-                }
-                return origFetch.apply(this, arguments as any)
-            }
-        }
-
         return new Promise<void>((resolve, reject) => {
             if (
                 typeof window !== "undefined" &&
@@ -678,9 +674,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 }
                 const client = new RTC({
                     login_token: token,
-                    enableCallReports: false,
-                    disableCallReport: true,
-                    enableCallReport: false,
+                    enableCallReports: true,
+                    disableCallReport: false,
                     enableCallRecording: false,
                     autoReconnect: false,
                     keepConnectionAliveOnSocketClose: true
@@ -884,10 +879,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         const currentCall = activeCallRef.current || activeCall
         if (!currentCall) {
             setTransferMsg("No active call to transfer.")
+            setTransferStatus("failed")
+            transferStatusRef.current = "failed"
             return
         }
-
-        setIsTransferring(true)
 
         let targetExtension = ""
         let targetName = ""
@@ -907,12 +902,23 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
         if (!cleanTargetNumber && !targetExtension && !transferData.extension_uid) {
             setTransferMsg("Please select a colleague or enter a valid number.")
+            setTransferStatus("failed")
+            transferStatusRef.current = "failed"
             setIsTransferring(false)
+            isTransferringRef.current = false
             return
         }
 
         const targetLabel = targetName ? `${targetName} (Ext ${targetExtension})` : (rawTargetNumber || "destination")
-        setTransferMsg(`Ringing ${targetLabel}… Initiating transfer…`)
+        
+        // 1. Separate State: Active WebRTC call remains completely intact while transfer initiates
+        setTransferStatus("initiating")
+        transferStatusRef.current = "initiating"
+        setIsTransferring(true)
+        isTransferringRef.current = true
+        lastTransferTimeRef.current = Date.now()
+        isCallActiveRef.current = true
+        setTransferMsg(`Initiating transfer to ${targetLabel}… Caller remains connected.`)
 
         // Extract all possible Call Control and Leg IDs from incoming or outbound call
         const callControlId =
@@ -993,18 +999,27 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             ]
         }
 
-        setIsTransferring(true)
-        isTransferringRef.current = true
-        lastTransferTimeRef.current = Date.now()
-        isCallActiveRef.current = true
-
         try {
-            // 1. Send transfer request to backend voice API
+            // 2. Transition transfer state to 'ringing'
+            setTransferStatus("ringing")
+            transferStatusRef.current = "ringing"
+            setTransferMsg(`Target ${targetLabel} is ringing… Caller remains connected.`)
+
+            // 3. Send transfer request to backend voice API with local API route fallback
             await api(cfgRef.current.transferUrl, {
                 method: "POST",
                 body: JSON.stringify(payload)
-            }).catch((err) => {
-                // If primary URL fails, attempt fallback with essential params
+            }).catch(async (err) => {
+                const localRes = await fetch("/api/voice/transfer", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                }).catch(() => null)
+
+                if (localRes && localRes.ok) {
+                    return await localRes.json()
+                }
+
                 return api(`${VOICE_BASE}/voice/api/transfer/`, {
                     method: "POST",
                     body: JSON.stringify(payload)
@@ -1013,19 +1028,24 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 })
             })
 
-            // 2. Transfer is successfully established by backend telephony service
-            setTransferMsg(`Transfer established! Connecting caller to ${targetLabel}…`)
+            // 4. Transfer completed successfully on telephony service
+            setTransferStatus("completed")
+            transferStatusRef.current = "completed"
+            setTransferMsg(`Transfer established! Call successfully handed off to ${targetLabel}.`)
             setSelectedColleague("")
             setTransferNumber("")
             setIsTransferring(false)
             isTransferringRef.current = false
 
-            // Keep confirmation visible and auto-clear message after 5 seconds without ending the call or reconnecting WebRTC
             setTimeout(() => {
                 setTransferMsg(prev => (prev.includes("Transfer established") ? "" : prev))
-            }, 5000)
+                setTransferStatus("idle")
+                transferStatusRef.current = "idle"
+            }, 6000)
         } catch (e: any) {
             console.error("Transfer error:", e)
+            setTransferStatus("failed")
+            transferStatusRef.current = "failed"
             setTransferMsg(`Transfer failed: ${e?.message || "Could not reach target"}. Caller remains connected.`)
             setIsTransferring(false)
             isTransferringRef.current = false
@@ -1392,8 +1412,24 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                             {showTransferPanel && (
                                 <div id="transfer-panel" className="mt-3 p-3.5 rounded-xl border border-border/80 bg-muted/40 space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <div className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                                            Transfer Call
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                                                Transfer Call
+                                            </span>
+                                            {transferStatus !== "idle" && (
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`text-[10px] font-mono uppercase px-2 py-0.5 ${
+                                                        transferStatus === "completed"
+                                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                                            : transferStatus === "failed"
+                                                            ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                                                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 animate-pulse"
+                                                    }`}
+                                                >
+                                                    {transferStatus}
+                                                </Badge>
+                                            )}
                                         </div>
                                         <button
                                             type="button"
