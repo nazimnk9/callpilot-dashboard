@@ -152,6 +152,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const dialedNumberRef = useRef<string>("")
     const timerIdRef = useRef<any>(null)
     const reconnectTimerRef = useRef<any>(null)
+    const reconnectAttemptsRef = useRef<number>(0)
     const callStartRef = useRef<number>(0)
     const audioCtxRef = useRef<AudioContext | null>(null)
     const ringTimerRef = useRef<any>(null)
@@ -482,10 +483,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 setActiveStateText(`Connected ${mmss(getDuration())}`)
             }, 1000)
         } else {
+            // "Calling…", "Ringing…", etc.
+            clearInterval(timerIdRef.current)
+            callStartRef.current = 0
             setActiveStateText(stateText)
-            if (!callStartRef.current) {
-                callStartRef.current = Date.now()
-            }
         }
     }
 
@@ -540,8 +541,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 break
             case "hangup":
             case "destroy":
-                // Only end incoming call if caller cancelled before answering
                 if (incomingCallRef.current && (!call || incomingCallRef.current.id === call.id)) {
+                    endCall(call)
+                }
+                if (activeCallRef.current && (!call || !call.id || activeCallRef.current.id === call.id)) {
                     endCall(call)
                 }
                 break
@@ -587,7 +590,9 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             return
         }
         clearTimeout(reconnectTimerRef.current)
-        reconnectTimerRef.current = setTimeout(connect, 5000)
+        const delay = Math.min(30000, 5000 * Math.pow(1.3, reconnectAttemptsRef.current))
+        reconnectAttemptsRef.current += 1
+        reconnectTimerRef.current = setTimeout(connect, delay)
     }
 
     // Connect WebRTC SDK (§1: POST /voice/api/token/)
@@ -610,13 +615,13 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             let token: string | null = null
             try {
                 const res = await api(cfgRef.current.tokenUrl, { method: "POST" })
-                token = res.token
+                token = res?.token || res?.login_token || res?.data?.token || res?.jwt || null
             } catch (err: any) {
                 try {
                     const fallbackRes = await fetch("/api/voice/token", { method: "POST" })
                     if (fallbackRes.ok) {
                         const fallbackData = await fallbackRes.json()
-                        token = fallbackData.token
+                        token = fallbackData?.token || fallbackData?.login_token || null
                     }
                 } catch (e: any) {
                     console.warn("Fallback token endpoint note:", e)
@@ -636,17 +641,24 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     client.remoteElement = "remoteAudio"
                 } catch (e) { }
                 client.on("telnyx.ready", () => {
+                    reconnectAttemptsRef.current = 0
                     setStatus("online")
                     setStatusDetail("Online")
                 })
                 client.on("telnyx.error", (e: any) => {
-                    console.error("telnyx.error", e)
-                    setStatus("offline")
-                    scheduleReconnect()
+                    const errorMsg = e?.message || e?.error?.message || (typeof e === "string" ? e : "") || "Connection event"
+                    console.warn("Telnyx RTC connection event:", errorMsg)
+                    if (!activeCallRef.current && !incomingCallRef.current && !isCallActiveRef.current) {
+                        setStatus("offline")
+                        setStatusDetail(errorMsg)
+                        scheduleReconnect()
+                    }
                 })
                 client.on("telnyx.socket.close", () => {
-                    setStatus("offline")
-                    scheduleReconnect()
+                    if (!activeCallRef.current && !incomingCallRef.current && !isCallActiveRef.current) {
+                        setStatus("offline")
+                        scheduleReconnect()
+                    }
                 })
                 client.on("telnyx.notification", onNotification)
                 client.connect()
@@ -654,11 +666,12 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             } else {
                 // Standalone ready fallback
                 setStatus("online")
+                setStatusDetail("Online")
             }
         } catch (e: any) {
-            console.error(e)
+            console.warn("Telnyx connection catch note:", e?.message || e)
             setStatus("offline")
-            setStatusDetail(e.message)
+            setStatusDetail(e?.message || "Offline")
             scheduleReconnect()
         }
     }
@@ -728,19 +741,33 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     // §7: Outbound calls with custom header X-Voice-Ext
-    const dial = (number?: string) => {
-        const target = (number || dialNumber || "").trim()
-        if (!target) return
+    const dial = async (number?: string) => {
+        const rawTarget = (number || dialNumber || "").trim()
+        if (!rawTarget) return
         if (status === "offline") {
             alert("Phone is offline. Wait for the Online badge.")
             return
         }
 
+        // Clean target and caller number: remove internal spaces and formatting for valid SIP URI
+        const cleanTarget = rawTarget.replace(/[\s\-()]/g, "")
+        // Only pass callerNumber if it's a real verified number from the organization (avoid 403 Forbidden on Telnyx)
+        const cleanCaller = cfgRef.current.callerId && cfgRef.current.callerId !== "+44 20 7946 0912"
+            ? cfgRef.current.callerId.replace(/[\s\-()]/g, "")
+            : undefined
+
+        // Request user media access before dialing to prevent WebRTC permission drop
+        try {
+            if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
+                await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null)
+            }
+        } catch (e) { }
+
         // Immediately pause / stop automatic Call List API polling & fetching
         isCallActiveRef.current = true
-        dialedNumberRef.current = target
+        dialedNumberRef.current = rawTarget
         setCandidateLookup(null)
-        lookupCandidate(target)
+        lookupCandidate(rawTarget)
 
         clearInterval(timerIdRef.current)
         callStartRef.current = 0
@@ -748,38 +775,34 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         // Display active call immediately on UI with the specific target number
         const simCall = {
             id: "call-" + Date.now(),
-            number: target,
-            destinationNumber: target,
-            options: { destinationNumber: target }
+            number: rawTarget,
+            destinationNumber: cleanTarget,
+            options: { destinationNumber: cleanTarget }
         }
         activeCallRef.current = simCall
         showActive(simCall, "Calling…")
 
         if (clientRef.current) {
             try {
-                const call = clientRef.current.newCall({
-                    destinationNumber: target,
-                    callerNumber: mainNumber || cfgRef.current.callerId || undefined,
+                const callOptions: any = {
+                    destinationNumber: cleanTarget,
                     remoteElement: "remoteAudio",
                     customHeaders: [
                         { name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }
                     ]
-                })
+                }
+                if (cleanCaller) {
+                    callOptions.callerNumber = cleanCaller
+                }
+                const call = clientRef.current.newCall(callOptions)
                 if (call) {
                     activeCallRef.current = call
                     setActiveCall(call)
                 }
             } catch (err: any) {
-                console.error("Telnyx newCall error:", err)
+                console.warn("Telnyx newCall error:", err)
             }
         }
-
-        // Transition to Connected after ringing
-        setTimeout(() => {
-            if (activeCallRef.current) {
-                showActive(activeCallRef.current, "Connected")
-            }
-        }, 1200)
 
         setDialNumber("")
     }
@@ -1460,7 +1483,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 </p>
             </div>
 
-            <audio id="remoteAudio" autoPlay playsInline className="hidden" />
+            <audio id="remoteAudio" autoPlay playsInline className="fixed -top-full -left-full opacity-0 pointer-events-none w-0 h-0" />
         </div>
     )
 }
