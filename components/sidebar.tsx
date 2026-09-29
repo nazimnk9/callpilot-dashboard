@@ -76,24 +76,31 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   }, [pathname, isSettingsPage]);
 
-  const menuItems = [
-    { icon: LayoutGrid, label: 'AI Control Centre', href: '/dashboard', isBold: true },
-    { label: 'Integrations', isHeader: true },
-    { icon: Globe, label: 'Connect ATS', href: '/dashboard/connect-ats', isBold: true },
-    { icon: Phone, label: 'Business Phone Numbers', href: '/dashboard/phone-numbers', isBold: true },
-    { label: 'AI Flows', isHeader: true },
-    { icon: Shuffle, label: 'AI Call Builder', href: '/dashboard/phone-call-flows', isBold: true },
-    { label: 'Report', isHeader: true },
-    { icon: FileText, label: 'Call Activity', href: '/dashboard/call-logs', isBold: true },
-  ];
+  const isVoipUser = currentUserRole === 'VOIP_USER';
+
+  const menuItems = isVoipUser
+    ? [
+      { label: 'AI Flows', isHeader: true },
+      { icon: Shuffle, label: 'AI Call Builder', href: '/dashboard/phone-call-flows', isBold: true },
+    ]
+    : [
+      { icon: LayoutGrid, label: 'AI Control Centre', href: '/dashboard', isBold: true },
+      { label: 'Integrations', isHeader: true },
+      { icon: Globe, label: 'Connect ATS', href: '/dashboard/connect-ats', isBold: true },
+      { icon: Phone, label: 'Business Phone Numbers', href: '/dashboard/phone-numbers', isBold: true },
+      { label: 'AI Flows', isHeader: true },
+      { icon: Shuffle, label: 'AI Call Builder', href: '/dashboard/phone-call-flows', isBold: true },
+      { label: 'Report', isHeader: true },
+      { icon: FileText, label: 'Call Activity', href: '/dashboard/call-logs', isBold: true },
+    ];
 
   const settingsMenuItems = [
     { label: 'Settings', isHeader: true },
     { icon: User, label: 'Profile', href: '/dashboard/profile', isBold: true },
     { label: 'Organization', isHeader: true },
     { icon: FileText, label: 'Business Details', href: '/dashboard/organization', isBold: true },
-    { icon: CreditCard, label: 'Billing', href: '/dashboard/billing', isBold: true },
-    ...(currentUserRole !== 'STAFF' ? [{ icon: Users, label: 'Users', href: '/dashboard/users', isBold: true }] : []),
+    ...(currentUserRole !== 'STAFF' && currentUserRole !== 'VOIP_USER' ? [{ icon: CreditCard, label: 'Billing', href: '/dashboard/billing', isBold: true }] : []),
+    ...(currentUserRole !== 'STAFF' && currentUserRole !== 'VOIP_USER' ? [{ icon: Users, label: 'Users', href: '/dashboard/users', isBold: true }] : []),
     { label: 'Support Tickets', isHeader: true },
     { icon: MessageSquare, label: 'Support Tickets', href: '/dashboard/help/support-tickets', isBold: true },
   ];
@@ -102,9 +109,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const handleViewToggle = () => {
     if (isSettingsView) {
-      // Switching from Settings back to Dashboard
+      // Switching from Settings back to Dashboard / Flows
       setIsSettingsView(false);
-      router.push('/dashboard');
+      router.push(isVoipUser ? '/dashboard/phone-call-flows' : '/dashboard');
     } else {
       // Switching from Dashboard to Settings
       setIsSettingsView(true);
@@ -131,7 +138,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="h-16 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-800 relative">
           <div className="flex items-center justify-center">
             <img
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push(isVoipUser ? '/dashboard/phone-call-flows' : '/dashboard')}
               src="/callpilot_logo.png"
               alt="CallPilot Logo"
               className="h-12 w-auto object-contain brightness-100 cursor-pointer"

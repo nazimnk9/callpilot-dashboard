@@ -579,30 +579,30 @@ export function OrganizationUsersContent() {
                                                             {formatTimestamp(item.joined_at)}
                                                         </div>
                                                     </TableCell>
-                                                     <TableCell className="py-4 px-6 text-right">
-                                                         <div className="flex justify-end gap-2">
-                                                             {canEditUser(item) ? (
-                                                                 <Button
-                                                                     onClick={() => handleOpenEditModal(item)}
-                                                                     variant="ghost"
-                                                                     size="icon"
-                                                                     className="h-9 w-9 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-all"
-                                                                 >
-                                                                     <Edit2 className="h-4 w-4" />
-                                                                 </Button>
-                                                             ) : (<div className="h-9 w-9" />)}
-                                                             {canDeleteUser(item) ? (
-                                                                 <Button
-                                                                     onClick={() => handleOpenDeleteModal(item)}
-                                                                     variant="ghost"
-                                                                     size="icon"
-                                                                     className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all"
-                                                                 >
-                                                                     <Trash2 className="h-4 w-4" />
-                                                                 </Button>
-                                                             ) : (<div className="h-9 w-9" />)}
-                                                         </div>
-                                                     </TableCell>
+                                                    <TableCell className="py-4 px-6 text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            {canEditUser(item) ? (
+                                                                <Button
+                                                                    onClick={() => handleOpenEditModal(item)}
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-9 w-9 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-all"
+                                                                >
+                                                                    <Edit2 className="h-4 w-4" />
+                                                                </Button>
+                                                            ) : (<div className="h-9 w-9" />)}
+                                                            {canDeleteUser(item) ? (
+                                                                <Button
+                                                                    onClick={() => handleOpenDeleteModal(item)}
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            ) : (<div className="h-9 w-9" />)}
+                                                        </div>
+                                                    </TableCell>
                                                 </TableRow>
                                             ))
                                         )
@@ -665,8 +665,8 @@ export function OrganizationUsersContent() {
             </div>
 
             {/* Invite User Modal */}
-            <Dialog 
-                open={isInviteModalOpen} 
+            <Dialog
+                open={isInviteModalOpen}
                 onOpenChange={(open) => {
                     setIsInviteModalOpen(open)
                     if (!open) {
@@ -768,6 +768,7 @@ export function OrganizationUsersContent() {
                                                 {/* <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem> */}
                                                 <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
                                                 <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
+                                                <SelectItem value="VOIP_USER" className="rounded-lg">VoIP User</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -861,7 +862,7 @@ export function OrganizationUsersContent() {
                                 />
                             </div> */}
 
-                             <div className="space-y-2">
+                            <div className="space-y-2">
                                 <Label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Assign Role <span className="text-red-500">*</span>
                                 </Label>
@@ -873,6 +874,7 @@ export function OrganizationUsersContent() {
                                         {/* <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem> */}
                                         <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
                                         <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
+                                        <SelectItem value="VOIP_USER" className="rounded-lg">VoIP User</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

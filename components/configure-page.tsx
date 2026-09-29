@@ -11,7 +11,7 @@ import Link from "next/link"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { flowService } from "@/services/flow-service"
 import { profileService } from "@/services/profile-service"
-import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock, Volume2, X, Loader2, ChevronDown, Search } from "lucide-react"
+import { Trash2, CheckCircle2, AlertCircle, ArrowLeft, Plus, Clock, Volume2, X, Loader2, ChevronDown, Search, ShieldAlert } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { LoaderOverlay } from "@/components/auth/loader-overlay"
 import {
@@ -1066,6 +1066,33 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                 setSearchQuery("")
             }
         }
+    }
+
+    if (currentUserRole === 'VOIP_USER') {
+        return (
+            <div className="relative flex-1 flex flex-col h-full overflow-hidden bg-gray-50/50 dark:bg-gray-950 items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-sm text-center flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-5">
+                        <ShieldAlert className="w-8 h-8" />
+                    </div>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 mb-3">
+                        Role: VOIP_USER
+                    </span>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                        Access Restricted
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
+                        You do not have authorization to configure this call flow. Your account is configured for VoIP Business Line operations.
+                    </p>
+                    <Button
+                        onClick={() => router.push('/dashboard/phone-call-flows')}
+                        className="w-full bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 rounded-lg text-sm transition-all shadow-sm"
+                    >
+                        Go to AI Call Builder
+                    </Button>
+                </div>
+            </div>
+        );
     }
 
     return (
