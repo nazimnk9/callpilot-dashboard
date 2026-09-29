@@ -134,10 +134,16 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const reconnectTimerRef = useRef<any>(null)
     const callStartRef = useRef<number>(0)
     const audioCtxRef = useRef<AudioContext | null>(null)
-    const ringTimerRef = useRef<any>(null)
+    const ringBufferRef = useRef<AudioBuffer | null>(null)
+    const ringSourceRef = useRef<AudioBufferSourceNode | null>(null)
+    const ringRequestedRef = useRef<boolean>(false)
+    const ringingCallIdRef = useRef<string>("")
+    const suppressRingForCallIdsRef = useRef<Set<string>>(new Set())
     const currentTabRef = useRef<"recent" | "missed" | "voicemail">("recent")
     const isConnectingRef = useRef<boolean>(false)
+    const clientReadyRef = useRef<boolean>(false)
     const dialedNumberRef = useRef<string>("")
+    const baseTitleRef = useRef<string>(typeof document !== "undefined" ? document.title : "")
 
     // Keep refs synchronized
     useEffect(() => {
@@ -233,54 +239,149 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         return data
     }
 
-    // Web Audio ringer (tone & burst from portal.js)
-    const tone = (freq: number, ms: number) => {
-        try {
-            if (!audioCtxRef.current) {
-                const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
-                if (AudioContextClass) audioCtxRef.current = new AudioContextClass()
+    // Reliable Web Audio ringtone. A looping AudioBuffer is used instead of
+    // setInterval/oscillator bursts because browsers can throttle timers and Telnyx
+    // may emit repeated "ringing" notifications for the same call.
+    const callId = (call: any): string => {
+        if (!call || call.id == null) return ""
+        return String(call.id)
+    }
+
+    const recoveredCallId = (call: any): string => {
+        if (!call || call.recoveredCallId == null) return ""
+        return String(call.recoveredCallId)
+    }
+
+    const sameCall = (a: any, b: any): boolean => {
+        const aId = callId(a)
+        const bId = callId(b)
+        if (!aId || !bId) return false
+        return aId === bId || recoveredCallId(a) === bId || recoveredCallId(b) === aId
+    }
+
+    const getAudioContext = (): AudioContext | null => {
+        if (audioCtxRef.current) return audioCtxRef.current
+        if (typeof window === "undefined") return null
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+        if (!AudioContextClass) return null
+        audioCtxRef.current = new AudioContextClass()
+        return audioCtxRef.current
+    }
+
+    const getRingtoneBuffer = (ctx: AudioContext): AudioBuffer => {
+        if (ringBufferRef.current && ringBufferRef.current.sampleRate === ctx.sampleRate) {
+            return ringBufferRef.current
+        }
+
+        // Two short tones followed by silence. The whole buffer loops continuously.
+        const durationSeconds = 2.5
+        const frameCount = Math.floor(durationSeconds * ctx.sampleRate)
+        const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate)
+        const data = buffer.getChannelData(0)
+
+        const writeTone = (startSeconds: number, toneSeconds: number, frequency: number) => {
+            const startFrame = Math.floor(startSeconds * ctx.sampleRate)
+            const toneFrames = Math.floor(toneSeconds * ctx.sampleRate)
+            const fadeFrames = Math.max(1, Math.floor(0.015 * ctx.sampleRate))
+
+            for (let i = 0; i < toneFrames && startFrame + i < frameCount; i++) {
+                let envelope = 1
+                if (i < fadeFrames) envelope = i / fadeFrames
+                if (i > toneFrames - fadeFrames) {
+                    envelope = Math.max(0, (toneFrames - i) / fadeFrames)
+                }
+                data[startFrame + i] =
+                    0.16 * envelope * Math.sin((2 * Math.PI * frequency * i) / ctx.sampleRate)
             }
-            if (!audioCtxRef.current) return
-            const ctx = audioCtxRef.current
-            const o = ctx.createOscillator()
-            const g = ctx.createGain()
-            g.gain.value = 0.15
-            o.frequency.value = freq
-            o.connect(g)
-            g.connect(ctx.destination)
-            o.start()
-            o.stop(ctx.currentTime + ms / 1000)
+        }
+
+        writeTone(0, 0.4, 440)
+        writeTone(0.45, 0.4, 480)
+        ringBufferRef.current = buffer
+        return buffer
+    }
+
+    const startRingSource = () => {
+        const ctx = audioCtxRef.current
+        if (!ringRequestedRef.current || ringSourceRef.current || !ctx || ctx.state !== "running") return
+
+        const source = ctx.createBufferSource()
+        source.buffer = getRingtoneBuffer(ctx)
+        source.loop = true
+        source.connect(ctx.destination)
+        source.onended = () => {
+            if (ringSourceRef.current === source) ringSourceRef.current = null
+        }
+        source.start()
+        ringSourceRef.current = source
+    }
+
+    const unlockAudio = async () => {
+        try {
+            const ctx = getAudioContext()
+            if (!ctx) return
+            if (ctx.state !== "running") await ctx.resume()
+            const running = ctx.state === "running"
+            setSoundBannerVisible(!running)
+            if (running && ringRequestedRef.current) startRingSource()
         } catch (e) {
-            console.warn("ringer unavailable", e)
+            console.warn("Could not unlock ringtone audio", e)
+            setSoundBannerVisible(true)
         }
     }
 
-    const burst = () => {
-        tone(440, 400)
-        setTimeout(() => tone(480, 400), 450)
-    }
+    const stopRinger = (call?: any) => {
+        // Only the call that owns the ringtone is allowed to stop it. This prevents an
+        // unrelated/outbound Telnyx callUpdate from silencing a valid incoming call.
+        if (call && ringingCallIdRef.current) {
+            const id = callId(call)
+            const recovered = recoveredCallId(call)
+            if (id !== ringingCallIdRef.current && recovered !== ringingCallIdRef.current) return
+        }
 
-    const startRinger = () => {
-        try {
-            if (!audioCtxRef.current) {
-                const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
-                if (AudioContextClass) audioCtxRef.current = new AudioContextClass()
-            }
-            if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
-                audioCtxRef.current.resume()
-                setSoundBannerVisible(audioCtxRef.current.state !== "running")
-            }
-            clearInterval(ringTimerRef.current)
-            burst()
-            ringTimerRef.current = setInterval(burst, 2500)
-        } catch (e) {
-            console.warn("ringer unavailable", e)
+        ringRequestedRef.current = false
+        ringingCallIdRef.current = ""
+
+        const source = ringSourceRef.current
+        ringSourceRef.current = null
+        if (source) {
+            try { source.stop() } catch { }
+            try { source.disconnect() } catch { }
         }
     }
 
-    const stopRinger = () => {
-        clearInterval(ringTimerRef.current)
-        ringTimerRef.current = null
+    const startRinger = (call: any) => {
+        const id = callId(call)
+        if (!id) return
+
+        // Repeated "ringing" events for the same call must be idempotent.
+        if (ringRequestedRef.current && ringingCallIdRef.current === id) {
+            startRingSource()
+            return
+        }
+
+        stopRinger()
+        ringRequestedRef.current = true
+        ringingCallIdRef.current = id
+
+        const ctx = getAudioContext()
+        if (!ctx) return
+
+        if (ctx.state === "running") {
+            setSoundBannerVisible(false)
+            startRingSource()
+            return
+        }
+
+        // Browser autoplay policy may require one click/tap first. Keep the ring request
+        // alive so the sound starts immediately after the user unlocks audio.
+        setSoundBannerVisible(true)
+        void ctx.resume().then(() => {
+            if (ringRequestedRef.current && ringingCallIdRef.current === id && ctx.state === "running") {
+                setSoundBannerVisible(false)
+                startRingSource()
+            }
+        }).catch(() => setSoundBannerVisible(true))
     }
 
     // Refresh list of calls or voicemail from API
@@ -373,22 +474,37 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // Incoming Call UI handling
     const showIncoming = (call: any) => {
+        const id = callId(call)
+
+        if (incomingCallRef.current && !sameCall(incomingCallRef.current, call)) {
+            stopRinger(incomingCallRef.current)
+        }
+
         incomingCallRef.current = call
         setIncomingCall(call)
         setIncomingCaller(callerOf(call))
-        startRinger()
+
+        // After Answer/Decline is clicked Telnyx can emit one final ringing update.
+        // Do not let that stale update restart the ringtone.
+        if (!suppressRingForCallIdsRef.current.has(id)) {
+            startRinger(call)
+        }
+
         if (typeof document !== "undefined") {
-            document.title = "📞 Incoming call"
+            document.title = `Incoming call - ${baseTitleRef.current || "Phone"}`
         }
     }
 
     // Active Call UI handling
     const showActive = (call: any, stateText: string) => {
-        if (incomingCallRef.current && incomingCallRef.current.id === call.id) {
+        if (incomingCallRef.current && sameCall(incomingCallRef.current, call)) {
             setIncomingCall(null)
             incomingCallRef.current = null
-            stopRinger()
+            stopRinger(call)
         }
+
+        suppressRingForCallIdsRef.current.delete(callId(call))
+
         const first = !activeCallRef.current
         activeCallRef.current = call
         setActiveCall(call)
@@ -410,18 +526,23 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // End call cleanup
     const endCall = useCallback((call?: any) => {
-        if (incomingCallRef.current && (!call || incomingCallRef.current.id === call.id)) {
+        if (call) suppressRingForCallIdsRef.current.delete(callId(call))
+
+        if (incomingCallRef.current && (!call || sameCall(incomingCallRef.current, call))) {
+            const endingIncoming = incomingCallRef.current
             setIncomingCall(null)
             incomingCallRef.current = null
-            stopRinger()
+            stopRinger(call || endingIncoming)
             if (typeof document !== "undefined") {
-                document.title = document.title.replace("📞 ", "")
+                document.title = baseTitleRef.current || document.title
             }
         }
-        if (activeCallRef.current && (!call || activeCallRef.current.id === call.id)) {
+
+        if (activeCallRef.current && (!call || sameCall(activeCallRef.current, call))) {
             setActiveCall(null)
             activeCallRef.current = null
             clearInterval(timerIdRef.current)
+            timerIdRef.current = null
             setShowTransferPanel(false)
             setTransferMsg("")
             setIsTransferring(false)
@@ -429,6 +550,9 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             setMuted(false)
             callStartRef.current = 0
             dialedNumberRef.current = ""
+            if (typeof document !== "undefined") {
+                document.title = baseTitleRef.current || document.title
+            }
             setTimeout(refreshList, 1500)
         }
     }, [refreshList])
@@ -437,23 +561,55 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const onNotification = (n: any) => {
         if (n.type !== "callUpdate" || !n.call) return
         const call = n.call
-        if (call.state === "active" || call.state === "hangup" || call.state === "destroy") {
-            stopRinger()
-        }
+
+        console.debug("Telnyx callUpdate", {
+            id: callId(call),
+            direction: call.direction,
+            state: call.state
+        })
+
+        // Do NOT globally stop the ringtone here. Only the matching incoming call
+        // is allowed to stop its own ringtone.
         switch (call.state) {
             case "ringing":
                 if (call.direction === "inbound") showIncoming(call)
                 else showActive(call, "Ringing…")
                 break
+
+            case "early":
+                // Early media can arrive before answer. An inbound call is still ringing.
+                if (call.direction === "inbound") showIncoming(call)
+                else showActive(call, "Ringing…")
+                break
+
             case "requesting":
             case "trying":
                 if (call.direction === "outbound") showActive(call, "Calling…")
                 break
+
+            case "answering":
+                stopRinger(call)
+                showActive(call, "Connecting…")
+                break
+
+            case "recovering":
+                stopRinger(call)
+                showActive(call, "Reconnecting…")
+                break
+
             case "active":
+                stopRinger(call)
                 showActive(call, "Connected")
                 break
+
+            case "held":
+                stopRinger(call)
+                showActive(call, "On hold")
+                break
+
             case "hangup":
             case "destroy":
+            case "purge":
                 endCall(call)
                 break
         }
@@ -554,6 +710,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     } catch (e) { }
                 }
 
+                clientReadyRef.current = false
+
                 const client = new RTC({
                     login_token: token,
                     enableCallReports: true,
@@ -568,19 +726,26 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 } catch (e) { }
 
                 client.on("telnyx.ready", () => {
+                    if (clientRef.current !== client) return
+                    clientReadyRef.current = true
                     setStatus("online")
                     setStatusDetail("Online")
                 })
 
                 client.on("telnyx.socket.open", () => {
-                    setStatus("online")
-                    setStatusDetail("Online")
+                    if (clientRef.current !== client) return
+                    // Socket open only means signaling transport is up. Wait for
+                    // telnyx.ready before advertising that the phone can receive calls.
+                    setStatus("connecting")
+                    setStatusDetail("Registering phone…")
                 })
 
                 client.on("telnyx.error", (e: any) => {
+                    if (clientRef.current !== client) return
                     console.error("telnyx.error", e)
                     const isFatal = e?.fatal === true || e?.code === 46001 || e?.code === 46002 || e?.code === 45003 || e?.code === 48001
                     if (isFatal && !activeCallRef.current && !incomingCallRef.current) {
+                        clientReadyRef.current = false
                         setStatus("offline")
                         setStatusDetail(e?.message || "Offline")
                         scheduleReconnect()
@@ -588,20 +753,24 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 })
 
                 client.on("telnyx.socket.close", () => {
+                    if (clientRef.current !== client) return
+                    clientReadyRef.current = false
                     if (!activeCallRef.current && !incomingCallRef.current) {
-                        setStatus((prev) => (prev === "online" ? "connecting" : prev))
+                        setStatus("connecting")
+                        setStatusDetail("Reconnecting…")
                     }
                 })
 
                 client.on("telnyx.notification", onNotification)
-                client.connect()
                 clientRef.current = client
+                client.connect()
             } else {
-                setStatus("online")
-                setStatusDetail("Online")
+                clientReadyRef.current = false
+                throw new Error("Could not get a Telnyx WebRTC login token")
             }
         } catch (e: any) {
             console.error("Telnyx connection error:", e)
+            clientReadyRef.current = false
             setStatus("offline")
             setStatusDetail(e?.message || "Offline")
             scheduleReconnect()
@@ -611,29 +780,54 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     // Button actions: Answer, Decline, Hangup, Hold, Mute
-    const handleAnswer = () => {
-        if (incomingCall) {
-            stopRinger()
-            if (typeof incomingCall.answer === "function") {
-                incomingCall.answer()
+    const handleAnswer = async () => {
+        const call = incomingCallRef.current || incomingCall
+        if (!call) return
+
+        const id = callId(call)
+        suppressRingForCallIdsRef.current.add(id)
+        stopRinger(call)
+
+        try {
+            if (typeof call.answer === "function") {
+                await Promise.resolve(call.answer())
             } else {
-                showActive(incomingCall, "Connected")
-                setIncomingCall(null)
+                showActive(call, "Connected")
+            }
+        } catch (e) {
+            console.error("Could not answer incoming call", e)
+            suppressRingForCallIdsRef.current.delete(id)
+            if (incomingCallRef.current && sameCall(incomingCallRef.current, call)) {
+                startRinger(call)
             }
         }
     }
 
-    const handleDecline = () => {
-        if (incomingCall) {
-            stopRinger()
-            if (typeof incomingCall.hangup === "function") {
-                incomingCall.hangup()
+    const handleDecline = async () => {
+        const call = incomingCallRef.current || incomingCall
+        if (!call) return
+
+        const id = callId(call)
+        suppressRingForCallIdsRef.current.add(id)
+        stopRinger(call)
+
+        try {
+            if (typeof call.hangup === "function") {
+                await Promise.resolve(call.hangup())
             }
-            setIncomingCall(null)
-            incomingCallRef.current = null
-            if (typeof document !== "undefined") {
-                document.title = document.title.replace("📞 ", "")
+        } catch (e) {
+            console.error("Could not decline incoming call", e)
+            suppressRingForCallIdsRef.current.delete(id)
+            if (incomingCallRef.current && sameCall(incomingCallRef.current, call)) {
+                startRinger(call)
             }
+            return
+        }
+
+        setIncomingCall(null)
+        incomingCallRef.current = null
+        if (typeof document !== "undefined") {
+            document.title = baseTitleRef.current || document.title
         }
     }
 
@@ -668,8 +862,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const dial = (number?: string) => {
         const rawTarget = (number || dialNumber || "").trim()
         if (!rawTarget) return
-        if (status === "offline") {
-            alert("Phone is offline. Wait for the Online badge.")
+        if (!clientRef.current || !clientReadyRef.current) {
+            alert("Phone is not ready yet. Wait for the Online badge.")
             return
         }
 
@@ -741,6 +935,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // Initial lifecycle, audio unlock & polling intervals
     useEffect(() => {
+        if (typeof document !== "undefined" && !baseTitleRef.current) {
+            baseTitleRef.current = document.title
+        }
+
         // Fetch user & organization details
         profileService.getProfile()
             .then(res => {
@@ -781,25 +979,26 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 .catch(() => { })
         }
 
-        // Audio unlock listener
+        // Browsers normally require one user gesture before WebAudio can play.
+        // If an incoming call is already waiting, unlockAudio() also starts its
+        // pending ringtone immediately after the gesture.
         const handleUnlock = () => {
-            if (!audioCtxRef.current) {
-                const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
-                if (AudioContextClass) audioCtxRef.current = new AudioContextClass()
-            }
-            if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
-                audioCtxRef.current.resume().then(() => {
-                    setSoundBannerVisible(false)
-                })
+            void unlockAudio()
+        }
+        window.addEventListener("pointerdown", handleUnlock, { passive: true })
+        window.addEventListener("keydown", handleUnlock)
+
+        const visibilityHandler = () => {
+            if (!document.hidden && ringRequestedRef.current) {
+                void unlockAudio()
             }
         }
-        window.addEventListener("click", handleUnlock)
+        document.addEventListener("visibilitychange", visibilityHandler)
 
         setTimeout(() => {
             try {
-                const c = new (window.AudioContext || (window as any).webkitAudioContext)()
-                setSoundBannerVisible(c.state !== "running")
-                c.close()
+                const ctx = getAudioContext()
+                if (ctx) setSoundBannerVisible(ctx.state !== "running")
             } catch (e) { }
         }, 500)
 
@@ -818,12 +1017,32 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         }, 8 * 3600 * 1000)
 
         return () => {
-            window.removeEventListener("click", handleUnlock)
+            window.removeEventListener("pointerdown", handleUnlock)
+            window.removeEventListener("keydown", handleUnlock)
+            document.removeEventListener("visibilitychange", visibilityHandler)
             clearInterval(listInterval)
             clearInterval(tokenInterval)
             stopRinger()
             if (timerIdRef.current) clearInterval(timerIdRef.current)
             if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
+
+            const client = clientRef.current
+            clientRef.current = null
+            clientReadyRef.current = false
+            if (client) {
+                try {
+                    if (typeof client.off === "function") {
+                        client.off("telnyx.ready")
+                        client.off("telnyx.socket.open")
+                        client.off("telnyx.socket.close")
+                        client.off("telnyx.socket.error")
+                        client.off("telnyx.error")
+                        client.off("telnyx.warning")
+                        client.off("telnyx.notification")
+                    }
+                    client.disconnect()
+                } catch (e) { }
+            }
         }
     }, [flowUid, refreshList])
 
@@ -888,13 +1107,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                         id="sound-banner"
                         className="p-3 text-xs rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center gap-2 cursor-pointer shadow-sm transition-all"
                         onClick={() => {
-                            if (!audioCtxRef.current) {
-                                const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
-                                if (AudioContextClass) audioCtxRef.current = new AudioContextClass()
-                            }
-                            if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
-                                audioCtxRef.current.resume().then(() => setSoundBannerVisible(false))
-                            }
+                            void unlockAudio()
                         }}
                     >
                         <Volume2 className="w-4 h-4 shrink-0 text-amber-600 animate-bounce" />
