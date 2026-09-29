@@ -92,6 +92,10 @@ export function PhoneCallFlowsContent() {
     }
 
     const handleConfigureClick = (uid: string, name: string, code: string) => {
+        if (name?.toLowerCase().includes("voip") || code?.toLowerCase().includes("voip")) {
+            router.push(`/dashboard/voip/${uid}`)
+            return
+        }
         router.push(`/dashboard/configure/${uid}?name=${encodeURIComponent(name)}&code=${code}`)
     }
 
@@ -139,31 +143,19 @@ export function PhoneCallFlowsContent() {
                     </div>
 
                     <div className="flex flex-row md:flex-row lg:flex-row gap-2.5 mt-auto">
-                        {flow.name?.toUpperCase() === "VOIP" ? (
-                            <Link href={`/dashboard/voip/${item.uid}`} className="w-full">
-                                <Button
-                                    className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm w-full"
-                                >
-                                    Dashboard
-                                </Button>
-                            </Link>
-                        ) : (
-                            <>
-                                <Button
-                                    className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm w-full "
-                                    onClick={() => handleConfigureClick(item.uid, flow.name, flow.code)}
-                                >
-                                    Configure
-                                </Button>
-                                <Link href={flow.code === "AICALL191" ? `/dashboard/report?code=${flow.code}` : `/dashboard/report/${item.uid}`} className="w-full">
-                                    <Button
-                                        className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none w-full"
-                                    >
-                                        {flow.code === "AICALL191" ? "Reservations" : "Reports"}
-                                    </Button>
-                                </Link>
-                            </>
-                        )}
+                        <Button
+                            className="bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 px-8 rounded-lg text-sm transition-all shadow-sm w-full "
+                            onClick={() => handleConfigureClick(item.uid, flow.name, flow.code)}
+                        >
+                            Configure
+                        </Button>
+                        <Link href={flow.code === "AICALL191" ? `/dashboard/report?code=${flow.code}` : `/dashboard/report/${item.uid}`} className="w-full">
+                            <Button
+                                className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none w-full"
+                            >
+                                {flow.code === "AICALL191" ? "Reservations" : "Reports"}
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </div>
