@@ -132,6 +132,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const incomingCallRef = useRef<any>(null)
     const timerIdRef = useRef<any>(null)
     const reconnectTimerRef = useRef<any>(null)
+    const readyWatchdogRef = useRef<any>(null)
+    const rtcSyncTimerRef = useRef<any>(null)
     const callStartRef = useRef<number>(0)
     const audioCtxRef = useRef<AudioContext | null>(null)
     const ringBufferRef = useRef<AudioBuffer | null>(null)
@@ -257,6 +259,21 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         const bId = callId(b)
         if (!aId || !bId) return false
         return aId === bId || recoveredCallId(a) === bId || recoveredCallId(b) === aId
+    }
+
+    const callDirection = (call: any): string => {
+        return String(call?.direction || call?.options?.direction || "").toLowerCase()
+    }
+
+    const callState = (call: any): string => {
+        return String(call?.state || "").toLowerCase()
+    }
+
+    const isDefinitelyOutbound = (call: any): boolean => {
+        if (callDirection(call) === "outbound") return true
+        // If this is the same object/call we created with newCall(), it is outbound
+        // even if an older SDK build temporarily omits the direction field.
+        return !!(activeCallRef.current && sameCall(activeCallRef.current, call) && dialedNumberRef.current)
     }
 
     const getAudioContext = (): AudioContext | null => {
@@ -559,32 +576,41 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // Event notification handler from Telnyx RTC SDK
     const onNotification = (n: any) => {
-        if (n.type !== "callUpdate" || !n.call) return
+        // Some older bundle builds omit `type` on a call notification. The call
+        // object/state is the authoritative part we need, so only reject a
+        // notification when it explicitly says it is a different type.
+        if (!n?.call) return
+        if (n.type && n.type !== "callUpdate") return
+
         const call = n.call
+        const state = callState(call)
+        const direction = callDirection(call)
 
         console.debug("Telnyx callUpdate", {
             id: callId(call),
-            direction: call.direction,
-            state: call.state
+            recoveredCallId: recoveredCallId(call),
+            direction,
+            state,
+            telnyxIDs: call?.telnyxIDs
         })
 
-        // Do NOT globally stop the ringtone here. Only the matching incoming call
-        // is allowed to stop its own ringtone.
-        switch (call.state) {
+        // IMPORTANT: never globally stop the ringtone because another Telnyx
+        // leg changed state. Only the matching incoming call can stop its ring.
+        switch (state) {
             case "ringing":
-                if (call.direction === "inbound") showIncoming(call)
-                else showActive(call, "Ringing…")
-                break
-
             case "early":
-                // Early media can arrive before answer. An inbound call is still ringing.
-                if (call.direction === "inbound") showIncoming(call)
-                else showActive(call, "Ringing…")
+                // Telnyx documents `ringing` as an incoming-call state. Keep the
+                // explicit outbound check for compatibility with older SDK builds,
+                // but if direction is missing treat a new ringing call as inbound.
+                if (isDefinitelyOutbound(call)) showActive(call, "Ringing…")
+                else showIncoming(call)
                 break
 
             case "requesting":
             case "trying":
-                if (call.direction === "outbound") showActive(call, "Calling…")
+                if (direction === "outbound" || isDefinitelyOutbound(call)) {
+                    showActive(call, "Calling…")
+                }
                 break
 
             case "answering":
@@ -612,6 +638,56 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             case "purge":
                 endCall(call)
                 break
+        }
+    }
+
+    // Recovery path for missed/stale React event callbacks. Current Telnyx SDK
+    // exposes getActiveCalls(); polling this is cheap and gives us the actual Call
+    // object, so Answer/Decline still work even if one callUpdate notification was
+    // missed while the component was mounting/reconnecting.
+    const reconcileRtcCalls = () => {
+        const client = clientRef.current
+        if (!clientReadyRef.current || !client || typeof client.getActiveCalls !== "function") return
+
+        let rtcCalls: any[] = []
+        try {
+            rtcCalls = client.getActiveCalls() || []
+        } catch (e) {
+            console.warn("Could not inspect Telnyx active calls", e)
+            return
+        }
+
+        const inboundRinging = rtcCalls.find((c: any) => {
+            const state = callState(c)
+            return (state === "ringing" || state === "early") && !isDefinitelyOutbound(c)
+        })
+
+        if (inboundRinging) {
+            if (!incomingCallRef.current || !sameCall(incomingCallRef.current, inboundRinging)) {
+                console.info("Recovered incoming Telnyx call from getActiveCalls()", {
+                    id: callId(inboundRinging),
+                    direction: callDirection(inboundRinging),
+                    state: callState(inboundRinging)
+                })
+                showIncoming(inboundRinging)
+            } else if (!ringRequestedRef.current) {
+                startRinger(inboundRinging)
+            }
+            return
+        }
+
+        // Also recover an answered/active call after a short network reconnect.
+        const connected = rtcCalls.find((c: any) => {
+            const state = callState(c)
+            return state === "answering" || state === "active" || state === "held" || state === "recovering"
+        })
+
+        if (connected && (!activeCallRef.current || !sameCall(activeCallRef.current, connected))) {
+            const state = callState(connected)
+            showActive(
+                connected,
+                state === "active" ? "Connected" : state === "held" ? "On hold" : state === "recovering" ? "Reconnecting…" : "Connecting…"
+            )
         }
     }
 
@@ -728,8 +804,14 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 client.on("telnyx.ready", () => {
                     if (clientRef.current !== client) return
                     clientReadyRef.current = true
+                    if (readyWatchdogRef.current) {
+                        clearTimeout(readyWatchdogRef.current)
+                        readyWatchdogRef.current = null
+                    }
                     setStatus("online")
-                    setStatusDetail("Online")
+                    setStatusDetail("Online - ready for incoming calls")
+                    // If the invite arrived during registration/mount, recover it now.
+                    setTimeout(reconcileRtcCalls, 0)
                 })
 
                 client.on("telnyx.socket.open", () => {
@@ -758,11 +840,31 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     if (!activeCallRef.current && !incomingCallRef.current) {
                         setStatus("connecting")
                         setStatusDetail("Reconnecting…")
+                        // SDK autoReconnect gets the first chance; this is only a
+                        // fallback if registration never returns.
+                        clearTimeout(reconnectTimerRef.current)
+                        reconnectTimerRef.current = setTimeout(() => {
+                            if (!clientReadyRef.current && !activeCallRef.current && !incomingCallRef.current) connect()
+                        }, 12000)
                     }
                 })
 
                 client.on("telnyx.notification", onNotification)
                 clientRef.current = client
+
+                // If the WebSocket opens but REGED/telnyx.ready never arrives, do not
+                // leave a misleading green Online badge forever.
+                if (readyWatchdogRef.current) clearTimeout(readyWatchdogRef.current)
+                readyWatchdogRef.current = setTimeout(() => {
+                    if (clientRef.current === client && !clientReadyRef.current && !activeCallRef.current && !incomingCallRef.current) {
+                        console.warn("Telnyx socket connected but client never became ready; reconnecting")
+                        setStatus("offline")
+                        setStatusDetail("Phone registration timed out")
+                        try { client.disconnect() } catch { }
+                        scheduleReconnect()
+                    }
+                }, 15000)
+
                 client.connect()
             } else {
                 clientReadyRef.current = false
@@ -790,7 +892,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
         try {
             if (typeof call.answer === "function") {
-                await Promise.resolve(call.answer())
+                await Promise.resolve(call.answer({ remoteElement: "remoteAudio" }))
             } else {
                 showActive(call, "Connected")
             }
@@ -1009,6 +1111,11 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         // 15s refresh interval
         const listInterval = setInterval(refreshList, 15000)
 
+        // Reconcile the SDK's own active-call registry frequently. This recovers
+        // the incoming Call object if a single telnyx.notification was missed and
+        // is what makes the Answer/Decline UI self-healing.
+        rtcSyncTimerRef.current = setInterval(reconcileRtcCalls, 500)
+
         // 8h token refresh interval
         const tokenInterval = setInterval(() => {
             if (!activeCallRef.current && !incomingCallRef.current) {
@@ -1023,6 +1130,14 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             clearInterval(listInterval)
             clearInterval(tokenInterval)
             stopRinger()
+            if (rtcSyncTimerRef.current) {
+                clearInterval(rtcSyncTimerRef.current)
+                rtcSyncTimerRef.current = null
+            }
+            if (readyWatchdogRef.current) {
+                clearTimeout(readyWatchdogRef.current)
+                readyWatchdogRef.current = null
+            }
             if (timerIdRef.current) clearInterval(timerIdRef.current)
             if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
 
