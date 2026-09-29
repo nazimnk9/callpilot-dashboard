@@ -94,7 +94,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const [orgName, setOrgName] = useState<string>("CallPilot")
     const [userName, setUserName] = useState<string>("User")
     const [extension, setExtension] = useState<string>("101")
-    const [mainNumber, setMainNumber] = useState<string>("+44 20 7946 0912")
+    const [mainNumber, setMainNumber] = useState<string>("0131 367 1667")
 
     // UI and Connection State
     const [status, setStatus] = useState<"online" | "offline" | "connecting">("offline")
@@ -155,45 +155,43 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     // Format mm:ss
     const mmss = (s: number) => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
 
-    // Helper: check if name is generic placeholder
     const isPlaceholder = (s: any) => {
         if (!s || typeof s !== "string") return true
         const lower = s.trim().toLowerCase()
         return (
             lower === "outbound call" ||
             lower === "outbound" ||
-            lower === "inbound call" ||
-            lower === "inbound" ||
-            lower === "incoming call" ||
             lower === "unknown" ||
-            lower === "active call"
+            lower === "active call" ||
+            lower === "incoming call"
         )
     }
 
-    // Helper: callerOf(call) prioritizing phone number over placeholder text
+    // Helper: callerOf(call)
     const callerOf = (call: any) => {
         if (!call) return dialedNumberRef.current || "Unknown"
         if (typeof call === "string") return isPlaceholder(call) ? (dialedNumberRef.current || "Unknown") : call
         const o = call.options || {}
 
+        // For outbound calls, prioritize destination number
+        if (call.direction === "outbound" || o.direction === "outbound" || dialedNumberRef.current) {
+            const dest = o.destinationNumber || call.destinationNumber || dialedNumberRef.current || o.remoteCallerNumber || call.number
+            if (dest && !isPlaceholder(dest)) return dest
+        }
+
         const candidates = [
+            o.remoteCallerName,
+            o.remoteCallerNumber,
             o.destinationNumber,
             call.destinationNumber,
-            o.remoteCallerNumber,
-            call.remoteCallerNumber,
-            o.callerNumber,
-            call.callerNumber,
             call.number,
-            dialedNumberRef.current,
-            o.remoteCallerName,
-            call.remoteCallerName,
-            o.callerName,
-            call.callerName
+            call.callerName,
+            call.callerNumber,
+            dialedNumberRef.current
         ]
-
         for (const c of candidates) {
             if (c && typeof c === "string" && !isPlaceholder(c)) {
-                return c.trim()
+                return c
             }
         }
         return dialedNumberRef.current || "Unknown"
@@ -681,11 +679,13 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             try {
                 const call = clientRef.current.newCall({
                     destinationNumber: rawTarget,
+                    remoteCallerName: rawTarget,
                     callerNumber: cfgRef.current.callerId || undefined,
                     remoteElement: "remoteAudio",
                     customHeaders: [{ name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }]
                 })
                 if (call) {
+                    activeCallRef.current = call
                     showActive(call, "Calling…")
                 }
             } catch (err) {
@@ -693,7 +693,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             }
         } else {
             // Simulated preview active call state
-            const simCall = { id: "call-" + Date.now(), destinationNumber: rawTarget, options: { destinationNumber: rawTarget } }
+            const simCall = { id: "call-" + Date.now(), direction: "outbound", number: rawTarget, destinationNumber: rawTarget, options: { destinationNumber: rawTarget, remoteCallerName: rawTarget } }
             showActive(simCall, "Calling…")
         }
         setDialNumber("")
@@ -754,23 +754,11 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             })
             .catch(() => { })
 
-        // Fetch Main Number from /voice/api/main-number/
-        api(`${VOICE_BASE}/voice/api/main-number/`)
-            .then(res => {
-                if (res && res.main_number) {
-                    setMainNumber(res.main_number)
-                    cfgRef.current.callerId = res.main_number
-                }
-            })
-            .catch(err => {
-                console.warn("Failed to fetch main number from /voice/api/main-number/:", err)
-            })
-
         profileService.getOrganization()
             .then(res => {
                 if (res.data) {
                     if (res.data.name) setOrgName(res.data.name)
-                    if (res.data.phone_number && !mainNumber) {
+                    if (res.data.phone_number) {
                         setMainNumber(res.data.phone_number)
                         cfgRef.current.callerId = res.data.phone_number
                     }
@@ -1264,8 +1252,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                             ) : (
                                 filteredCalls.map(c => {
                                     const isMissed = c.direction === "inbound" && c.status === "missed"
-                                    const hasValidName = c.contact_name && !isPlaceholder(c.contact_name)
-                                    const who = hasValidName ? `${c.contact_name} · ${c.number}` : c.number
+                                    const who = c.contact_name ? `${c.contact_name} · ${c.number}` : c.number
                                     const sub = `${new Date(c.started_at).toLocaleString()} · ${
                                         c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
                                     }${c.handled_by ? ` · ${c.handled_by}` : ""}`
