@@ -137,6 +137,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const ringTimerRef = useRef<any>(null)
     const currentTabRef = useRef<"recent" | "missed" | "voicemail">("recent")
     const isConnectingRef = useRef<boolean>(false)
+    const dialedNumberRef = useRef<string>("")
 
     // Keep refs synchronized
     useEffect(() => {
@@ -154,12 +155,48 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     // Format mm:ss
     const mmss = (s: number) => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
 
-    // Helper: callerOf(call)
+    // Helper: check if name is generic placeholder
+    const isPlaceholder = (s: any) => {
+        if (!s || typeof s !== "string") return true
+        const lower = s.trim().toLowerCase()
+        return (
+            lower === "outbound call" ||
+            lower === "outbound" ||
+            lower === "inbound call" ||
+            lower === "inbound" ||
+            lower === "incoming call" ||
+            lower === "unknown" ||
+            lower === "active call"
+        )
+    }
+
+    // Helper: callerOf(call) prioritizing phone number over placeholder text
     const callerOf = (call: any) => {
-        if (!call) return "Unknown"
-        if (typeof call === "string") return call
+        if (!call) return dialedNumberRef.current || "Unknown"
+        if (typeof call === "string") return isPlaceholder(call) ? (dialedNumberRef.current || "Unknown") : call
         const o = call.options || {}
-        return o.remoteCallerName || o.remoteCallerNumber || o.destinationNumber || call.destinationNumber || call.number || "Unknown"
+
+        const candidates = [
+            o.destinationNumber,
+            call.destinationNumber,
+            o.remoteCallerNumber,
+            call.remoteCallerNumber,
+            o.callerNumber,
+            call.callerNumber,
+            call.number,
+            dialedNumberRef.current,
+            o.remoteCallerName,
+            call.remoteCallerName,
+            o.callerName,
+            call.callerName
+        ]
+
+        for (const c of candidates) {
+            if (c && typeof c === "string" && !isPlaceholder(c)) {
+                return c.trim()
+            }
+        }
+        return dialedNumberRef.current || "Unknown"
     }
 
     // Helper to get cookie by name
@@ -393,6 +430,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             setHeld(false)
             setMuted(false)
             callStartRef.current = 0
+            dialedNumberRef.current = ""
             setTimeout(refreshList, 1500)
         }
     }, [refreshList])
@@ -637,16 +675,25 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             return
         }
 
+        dialedNumberRef.current = rawTarget
+
         if (clientRef.current && typeof clientRef.current.newCall === "function") {
-            clientRef.current.newCall({
-                destinationNumber: rawTarget,
-                callerNumber: cfgRef.current.callerId || undefined,
-                remoteElement: "remoteAudio",
-                customHeaders: [{ name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }]
-            })
+            try {
+                const call = clientRef.current.newCall({
+                    destinationNumber: rawTarget,
+                    callerNumber: cfgRef.current.callerId || undefined,
+                    remoteElement: "remoteAudio",
+                    customHeaders: [{ name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }]
+                })
+                if (call) {
+                    showActive(call, "Calling…")
+                }
+            } catch (err) {
+                console.warn("newCall error:", err)
+            }
         } else {
             // Simulated preview active call state
-            const simCall = { id: "call-" + Date.now(), options: { destinationNumber: rawTarget } }
+            const simCall = { id: "call-" + Date.now(), destinationNumber: rawTarget, options: { destinationNumber: rawTarget } }
             showActive(simCall, "Calling…")
         }
         setDialNumber("")
@@ -1217,7 +1264,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                             ) : (
                                 filteredCalls.map(c => {
                                     const isMissed = c.direction === "inbound" && c.status === "missed"
-                                    const who = c.contact_name ? `${c.contact_name} · ${c.number}` : c.number
+                                    const hasValidName = c.contact_name && !isPlaceholder(c.contact_name)
+                                    const who = hasValidName ? `${c.contact_name} · ${c.number}` : c.number
                                     const sub = `${new Date(c.started_at).toLocaleString()} · ${
                                         c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
                                     }${c.handled_by ? ` · ${c.handled_by}` : ""}`

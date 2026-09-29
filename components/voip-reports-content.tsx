@@ -98,6 +98,21 @@ export function VoipReportsContent({ flowUid }: VoipReportsContentProps) {
     // Format mm:ss
     const mmss = (s: number) => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
 
+    // Helper: check if name is generic placeholder
+    const isPlaceholder = (s: any) => {
+        if (!s || typeof s !== "string") return true
+        const lower = s.trim().toLowerCase()
+        return (
+            lower === "outbound call" ||
+            lower === "outbound" ||
+            lower === "inbound call" ||
+            lower === "inbound" ||
+            lower === "incoming call" ||
+            lower === "unknown" ||
+            lower === "active call"
+        )
+    }
+
     // Helper to format audio URL
     const formatAudioUrl = (url: string) => {
         if (!url) return ""
@@ -371,7 +386,8 @@ export function VoipReportsContent({ flowUid }: VoipReportsContentProps) {
                                 ) : (
                                     filteredCalls.map(c => {
                                         const isMissed = c.direction === "inbound" && c.status === "missed"
-                                        const who = c.contact_name ? `${c.contact_name} · ${c.number}` : c.number
+                                        const hasValidName = c.contact_name && !isPlaceholder(c.contact_name)
+                                        const who = hasValidName ? `${c.contact_name} · ${c.number}` : c.number
                                         const sub = `${new Date(c.started_at).toLocaleString()} · ${c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
                                             }${c.handled_by ? ` · ${c.handled_by}` : ""}`
 
