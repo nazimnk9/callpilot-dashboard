@@ -14,6 +14,19 @@ const nextConfig = {
   experimental: {
     devIndicator: false,
   },
+  async headers() {
+    return [
+      {
+        source: "/((?!login).*)",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow",
+          },
+        ],
+      },
+    ];
+  },
 }
 
 export default nextConfig

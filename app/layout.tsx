@@ -10,9 +10,15 @@ const _geist = Geist({ subsets: ['latin'] })
 const _geistMono = Geist_Mono({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Chat Prompts - Dashboard',
-  description: 'Create and manage chat prompts with AI assistance',
-  icons: [],
+  title: {
+    default: "CallPilot",
+    template: "%s | CallPilot",
+  },
+  description: "CallPilot account dashboard.",
+  robots: {
+    index: false,
+    follow: false,
+  }, // whole panel is private by default
 }
 
 export default function RootLayout({
