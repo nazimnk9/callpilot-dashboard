@@ -8,7 +8,6 @@ import { profileService } from "@/services/profile-service"
 import {
     ArrowLeft,
     Phone,
-    PhoneCall,
     PhoneIncoming,
     PhoneOutgoing,
     PhoneMissed,
@@ -18,14 +17,11 @@ import {
     Pause,
     Play,
     ArrowRightLeft,
-    Volume2,
-    User,
     Clock,
     Loader2,
-    UserCheck,
-    AlertCircle,
     Voicemail,
-    Radio
+    Radio,
+    Volume2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -63,13 +59,6 @@ interface Colleague {
     extension: string;
 }
 
-interface CandidateInfo {
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-    [key: string]: any;
-}
-
 interface VoiceConfig {
     sdkUrl: string;
     tokenUrl: string;
@@ -87,8 +76,6 @@ interface VoipDashboardContentProps {
 
 export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const router = useRouter()
-
-    // Determine Base Voice API URL (e.g. https://api.callpilot.pro or fallback BASE_URL)
     const VOICE_BASE = BASE_URL
 
     // Configuration object mirroring JSON from voice-config script tag
@@ -103,7 +90,13 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         callerId: ""
     })
 
-    // UI and Call State
+    // User & Organization meta
+    const [orgName, setOrgName] = useState<string>("CallPilot")
+    const [userName, setUserName] = useState<string>("User")
+    const [extension, setExtension] = useState<string>("101")
+    const [mainNumber, setMainNumber] = useState<string>("+44 20 7946 0912")
+
+    // UI and Connection State
     const [status, setStatus] = useState<"online" | "offline" | "connecting">("offline")
     const [statusDetail, setStatusDetail] = useState<string>("")
     const [soundBannerVisible, setSoundBannerVisible] = useState(false)
@@ -118,12 +111,6 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const [activeStateText, setActiveStateText] = useState<string>("")
     const [held, setHeld] = useState(false)
     const [muted, setMuted] = useState(false)
-    const [candidateLookup, setCandidateLookup] = useState<{
-        loading?: boolean;
-        jobadderConnected?: boolean;
-        found?: boolean;
-        candidate?: CandidateInfo | null;
-    } | null>(null)
 
     // Transfer States
     const [showTransferPanel, setShowTransferPanel] = useState(false)
@@ -132,7 +119,6 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const [transferNumber, setTransferNumber] = useState("")
     const [transferMsg, setTransferMsg] = useState("")
     const [isTransferring, setIsTransferring] = useState(false)
-    const [transferStatus, setTransferStatus] = useState<"idle" | "initiating" | "ringing" | "connecting" | "connected" | "completed" | "failed">("idle")
 
     // List Data
     const [callsList, setCallsList] = useState<CallItem[]>([])
@@ -140,48 +126,26 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const [unreadVoicemails, setUnreadVoicemails] = useState<number>(0)
     const [listErrorMessage, setListErrorMessage] = useState<string | null>(null)
 
-    // User & Org Meta
-    const [orgName, setOrgName] = useState<string>("VOIP")
-    const [userName, setUserName] = useState<string>("Osman Goni")
-    const [extension, setExtension] = useState<string>("101")
-    const [mainNumber, setMainNumber] = useState<string>("+44 20 7946 0912")
-
-    // Refs for SDK and Audio
+    // Refs for SDK and Audio lifecycle
     const clientRef = useRef<any>(null)
     const activeCallRef = useRef<any>(null)
     const incomingCallRef = useRef<any>(null)
-    const isCallActiveRef = useRef<boolean>(false)
-    const isTransferringRef = useRef<boolean>(false)
-    const transferStatusRef = useRef<"idle" | "initiating" | "ringing" | "connecting" | "connected" | "completed" | "failed">("idle")
-    const lastTransferTimeRef = useRef<number>(0)
-    const dialedNumberRef = useRef<string>("")
     const timerIdRef = useRef<any>(null)
     const reconnectTimerRef = useRef<any>(null)
-    const reconnectAttemptsRef = useRef<number>(0)
-    const lastCallEndTimeRef = useRef<number>(0)
     const callStartRef = useRef<number>(0)
     const audioCtxRef = useRef<AudioContext | null>(null)
     const ringTimerRef = useRef<any>(null)
     const currentTabRef = useRef<"recent" | "missed" | "voicemail">("recent")
+    const isConnectingRef = useRef<boolean>(false)
 
-    // Keep refs in sync with state for callbacks
+    // Keep refs synchronized
     useEffect(() => {
         activeCallRef.current = activeCall
-        if (activeCall) {
-            isCallActiveRef.current = true
-        } else if (!incomingCall) {
-            isCallActiveRef.current = false
-        }
-    }, [activeCall, incomingCall])
+    }, [activeCall])
 
     useEffect(() => {
         incomingCallRef.current = incomingCall
-        if (incomingCall) {
-            isCallActiveRef.current = true
-        } else if (!activeCall) {
-            isCallActiveRef.current = false
-        }
-    }, [incomingCall, activeCall])
+    }, [incomingCall])
 
     useEffect(() => {
         currentTabRef.current = currentTab
@@ -190,42 +154,15 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     // Format mm:ss
     const mmss = (s: number) => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")
 
-    // Helper: detect if a string is a generic placeholder like "Outbound Call" or "Unknown"
-    const isPlaceholder = (s: any) => {
-        if (!s || typeof s !== "string") return true
-        const lower = s.trim().toLowerCase()
-        return (
-            lower === "outbound call" ||
-            lower === "outbound" ||
-            lower === "unknown" ||
-            lower === "active call" ||
-            lower === "incoming call"
-        )
-    }
-
     // Helper: callerOf(call)
     const callerOf = (call: any) => {
         if (!call) return "Unknown"
-        if (typeof call === "string") return isPlaceholder(call) ? "Unknown" : call
+        if (typeof call === "string") return call
         const o = call.options || {}
-        const candidates = [
-            call.destinationNumber,
-            o.destinationNumber,
-            call.number,
-            o.remoteCallerNumber,
-            call.callerNumber,
-            call.callerName,
-            o.remoteCallerName
-        ]
-        for (const c of candidates) {
-            if (c && typeof c === "string" && !isPlaceholder(c)) {
-                return c
-            }
-        }
-        return "Unknown"
+        return o.remoteCallerName || o.remoteCallerNumber || o.destinationNumber || call.destinationNumber || call.number || "Unknown"
     }
 
-    // Helper to get cookie by name (for csrftoken if present)
+    // Helper to get cookie by name
     const getCookie = (name: string): string => {
         if (typeof document === "undefined") return ""
         const value = `; ${document.cookie}`
@@ -234,7 +171,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         return ""
     }
 
-    // API fetch wrapper matching API Reference specification (supports Bearer token, session cookies & CSRF)
+    // API fetch wrapper matching portal.js
     const api = async (url: string, opts: RequestInit = {}) => {
         const token = cookieUtils.get("access")
         const csrfToken = getCookie("csrftoken")
@@ -311,57 +248,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         ringTimerRef.current = null
     }
 
-    // JobAdder Caller Lookup API (§ Caller Lookup)
-    const lookupCandidate = async (phoneNumber: string) => {
-        if (!phoneNumber || !phoneNumber.trim()) return
-        const phone = phoneNumber.trim()
-        setCandidateLookup({ loading: true })
-        try {
-            const url = `${VOICE_BASE}/voice/api/jobadder-caller-lookup/?phone=${encodeURIComponent(phone)}`
-            const data = await api(url)
-            if (data) {
-                const jobadderConnected = data.jobadder_connected !== undefined ? Boolean(data.jobadder_connected) : true
-                const found = data.found !== undefined ? Boolean(data.found) : Boolean(data.candidate || data.firstName)
-                const candidate = data.candidate || (data.firstName || data.lastName || data.phone ? data : null)
-                setCandidateLookup({
-                    loading: false,
-                    jobadderConnected,
-                    found,
-                    candidate
-                })
-            } else {
-                setCandidateLookup({
-                    loading: false,
-                    jobadderConnected: true,
-                    found: false,
-                    candidate: null
-                })
-            }
-        } catch (err: any) {
-            console.warn("JobAdder candidate lookup failed:", err)
-            setCandidateLookup({
-                loading: false,
-                jobadderConnected: false,
-                found: false,
-                candidate: null
-            })
-        }
-    }
-
-    // §2 & §3: Refresh list of calls or voicemail from API
+    // Refresh list of calls or voicemail from API
     const refreshList = useCallback(async () => {
-        // While placing a call, ringing, connected, transferring, or in an active call, Call List API must NOT be called
-        if (
-            isCallActiveRef.current ||
-            isTransferringRef.current ||
-            activeCallRef.current ||
-            incomingCallRef.current ||
-            activeCall ||
-            incomingCall
-        ) {
-            return
-        }
-
         setListErrorMessage(null)
         try {
             if (currentTabRef.current === "voicemail") {
@@ -444,61 +332,49 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 setCallsList(calls)
             }
         } catch (e: any) {
-            setListErrorMessage(e.message)
+            setListErrorMessage(e.message || "Failed to load calls")
         }
-    }, [VOICE_BASE, activeCall, incomingCall])
+    }, [VOICE_BASE])
 
-    // Call UI handlers
+    // Incoming Call UI handling
     const showIncoming = (call: any) => {
-        isCallActiveRef.current = true
         incomingCallRef.current = call
         setIncomingCall(call)
-        const caller = callerOf(call)
-        setIncomingCaller(caller)
-        if (caller && caller !== "Unknown") {
-            lookupCandidate(caller)
-        }
+        setIncomingCaller(callerOf(call))
         startRinger()
         if (typeof document !== "undefined") {
             document.title = "📞 Incoming call"
         }
     }
 
+    // Active Call UI handling
     const showActive = (call: any, stateText: string) => {
-        isCallActiveRef.current = true
-        activeCallRef.current = call
-        if (incomingCallRef.current && incomingCallRef.current.id === call?.id) {
+        if (incomingCallRef.current && incomingCallRef.current.id === call.id) {
             setIncomingCall(null)
             incomingCallRef.current = null
             stopRinger()
         }
+        const first = !activeCallRef.current
+        activeCallRef.current = call
         setActiveCall(call)
-        const resolvedCaller = callerOf(call)
-        const targetNumber = (resolvedCaller !== "Unknown" && !isPlaceholder(resolvedCaller))
-            ? resolvedCaller
-            : (dialedNumberRef.current || call?.destinationNumber || call?.options?.destinationNumber || call?.number || dialNumber || "Active Call")
-        setActiveWho(targetNumber)
+        setActiveWho(callerOf(call))
 
-        if (stateText === "Connected") {
-            if (!callStartRef.current) {
-                callStartRef.current = Date.now()
-            }
+        if (stateText === "Connected" && (first || !callStartRef.current)) {
+            callStartRef.current = Date.now()
             clearInterval(timerIdRef.current)
-            const getDuration = () => Math.floor((Date.now() - callStartRef.current) / 1000)
-            setActiveStateText(`Connected ${mmss(getDuration())}`)
+            setActiveStateText("Connected " + mmss(0))
             timerIdRef.current = setInterval(() => {
-                setActiveStateText(`Connected ${mmss(getDuration())}`)
+                const elapsed = Math.floor((Date.now() - callStartRef.current) / 1000)
+                setActiveStateText("Connected " + mmss(elapsed))
             }, 1000)
-        } else {
-            // "Calling…", "Ringing…", etc.
+        } else if (stateText !== "Connected") {
             clearInterval(timerIdRef.current)
-            callStartRef.current = 0
             setActiveStateText(stateText)
         }
     }
 
+    // End call cleanup
     const endCall = useCallback((call?: any) => {
-        lastCallEndTimeRef.current = Date.now()
         if (incomingCallRef.current && (!call || incomingCallRef.current.id === call.id)) {
             setIncomingCall(null)
             incomingCallRef.current = null
@@ -507,33 +383,21 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 document.title = document.title.replace("📞 ", "")
             }
         }
-        if (activeCallRef.current && (!call || !call.id || activeCallRef.current.id === call.id)) {
+        if (activeCallRef.current && (!call || activeCallRef.current.id === call.id)) {
             setActiveCall(null)
             activeCallRef.current = null
             clearInterval(timerIdRef.current)
             setShowTransferPanel(false)
             setTransferMsg("")
             setIsTransferring(false)
-            isTransferringRef.current = false
-            setTransferStatus("idle")
-            transferStatusRef.current = "idle"
             setHeld(false)
             setMuted(false)
             callStartRef.current = 0
-            dialedNumberRef.current = ""
-            setCandidateLookup(null)
-        }
-        if (!activeCallRef.current && !incomingCallRef.current) {
-            isCallActiveRef.current = false
-            setTimeout(() => {
-                if (!isCallActiveRef.current && !isTransferringRef.current && !activeCallRef.current && !incomingCallRef.current) {
-                    refreshList()
-                }
-            }, 1500)
+            setTimeout(refreshList, 1500)
         }
     }, [refreshList])
 
-    // Event notification handler from Telnyx RTC SDK (§0)
+    // Event notification handler from Telnyx RTC SDK
     const onNotification = (n: any) => {
         if (n.type !== "callUpdate" || !n.call) return
         const call = n.call
@@ -544,10 +408,6 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             case "ringing":
                 if (call.direction === "inbound") showIncoming(call)
                 else showActive(call, "Ringing…")
-                if (isTransferringRef.current) {
-                    setTransferStatus("ringing")
-                    transferStatusRef.current = "ringing"
-                }
                 break
             case "requesting":
             case "trying":
@@ -555,31 +415,15 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 break
             case "active":
                 showActive(call, "Connected")
-                if (isTransferringRef.current && transferStatusRef.current === "ringing") {
-                    setTransferStatus("connected")
-                    transferStatusRef.current = "connected"
-                }
                 break
             case "hangup":
             case "destroy":
-                if (incomingCallRef.current && call?.id && incomingCallRef.current.id === call.id) {
-                    endCall(call)
-                }
-                if (
-                    activeCallRef.current &&
-                    call?.id &&
-                    (activeCallRef.current.id === call.id ||
-                        activeCallRef.current.callId === call.id ||
-                        activeCallRef.current.options?.id === call.id)
-                ) {
-                    // Call legitimately ended on provider side
-                    endCall(call)
-                }
+                endCall(call)
                 break
         }
     }
 
-    // SDK script loader with local script + CDN fallback
+    // SDK script loader
     const loadSdk = () => {
         return new Promise<void>((resolve, reject) => {
             if (
@@ -596,7 +440,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
             const tryLoadScript = () => {
                 if (index >= scriptUrls.length) {
-                    return reject(new Error("Could not load the Telnyx WebRTC SDK from local or CDN"))
+                    return reject(new Error("Could not load the Telnyx WebRTC SDK (" + cfgRef.current.sdkUrl + ")"))
                 }
                 const url = scriptUrls[index++]
                 const s = document.createElement("script")
@@ -614,34 +458,32 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     const scheduleReconnect = () => {
-        const isRecentCallEnd = Date.now() - lastCallEndTimeRef.current < 4000
-        const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 25000
-        if (activeCallRef.current || incomingCallRef.current || isCallActiveRef.current || isTransferringRef.current || isRecentCallEnd || isRecentTransfer) {
-            return
-        }
         clearTimeout(reconnectTimerRef.current)
-        const delay = Math.min(30000, 5000 * Math.pow(1.3, reconnectAttemptsRef.current))
-        reconnectAttemptsRef.current += 1
-        reconnectTimerRef.current = setTimeout(connect, delay)
+        reconnectTimerRef.current = setTimeout(connect, 5000)
     }
 
-    // Connect WebRTC SDK (§1: POST /voice/api/token/)
+    // Connect WebRTC SDK
     const connect = async () => {
-        const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 25000
-        if (activeCallRef.current || incomingCallRef.current || isCallActiveRef.current || isTransferringRef.current || isRecentTransfer) {
+        if (activeCallRef.current || incomingCallRef.current) {
+            reconnectTimerRef.current = setTimeout(connect, 15000)
             return
         }
-        setStatus("connecting")
+        if (isConnectingRef.current) return
+        isConnectingRef.current = true
+
+        setStatus((prev) => (prev === "online" ? "online" : "connecting"))
         setStatusDetail("")
         try {
             await loadSdk()
             const RTC =
+                (window as any).TelnyxWebRTC?.TelnyxRTC ||
                 (window as any).TelnyxRTC?.TelnyxRTC ||
                 (window as any).TelnyxRTC ||
-                (window as any).TelnyxWebRTC?.TelnyxRTC ||
                 (window as any).TelnyxWebRTC
 
-            // Fetch live login_token (tries backend endpoint, falls back to server-side Next.js route /api/voice/token)
+            if (!RTC) throw new Error("Telnyx SDK global not found")
+
+            // Fetch live login_token
             let token: string | null = null
             try {
                 const res = await api(cfgRef.current.tokenUrl, { method: "POST" })
@@ -665,76 +507,81 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                         clientRef.current = null
                         if (typeof oldClient.off === "function") {
                             oldClient.off("telnyx.ready")
-                            oldClient.off("telnyx.error")
+                            oldClient.off("telnyx.socket.open")
                             oldClient.off("telnyx.socket.close")
+                            oldClient.off("telnyx.socket.error")
+                            oldClient.off("telnyx.error")
+                            oldClient.off("telnyx.warning")
                             oldClient.off("telnyx.notification")
                         }
                         oldClient.disconnect()
                     } catch (e) { }
                 }
+
                 const client = new RTC({
                     login_token: token,
                     enableCallReports: true,
                     disableCallReport: false,
                     enableCallRecording: false,
-                    autoReconnect: false,
-                    keepConnectionAliveOnSocketClose: true
+                    autoReconnect: true,
+                    maxReconnectAttempts: 10
                 })
+
                 try {
                     client.remoteElement = "remoteAudio"
                 } catch (e) { }
+
                 client.on("telnyx.ready", () => {
-                    reconnectAttemptsRef.current = 0
                     setStatus("online")
                     setStatusDetail("Online")
                 })
+
+                client.on("telnyx.socket.open", () => {
+                    setStatus("online")
+                    setStatusDetail("Online")
+                })
+
                 client.on("telnyx.error", (e: any) => {
-                    const isRecentCallEnd = Date.now() - lastCallEndTimeRef.current < 4000
-                    const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 25000
-                    const errorMsg = e?.message || e?.error?.message || (typeof e === "string" ? e : "") || "Connection event"
-                    console.warn("Telnyx RTC connection event:", errorMsg)
-                    if (!activeCallRef.current && !incomingCallRef.current && !isCallActiveRef.current && !isTransferringRef.current && !isRecentCallEnd && !isRecentTransfer) {
+                    console.error("telnyx.error", e)
+                    const isFatal = e?.fatal === true || e?.code === 46001 || e?.code === 46002 || e?.code === 45003 || e?.code === 48001
+                    if (isFatal && !activeCallRef.current && !incomingCallRef.current) {
                         setStatus("offline")
-                        setStatusDetail(errorMsg)
+                        setStatusDetail(e?.message || "Offline")
                         scheduleReconnect()
                     }
                 })
+
                 client.on("telnyx.socket.close", () => {
-                    const isRecentCallEnd = Date.now() - lastCallEndTimeRef.current < 4000
-                    const isRecentTransfer = Date.now() - lastTransferTimeRef.current < 25000
-                    if (!activeCallRef.current && !incomingCallRef.current && !isCallActiveRef.current && !isTransferringRef.current && !isRecentCallEnd && !isRecentTransfer) {
-                        setStatus("offline")
-                        scheduleReconnect()
+                    if (!activeCallRef.current && !incomingCallRef.current) {
+                        setStatus((prev) => (prev === "online" ? "connecting" : prev))
                     }
                 })
+
                 client.on("telnyx.notification", onNotification)
                 client.connect()
                 clientRef.current = client
             } else {
-                // Standalone ready fallback
                 setStatus("online")
                 setStatusDetail("Online")
             }
         } catch (e: any) {
-            console.warn("Telnyx connection catch note:", e?.message || e)
+            console.error("Telnyx connection error:", e)
             setStatus("offline")
             setStatusDetail(e?.message || "Offline")
             scheduleReconnect()
+        } finally {
+            isConnectingRef.current = false
         }
     }
 
-    // Button actions: Answer, Decline, Hangup, Hold, Mute (§0: SDK methods)
+    // Button actions: Answer, Decline, Hangup, Hold, Mute
     const handleAnswer = () => {
         if (incomingCall) {
             stopRinger()
-            isCallActiveRef.current = true
             if (typeof incomingCall.answer === "function") {
                 incomingCall.answer()
             } else {
-                const simCall = { id: "sim-in-" + Date.now(), options: { remoteCallerNumber: incomingCaller } }
-                activeCallRef.current = simCall
-                incomingCallRef.current = null
-                showActive(simCall, "Connected")
+                showActive(incomingCall, "Connected")
                 setIncomingCall(null)
             }
         }
@@ -748,9 +595,6 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             }
             setIncomingCall(null)
             incomingCallRef.current = null
-            if (!activeCallRef.current) {
-                isCallActiveRef.current = false
-            }
             if (typeof document !== "undefined") {
                 document.title = document.title.replace("📞 ", "")
             }
@@ -758,14 +602,11 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     const handleHangup = () => {
-        const callToEnd = activeCallRef.current || activeCall
-        if (callToEnd) {
-            if (typeof callToEnd.hangup === "function") {
-                try {
-                    callToEnd.hangup()
-                } catch (e) { }
+        if (activeCall) {
+            if (typeof activeCall.hangup === "function") {
+                activeCall.hangup()
             }
-            endCall(callToEnd)
+            endCall(activeCall)
         }
     }
 
@@ -787,8 +628,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         }
     }
 
-    // §7: Outbound calls with custom header X-Voice-Ext
-    const dial = async (number?: string) => {
+    // Dial action matching portal.js
+    const dial = (number?: string) => {
         const rawTarget = (number || dialNumber || "").trim()
         if (!rawTarget) return
         if (status === "offline") {
@@ -796,260 +637,59 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             return
         }
 
-        // Clean target and caller number: remove internal spaces and formatting for valid SIP URI
-        const cleanTarget = rawTarget.replace(/[\s\-()]/g, "")
-        // Only pass callerNumber if it's a real verified number from the organization (avoid 403 Forbidden on Telnyx)
-        const cleanCaller = cfgRef.current.callerId && cfgRef.current.callerId !== "+44 20 7946 0912"
-            ? cfgRef.current.callerId.replace(/[\s\-()]/g, "")
-            : undefined
-
-        // Request user media access before dialing to prevent WebRTC permission drop
-        try {
-            if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
-                await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null)
-            }
-        } catch (e) { }
-
-        // Immediately pause / stop automatic Call List API polling & fetching
-        isCallActiveRef.current = true
-        dialedNumberRef.current = rawTarget
-        setCandidateLookup(null)
-        lookupCandidate(rawTarget)
-
-        clearInterval(timerIdRef.current)
-        callStartRef.current = 0
-
-        // Display active call immediately on UI with the specific target number
-        const simCall = {
-            id: "call-" + Date.now(),
-            number: rawTarget,
-            destinationNumber: cleanTarget,
-            options: { destinationNumber: cleanTarget }
+        if (clientRef.current && typeof clientRef.current.newCall === "function") {
+            clientRef.current.newCall({
+                destinationNumber: rawTarget,
+                callerNumber: cfgRef.current.callerId || undefined,
+                remoteElement: "remoteAudio",
+                customHeaders: [{ name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }]
+            })
+        } else {
+            // Simulated preview active call state
+            const simCall = { id: "call-" + Date.now(), options: { destinationNumber: rawTarget } }
+            showActive(simCall, "Calling…")
         }
-        activeCallRef.current = simCall
-        showActive(simCall, "Calling…")
-
-        if (clientRef.current) {
-            try {
-                const callOptions: any = {
-                    destinationNumber: cleanTarget,
-                    remoteElement: "remoteAudio",
-                    customHeaders: [
-                        { name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }
-                    ]
-                }
-                if (cleanCaller) {
-                    callOptions.callerNumber = cleanCaller
-                }
-                const call = clientRef.current.newCall(callOptions)
-                if (call) {
-                    activeCallRef.current = call
-                    setActiveCall(call)
-                }
-            } catch (err: any) {
-                console.warn("Telnyx newCall error:", err)
-            }
-        }
-
         setDialNumber("")
     }
 
-    // §4 & §5: Transfer toggle & doTransfer
+    // Transfer toggle & doTransfer matching portal.js
     const handleTransferToggle = async () => {
-        const next = !showTransferPanel
-        setShowTransferPanel(next)
+        const nextState = !showTransferPanel
+        setShowTransferPanel(nextState)
         setTransferMsg("")
-        if (next) {
+        if (nextState) {
             try {
                 const res = await api(cfgRef.current.colleaguesUrl)
-                if (res && res.colleagues && Array.isArray(res.colleagues)) {
+                if (res && res.colleagues) {
                     setColleagues(res.colleagues)
                 }
             } catch (e: any) {
-                setColleagues([
-                    { uid: "col-1", name: "Support Team", extension: "102" },
-                    { uid: "col-2", name: "Recruitment Consultant", extension: "103" },
-                    { uid: "col-3", name: "Operations Lead", extension: "104" }
-                ])
+                setTransferMsg(e.message || "Failed to load colleagues")
             }
         }
     }
 
-    const doTransfer = async (transferData: { extension_uid?: string; number?: string }) => {
-        const currentCall = activeCallRef.current || activeCall
-        if (!currentCall) {
-            setTransferMsg("No active call to transfer.")
-            setTransferStatus("failed")
-            transferStatusRef.current = "failed"
-            return
-        }
-
-        let targetExtension = ""
-        let targetName = ""
-        if (transferData.extension_uid) {
-            const foundColleague = colleagues.find(c => c.uid === transferData.extension_uid)
-            if (foundColleague) {
-                targetExtension = foundColleague.extension
-                targetName = foundColleague.name
-            }
-        }
-
-        const rawTargetNumber = (transferData.number || targetExtension || "").trim()
-        let cleanTargetNumber = rawTargetNumber.replace(/[\s\-()]/g, "")
-        if (rawTargetNumber.startsWith("+") && !cleanTargetNumber.startsWith("+")) {
-            cleanTargetNumber = "+" + cleanTargetNumber
-        }
-
-        if (!cleanTargetNumber && !targetExtension && !transferData.extension_uid) {
-            setTransferMsg("Please select a colleague or enter a valid number.")
-            setTransferStatus("failed")
-            transferStatusRef.current = "failed"
-            setIsTransferring(false)
-            isTransferringRef.current = false
-            return
-        }
-
-        const targetLabel = targetName ? `${targetName} (Ext ${targetExtension})` : (rawTargetNumber || "destination")
-        
-        // 1. Separate State: Active WebRTC call remains completely intact while transfer initiates
-        setTransferStatus("initiating")
-        transferStatusRef.current = "initiating"
+    const doTransfer = async (body: { extension_uid?: string; number?: string }) => {
+        setTransferMsg("Transferring…")
         setIsTransferring(true)
-        isTransferringRef.current = true
-        lastTransferTimeRef.current = Date.now()
-        isCallActiveRef.current = true
-        setTransferMsg(`Initiating transfer to ${targetLabel}… Caller remains connected.`)
-
-        // Extract all possible Call Control and Leg IDs from incoming or outbound call
-        const callControlId =
-            currentCall.telnyxCallControlId ||
-            currentCall.call_control_id ||
-            currentCall.options?.telnyxCallControlId ||
-            currentCall.options?.callControlId ||
-            currentCall.options?.call_control_id ||
-            currentCall.params?.telnyx_call_control_id ||
-            currentCall.params?.call_control_id ||
-            currentCall.id ||
-            ""
-
-        const callLegId =
-            currentCall.telnyxLegId ||
-            currentCall.call_leg_id ||
-            currentCall.options?.telnyxLegId ||
-            currentCall.options?.call_leg_id ||
-            currentCall.params?.telnyx_leg_id ||
-            currentCall.params?.call_leg_id ||
-            currentCall.id ||
-            ""
-
-        const callerPhone =
-            incomingCaller ||
-            currentCall.callerNumber ||
-            currentCall.options?.callerNumber ||
-            currentCall.options?.remoteCallerNumber ||
-            callerOf(currentCall) ||
-            ""
-
-        let headerCallId = ""
-        const headersList = currentCall.options?.customHeaders || currentCall.customHeaders || []
-        if (Array.isArray(headersList)) {
-            for (const h of headersList) {
-                if (h && (h.name === "X-Call-ID" || h.name === "X-Call-Control-ID" || h.name === "X-CallControlId")) {
-                    headerCallId = h.value
-                }
-            }
-        }
-
-        const effectiveCallId = headerCallId || callControlId || currentCall.id || currentCall.callId || ""
-
-        const cleanCaller = cfgRef.current.callerId && cfgRef.current.callerId !== "+44 20 7946 0912"
-            ? cfgRef.current.callerId.replace(/[\s\-()]/g, "")
-            : undefined
-
-        const payload: any = {
-            call_id: effectiveCallId,
-            call_control_id: callControlId || effectiveCallId,
-            call_leg_id: callLegId || effectiveCallId,
-            flow_uid: flowUid || "",
-            flow: flowUid || "",
-            extension_uid: transferData.extension_uid || "",
-            extension: targetExtension || cleanTargetNumber,
-            colleague_id: transferData.extension_uid || "",
-            colleague_uid: transferData.extension_uid || "",
-            colleague_name: targetName || "",
-            destination: cleanTargetNumber || targetExtension,
-            target: cleanTargetNumber || targetExtension,
-            target_number: cleanTargetNumber || targetExtension,
-            transfer_to: cleanTargetNumber || targetExtension,
-            number: cleanTargetNumber,
-            to: cleanTargetNumber || targetExtension,
-            caller_number: callerPhone,
-            caller: callerPhone,
-            from: callerPhone || cleanCaller || cfgRef.current.callerId || "",
-            caller_id: cleanCaller || cfgRef.current.callerId || "",
-            agent_uid: cfgRef.current.extensionUid || "",
-            user_uid: cfgRef.current.extensionUid || "",
-            custom_headers: [
-                { name: "X-Voice-Ext", value: targetExtension || transferData.extension_uid || "" },
-                { name: "X-Flow-UID", value: flowUid || "" }
-            ],
-            headers: [
-                { name: "X-Voice-Ext", value: targetExtension || transferData.extension_uid || "" },
-                { name: "X-Flow-UID", value: flowUid || "" }
-            ]
-        }
-
         try {
-            // 2. Transition transfer state to 'ringing'
-            setTransferStatus("ringing")
-            transferStatusRef.current = "ringing"
-            setTransferMsg(`Target ${targetLabel} is ringing… Caller remains connected.`)
-
-            // 3. Send transfer request to backend voice API with local API route fallback
             await api(cfgRef.current.transferUrl, {
                 method: "POST",
-                body: JSON.stringify(payload)
-            }).catch(async (err) => {
-                const localRes = await fetch("/api/voice/transfer", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                }).catch(() => null)
-
-                if (localRes && localRes.ok) {
-                    return await localRes.json()
-                }
-
-                return api(`${VOICE_BASE}/voice/api/transfer/`, {
-                    method: "POST",
-                    body: JSON.stringify(payload)
-                }).catch(() => {
-                    throw err
-                })
+                body: JSON.stringify(body)
             })
-
-            // 4. Transfer completed successfully on telephony service
-            setTransferStatus("completed")
-            transferStatusRef.current = "completed"
-            setTransferMsg(`Transfer established! Call successfully handed off to ${targetLabel}.`)
-            setSelectedColleague("")
-            setTransferNumber("")
-            setIsTransferring(false)
-            isTransferringRef.current = false
-
-            setTimeout(() => {
-                setTransferMsg(prev => (prev.includes("Transfer established") ? "" : prev))
-                setTransferStatus("idle")
-                transferStatusRef.current = "idle"
-            }, 6000)
+            setTransferMsg("Transferred.")
         } catch (e: any) {
-            console.error("Transfer error:", e)
-            setTransferStatus("failed")
-            transferStatusRef.current = "failed"
-            setTransferMsg(`Transfer failed: ${e?.message || "Could not reach target"}. Caller remains connected.`)
+            setTransferMsg(e.message || "Transfer failed")
+        } finally {
             setIsTransferring(false)
-            isTransferringRef.current = false
         }
+    }
+
+    // Helper to format audio URL
+    const formatAudioUrl = (url: string) => {
+        if (!url) return ""
+        if (url.startsWith("http")) return url
+        return `${VOICE_BASE}${url.startsWith("/") ? "" : "/"}${url}`
     }
 
     // Initial lifecycle, audio unlock & polling intervals
@@ -1067,11 +707,23 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             })
             .catch(() => { })
 
+        // Fetch Main Number from /voice/api/main-number/
+        api(`${VOICE_BASE}/voice/api/main-number/`)
+            .then(res => {
+                if (res && res.main_number) {
+                    setMainNumber(res.main_number)
+                    cfgRef.current.callerId = res.main_number
+                }
+            })
+            .catch(err => {
+                console.warn("Failed to fetch main number from /voice/api/main-number/:", err)
+            })
+
         profileService.getOrganization()
             .then(res => {
                 if (res.data) {
                     if (res.data.name) setOrgName(res.data.name)
-                    if (res.data.phone_number) {
+                    if (res.data.phone_number && !mainNumber) {
                         setMainNumber(res.data.phone_number)
                         cfgRef.current.callerId = res.data.phone_number
                     }
@@ -1094,7 +746,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 .catch(() => { })
         }
 
-        // Audio unlock
+        // Audio unlock listener
         const handleUnlock = () => {
             if (!audioCtxRef.current) {
                 const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
@@ -1120,21 +772,12 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         connect()
         refreshList()
 
-        // 15s refresh interval (§3)
-        const listInterval = setInterval(() => {
-            if (
-                !isCallActiveRef.current &&
-                !isTransferringRef.current &&
-                !activeCallRef.current &&
-                !incomingCallRef.current
-            ) {
-                refreshList()
-            }
-        }, 15000)
+        // 15s refresh interval
+        const listInterval = setInterval(refreshList, 15000)
 
-        // 8h token refresh interval (§1)
+        // 8h token refresh interval
         const tokenInterval = setInterval(() => {
-            if (!activeCallRef.current && !incomingCallRef.current && !isTransferringRef.current) {
+            if (!activeCallRef.current && !incomingCallRef.current) {
                 connect()
             }
         }, 8 * 3600 * 1000)
@@ -1154,14 +797,11 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         refreshList()
     }, [currentTab, refreshList])
 
-    const filteredCalls = currentTab === "missed" ? callsList.filter(c => c.direction === "inbound" && c.status === "missed") : callsList
+    const filteredCalls = currentTab === "missed"
+        ? callsList.filter(c => c.direction === "inbound" && c.status === "missed")
+        : callsList
 
-    // Helper to format audio URL (§3b)
-    const formatAudioUrl = (url: string) => {
-        if (!url) return ""
-        if (url.startsWith("http")) return url
-        return `${VOICE_BASE}${url.startsWith("/") ? "" : "/"}${url}`
-    }
+    const arrow = { inbound: "↙", outbound: "↗" }
 
     return (
         <div className="flex-1 overflow-y-auto bg-background p-4 md:p-8 min-h-screen text-foreground font-sans">
@@ -1179,129 +819,77 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     </Button>
                 </div>
 
-                {/* Header Card */}
-                <Card className="border border-border/70 bg-card shadow-sm">
-                    <CardContent className="p-5">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                                    <PhoneCall className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h1 className="text-lg font-bold tracking-tight text-foreground">
-                                        {orgName.toUpperCase()} PHONE
-                                    </h1>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                        WebRTC Softphone & VoIP Station
-                                    </p>
-                                </div>
-                            </div>
-                            <Badge
-                                id="status"
-                                title={statusDetail}
-                                variant="outline"
-                                className={`text-xs font-semibold px-2.5 py-1 gap-1.5 ${status === "online"
-                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
-                                        : status === "connecting"
-                                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                                            : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
-                                    }`}
-                            >
-                                {status === "online" && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />}
-                                {status === "connecting" && <Loader2 className="w-3 h-3 animate-spin shrink-0 text-amber-500" />}
-                                {status === "offline" && <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />}
-                                {status === "online" ? "Online" : status === "connecting" ? "Connecting…" : "Offline"}
-                            </Badge>
-                        </div>
+                {/* Header matching HTML template */}
+                <div className="p-4 rounded-2xl border border-border/70 bg-card shadow-sm space-y-2">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-xl font-bold tracking-tight text-foreground uppercase">
+                            VOIP Business Phone
+                        </h1>
+                        <Badge
+                            id="status"
+                            variant="outline"
+                            title={statusDetail}
+                            className={`font-mono text-xs px-2.5 py-0.5 font-semibold transition-all ${
+                                status === "online"
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                                    : status === "connecting"
+                                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 animate-pulse"
+                                    : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
+                            }`}
+                        >
+                            {status === "online" ? "Online" : status === "connecting" ? "Connecting…" : "Offline"}
+                        </Badge>
+                    </div>
 
-                        <div className="mt-4 pt-3 border-t border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1.5">
-                                <User className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
-                                <span className="truncate">Logged in: <strong className="text-foreground font-semibold">{userName}</strong> <span className="text-muted-foreground/80">(ext {extension})</span></span>
-                            </div>
-                            <div className="flex items-center gap-1.5 sm:justify-end">
-                                <Phone className="w-3.5 h-3.5 text-muted-foreground/80 shrink-0" />
-                                <span className="truncate">Main Number: <strong className="text-foreground font-semibold">{mainNumber}</strong></span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                        Logged in: <strong className="text-foreground">{userName}</strong> (ext {extension})<br />
+                        Main Number: <strong className="text-foreground">{mainNumber}</strong>
+                    </p>
+                </div>
 
-                {/* Sound Permission Alert Banner */}
+                {/* Sound Banner */}
                 {soundBannerVisible && (
                     <div
                         id="sound-banner"
-                        className="flex items-center gap-2.5 p-3.5 rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-xs font-medium shadow-sm transition-all animate-fade-in cursor-pointer"
+                        className="p-3 text-xs rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center gap-2 cursor-pointer shadow-sm transition-all"
+                        onClick={() => {
+                            if (!audioCtxRef.current) {
+                                const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+                                if (AudioContextClass) audioCtxRef.current = new AudioContextClass()
+                            }
+                            if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+                                audioCtxRef.current.resume().then(() => setSoundBannerVisible(false))
+                            }
+                        }}
                     >
-                        <Volume2 className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                        <span>Click anywhere on this page to enable telephone ringtone sound.</span>
+                        <Volume2 className="w-4 h-4 shrink-0 text-amber-600 animate-bounce" />
+                        <span>Click anywhere on this page to enable ringing sound.</span>
                     </div>
                 )}
 
                 {/* Section: Incoming Call */}
                 {incomingCall && (
-                    <Card id="incoming" className="border-2 border-emerald-500/80 bg-emerald-500/5 shadow-lg shadow-emerald-500/10 animate-pulse">
-                        <CardContent className="p-5 space-y-4">
-                            {candidateLookup && (
-                                <div className="pb-3 border-b border-emerald-500/20">
-                                    {candidateLookup.loading ? (
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground italic">
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
-                                            Looking up candidate…
-                                        </div>
-                                    ) : candidateLookup.jobadderConnected === false ? (
-                                        <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1.5">
-                                            <AlertCircle className="w-3.5 h-3.5" /> JobAdder is not connected
-                                        </Badge>
-                                    ) : candidateLookup.found === false ? (
-                                        <Badge variant="outline" className="text-xs bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30 gap-1.5">
-                                            <AlertCircle className="w-3.5 h-3.5" /> Candidate not found
-                                        </Badge>
-                                    ) : candidateLookup.candidate ? (
-                                        <div className="space-y-1">
-                                            <Badge variant="outline" className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1 text-[11px] font-bold uppercase tracking-wider">
-                                                <UserCheck className="w-3 h-3" /> Candidate Match
-                                            </Badge>
-                                            <div className="text-base font-bold text-foreground">
-                                                {[candidateLookup.candidate.firstName, candidateLookup.candidate.lastName].filter(Boolean).join(" ")}
-                                            </div>
-                                            {candidateLookup.candidate.phone && (
-                                                <div className="text-xs font-medium text-muted-foreground">
-                                                    {candidateLookup.candidate.phone}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : null}
-                                </div>
-                            )}
-
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                                    <PhoneIncoming className="w-6 h-6 animate-bounce" />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <div className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                                        Incoming Call
-                                    </div>
-                                    <div id="incoming-from" className="text-lg font-bold text-foreground truncate">
-                                        {incomingCaller || "Unknown Caller"}
-                                    </div>
-                                </div>
+                    <Card id="incoming" className="border-2 border-emerald-500 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-md animate-pulse">
+                        <CardContent className="p-4 space-y-3">
+                            <div className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                Incoming call
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2.5 pt-1">
+                            <div id="incoming-from" className="text-xl font-bold text-foreground truncate">
+                                Incoming call: {incomingCaller || "Unknown"}
+                            </div>
+                            <div className="flex gap-2.5 pt-1">
                                 <Button
                                     id="btn-answer"
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 h-10 shadow-sm"
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 rounded-xl gap-2 shadow-sm"
                                     onClick={handleAnswer}
                                 >
-                                    <Phone className="w-4 h-4" />
+                                    <PhoneIncoming className="w-4 h-4" />
                                     Answer
                                 </Button>
                                 <Button
                                     id="btn-decline"
                                     variant="destructive"
-                                    className="font-semibold gap-2 h-10 shadow-sm"
+                                    className="flex-1 font-bold h-11 rounded-xl gap-2 shadow-sm"
                                     onClick={handleDecline}
                                 >
                                     <PhoneOff className="w-4 h-4" />
@@ -1314,41 +902,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
                 {/* Section: Active Call */}
                 {activeCall && (
-                    <Card id="active" className="border border-primary/40 bg-card shadow-md">
-                        <CardContent className="p-5 space-y-4">
-                            {candidateLookup && (
-                                <div className="pb-3 border-b border-border/60">
-                                    {candidateLookup.loading ? (
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground italic">
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                                            Looking up candidate…
-                                        </div>
-                                    ) : candidateLookup.jobadderConnected === false ? (
-                                        <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 gap-1.5">
-                                            <AlertCircle className="w-3.5 h-3.5" /> JobAdder is not connected
-                                        </Badge>
-                                    ) : candidateLookup.found === false ? (
-                                        <Badge variant="outline" className="text-xs bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30 gap-1.5">
-                                            <AlertCircle className="w-3.5 h-3.5" /> Candidate not found
-                                        </Badge>
-                                    ) : candidateLookup.candidate ? (
-                                        <div className="space-y-1">
-                                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1 text-[11px] font-bold uppercase tracking-wider">
-                                                <UserCheck className="w-3 h-3" /> Candidate Match
-                                            </Badge>
-                                            <div className="text-base font-bold text-foreground">
-                                                {[candidateLookup.candidate.firstName, candidateLookup.candidate.lastName].filter(Boolean).join(" ")}
-                                            </div>
-                                            {candidateLookup.candidate.phone && (
-                                                <div className="text-xs font-medium text-muted-foreground">
-                                                    {candidateLookup.candidate.phone}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : null}
-                                </div>
-                            )}
-
+                    <Card id="active" className="border-2 border-primary/40 bg-card shadow-md">
+                        <CardContent className="p-4 space-y-3">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1412,25 +967,9 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                             {showTransferPanel && (
                                 <div id="transfer-panel" className="mt-3 p-3.5 rounded-xl border border-border/80 bg-muted/40 space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                                                Transfer Call
-                                            </span>
-                                            {transferStatus !== "idle" && (
-                                                <Badge
-                                                    variant="outline"
-                                                    className={`text-[10px] font-mono uppercase px-2 py-0.5 ${
-                                                        transferStatus === "completed"
-                                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                                            : transferStatus === "failed"
-                                                            ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-                                                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 animate-pulse"
-                                                    }`}
-                                                >
-                                                    {transferStatus}
-                                                </Badge>
-                                            )}
-                                        </div>
+                                        <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                                            Transfer Call
+                                        </span>
                                         <button
                                             type="button"
                                             onClick={() => setShowTransferPanel(false)}
@@ -1461,7 +1000,9 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                             id="btn-transfer-go"
                                             size="sm"
                                             className="h-9 px-3 gap-1.5 text-xs font-semibold shrink-0"
-                                            onClick={() => doTransfer({ extension_uid: selectedColleague })}
+                                            onClick={() => {
+                                                if (selectedColleague) doTransfer({ extension_uid: selectedColleague })
+                                            }}
                                             disabled={!selectedColleague || isTransferring}
                                         >
                                             {isTransferring ? (
@@ -1475,7 +1016,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                     <div className="flex gap-2">
                                         <Input
                                             id="transfer-number"
-                                            placeholder="…or dial outside number"
+                                            placeholder="…or an outside number"
                                             inputMode="tel"
                                             className="h-9 text-xs"
                                             value={transferNumber}
@@ -1495,7 +1036,9 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                             size="sm"
                                             variant="secondary"
                                             className="h-9 px-3 gap-1.5 text-xs font-semibold shrink-0"
-                                            onClick={() => doTransfer({ number: transferNumber.trim() })}
+                                            onClick={() => {
+                                                if (transferNumber.trim()) doTransfer({ number: transferNumber.trim() })
+                                            }}
                                             disabled={!transferNumber.trim() || isTransferring}
                                         >
                                             {isTransferring ? (
@@ -1509,11 +1052,12 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                     {transferMsg && (
                                         <div
                                             id="transfer-msg"
-                                            className={`text-xs font-medium pt-1 flex items-center gap-1.5 ${transferMsg.toLowerCase().includes("fail") ||
-                                                    transferMsg.toLowerCase().includes("error")
+                                            className={`text-xs font-medium pt-1 ${
+                                                transferMsg.toLowerCase().includes("fail") ||
+                                                transferMsg.toLowerCase().includes("error")
                                                     ? "text-rose-600 dark:text-rose-400"
                                                     : "text-emerald-600 dark:text-emerald-400"
-                                                }`}
+                                            }`}
                                         >
                                             {transferMsg}
                                         </div>
@@ -1532,7 +1076,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                 <Phone className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                                 <Input
                                     id="dial-input"
-                                    placeholder="Enter telephone number to dial…"
+                                    placeholder="Enter telephone number"
                                     inputMode="tel"
                                     autoComplete="off"
                                     className="pl-9 h-11 text-base font-medium rounded-xl"
@@ -1559,30 +1103,33 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 <div className="p-1 rounded-xl bg-muted/60 border border-border/50 flex gap-1">
                     <button
                         data-tab="recent"
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${currentTab === "recent"
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                            currentTab === "recent"
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                            }`}
+                        }`}
                         onClick={() => setCurrentTab("recent")}
                     >
                         Recent Calls
                     </button>
                     <button
                         data-tab="missed"
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${currentTab === "missed"
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                            currentTab === "missed"
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                            }`}
+                        }`}
                         onClick={() => setCurrentTab("missed")}
                     >
                         Missed Calls
                     </button>
                     <button
                         data-tab="voicemail"
-                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 ${currentTab === "voicemail"
+                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 ${
+                            currentTab === "voicemail"
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                            }`}
+                        }`}
                         onClick={() => setCurrentTab("voicemail")}
                     >
                         Voicemail
@@ -1600,14 +1147,14 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                         <ul id="list" className="space-y-1.5">
                             {listErrorMessage ? (
                                 <li className="p-4 text-center rounded-xl bg-muted/30">
-                                    <div className="text-sm font-semibold text-rose-600">Could not load calls</div>
+                                    <div className="text-sm font-semibold text-rose-600">Could not load</div>
                                     <div className="text-xs text-muted-foreground mt-0.5">{listErrorMessage}</div>
                                 </li>
                             ) : currentTab === "voicemail" ? (
                                 voicemailsList.length === 0 ? (
                                     <li className="p-6 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
                                         <Voicemail className="w-8 h-8 text-muted-foreground/40" />
-                                        <span>No voicemail messages found.</span>
+                                        <span>No voicemail</span>
                                     </li>
                                 ) : (
                                     voicemailsList.map(v => (
@@ -1651,13 +1198,13 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                                                 (item.uid === v.uid || item.id === v.id)
                                                                     ? { ...item, is_read: true }
                                                                     : item
-                                                            )
+                                                                )
                                                         )
                                                         setUnreadVoicemails(prev => Math.max(0, prev - 1))
                                                     }}
                                                 />
                                             ) : (
-                                                <div className="text-xs text-muted-foreground italic mt-1"> (Processing audio…)</div>
+                                                <div className="text-xs text-muted-foreground italic mt-1"> (processing…)</div>
                                             )}
                                         </li>
                                     ))
@@ -1665,31 +1212,34 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                             ) : filteredCalls.length === 0 ? (
                                 <li className="p-6 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
                                     <PhoneMissed className="w-8 h-8 text-muted-foreground/40" />
-                                    <span>{currentTab === "missed" ? "No missed calls found." : "No call logs yet."}</span>
+                                    <span>{currentTab === "missed" ? "No missed calls" : "No calls yet"}</span>
                                 </li>
                             ) : (
                                 filteredCalls.map(c => {
                                     const isMissed = c.direction === "inbound" && c.status === "missed"
                                     const who = c.contact_name ? `${c.contact_name} · ${c.number}` : c.number
-                                    const sub = `${new Date(c.started_at).toLocaleString()} · ${c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
-                                        }${c.handled_by ? ` · ${c.handled_by}` : ""}`
+                                    const sub = `${new Date(c.started_at).toLocaleString()} · ${
+                                        c.status === "completed" ? mmss(c.duration) : c.status.replace("_", " ")
+                                    }${c.handled_by ? ` · ${c.handled_by}` : ""}`
 
                                     return (
                                         <li
                                             key={c.uid || c.id}
-                                            className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${isMissed
+                                            className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 ${
+                                                isMissed
                                                     ? "border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10"
                                                     : "border-border/60 bg-background/50 hover:bg-muted/40"
-                                                }`}
+                                            }`}
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div
-                                                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isMissed
+                                                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                                        isMissed
                                                             ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                                                             : c.direction === "inbound"
-                                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                                                : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                                                        }`}
+                                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                                    }`}
                                                 >
                                                     {isMissed ? (
                                                         <PhoneMissed className="w-4 h-4" />
@@ -1701,12 +1251,16 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div
-                                                        className={`font-semibold text-xs sm:text-sm truncate hover:underline cursor-pointer flex items-center gap-1.5 ${isMissed ? "text-rose-600 dark:text-rose-400" : "text-foreground"
-                                                            }`}
+                                                        className={`font-semibold text-xs sm:text-sm truncate hover:underline cursor-pointer flex items-center gap-1.5 ${
+                                                            isMissed ? "text-rose-600 dark:text-rose-400" : "text-foreground"
+                                                        }`}
                                                         onClick={() => setDialNumber(c.number)}
                                                         title="Click to dial number"
                                                     >
-                                                        <span className="truncate">{who}</span>
+                                                        <span className="truncate">
+                                                            {isMissed ? "✖ " : arrow[c.direction] + " "}
+                                                            {who}
+                                                        </span>
                                                         {c.has_voicemail && (
                                                             <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] font-semibold px-1.5 py-0">
                                                                 voicemail
@@ -1737,7 +1291,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
                 {/* Footer Notice */}
                 <p className="text-center text-[11px] text-muted-foreground/80 py-2">
-                    Emergency calls (999/911/112) should be dialed directly from your mobile or landline device.
+                    Not for emergency calls: dial 999 from your mobile.
                 </p>
             </div>
 
