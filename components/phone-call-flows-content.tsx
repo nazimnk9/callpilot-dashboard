@@ -149,7 +149,16 @@ export function PhoneCallFlowsContent() {
                         >
                             Configure
                         </Button>
-                        <Link href={flow.code === "AICALL191" ? `/dashboard/report?code=${flow.code}` : `/dashboard/report/${item.uid}`} className="w-full">
+                        <Link
+                            href={
+                                (flow.name?.toLowerCase().includes("voip") || flow.code?.toLowerCase().includes("voip"))
+                                    ? `/dashboard/voip-reports/${item.uid}`
+                                    : flow.code === "AICALL191"
+                                        ? `/dashboard/report?code=${flow.code}`
+                                        : `/dashboard/report/${item.uid}`
+                            }
+                            className="w-full"
+                        >
                             <Button
                                 className="bg-[#e2e8f0] dark:bg-gray-700 hover:bg-[#cbd5e1] dark:hover:bg-gray-600 text-[#64748b] dark:text-gray-300 font-semibold h-11 px-8 rounded-lg text-sm transition-all border-none w-full"
                             >
