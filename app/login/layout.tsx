@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: {
     absolute: "Sign in | CallPilot",
