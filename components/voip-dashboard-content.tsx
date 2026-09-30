@@ -134,6 +134,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const reconnectTimerRef = useRef<any>(null)
     const readyWatchdogRef = useRef<any>(null)
     const rtcSyncTimerRef = useRef<any>(null)
+    const answerWatchdogRef = useRef<any>(null)
     const callStartRef = useRef<number>(0)
     const audioCtxRef = useRef<AudioContext | null>(null)
     const ringBufferRef = useRef<AudioBuffer | null>(null)
@@ -274,6 +275,65 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         // If this is the same object/call we created with newCall(), it is outbound
         // even if an older SDK build temporarily omits the direction field.
         return !!(activeCallRef.current && sameCall(activeCallRef.current, call) && dialedNumberRef.current)
+    }
+
+    // Telnyx WebRTC 2.27.x currently has an open bug where answer() can be
+    // silently ignored for a legitimate second inbound call (common in server-dialed
+    // transfer/consult flows). Telnyx's published workaround is to temporarily set
+    // call.options.attach=true while answer() is invoked. Keep the workaround scoped
+    // to the answer operation so normal call recovery semantics are unchanged.
+    const answerIncomingWithTransferWorkaround = async (call: any) => {
+        if (!call || typeof call.answer !== "function") {
+            throw new Error("Incoming Telnyx call cannot be answered")
+        }
+
+        // Ask the SDK/browser for microphone permission while we are still inside
+        // the user's Answer click gesture. A denied mic can otherwise look like an
+        // answer that never connects.
+        const client = clientRef.current
+        if (client && typeof client.checkPermissions === "function") {
+            try {
+                const allowed = await client.checkPermissions(true, false)
+                if (allowed === false) {
+                    throw new Error("Microphone permission is required to answer calls")
+                }
+            } catch (permissionError: any) {
+                // If the SDK explicitly says permission is denied, surface it. Some
+                // SDK/browser combinations throw for unsupported permission probes;
+                // in that case answer() itself remains the source of truth.
+                const message = String(permissionError?.message || permissionError || "")
+                if (/permission|microphone|denied|notallowed/i.test(message)) {
+                    throw permissionError
+                }
+                console.warn("Telnyx microphone permission precheck skipped:", permissionError)
+            }
+        }
+
+        const options = call.options || null
+        const hadAttach = !!(options && Object.prototype.hasOwnProperty.call(options, "attach"))
+        const previousAttach = options?.attach
+
+        if (options) {
+            options.attach = true
+        }
+
+        try {
+            console.info("Answering incoming Telnyx call", {
+                id: callId(call),
+                state: callState(call),
+                direction: callDirection(call),
+                transferCompatibilityWorkaround: !!options
+            })
+
+            await Promise.resolve(call.answer({ remoteElement: "remoteAudio" }))
+        } finally {
+            // The duplicate-answer guard runs during answer(). Restore the original
+            // value once the SDK has accepted the operation.
+            if (options) {
+                if (hadAttach) options.attach = previousAttach
+                else delete options.attach
+            }
+        }
     }
 
     const getAudioContext = (): AudioContext | null => {
@@ -514,6 +574,11 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // Active Call UI handling
     const showActive = (call: any, stateText: string) => {
+        if (answerWatchdogRef.current) {
+            clearTimeout(answerWatchdogRef.current)
+            answerWatchdogRef.current = null
+        }
+
         if (incomingCallRef.current && sameCall(incomingCallRef.current, call)) {
             setIncomingCall(null)
             incomingCallRef.current = null
@@ -543,6 +608,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // End call cleanup
     const endCall = useCallback((call?: any) => {
+        if (answerWatchdogRef.current) {
+            clearTimeout(answerWatchdogRef.current)
+            answerWatchdogRef.current = null
+        }
         if (call) suppressRingForCallIdsRef.current.delete(callId(call))
 
         if (incomingCallRef.current && (!call || sameCall(incomingCallRef.current, call))) {
@@ -891,14 +960,34 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         stopRinger(call)
 
         try {
-            if (typeof call.answer === "function") {
-                await Promise.resolve(call.answer({ remoteElement: "remoteAudio" }))
-            } else {
-                showActive(call, "Connected")
-            }
-        } catch (e) {
+            await answerIncomingWithTransferWorkaround(call)
+
+            // Do not fake the Connected UI here. Wait for Telnyx to emit answering/
+            // active. The 2.27.x duplicate-answer bug returns from answer() without
+            // throwing, so detect that silent failure and restore the ringing UI.
+            if (answerWatchdogRef.current) clearTimeout(answerWatchdogRef.current)
+            answerWatchdogRef.current = setTimeout(() => {
+                answerWatchdogRef.current = null
+
+                const currentIncoming = incomingCallRef.current
+                if (!currentIncoming || !sameCall(currentIncoming, call)) return
+
+                const state = callState(currentIncoming)
+                if (state === "ringing" || state === "early" || !state) {
+                    console.error(
+                        "Telnyx answer() did not transition the call. " +
+                        "This is consistent with the 2.27.x duplicate inbound-answer transfer bug.",
+                        { id, state, call: currentIncoming }
+                    )
+                    suppressRingForCallIdsRef.current.delete(id)
+                    setStatusDetail("Incoming call answer did not complete - retrying is safe")
+                    startRinger(currentIncoming)
+                }
+            }, 7000)
+        } catch (e: any) {
             console.error("Could not answer incoming call", e)
             suppressRingForCallIdsRef.current.delete(id)
+            setStatusDetail(e?.message || "Could not answer incoming call")
             if (incomingCallRef.current && sameCall(incomingCallRef.current, call)) {
                 startRinger(call)
             }
@@ -908,6 +997,11 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const handleDecline = async () => {
         const call = incomingCallRef.current || incomingCall
         if (!call) return
+
+        if (answerWatchdogRef.current) {
+            clearTimeout(answerWatchdogRef.current)
+            answerWatchdogRef.current = null
+        }
 
         const id = callId(call)
         suppressRingForCallIdsRef.current.add(id)
