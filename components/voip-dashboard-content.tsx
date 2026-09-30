@@ -109,6 +109,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const [activeCall, setActiveCall] = useState<any | null>(null)
     const [activeWho, setActiveWho] = useState<string>("")
     const [activeStateText, setActiveStateText] = useState<string>("")
+    const [isAnswering, setIsAnswering] = useState(false)
     const [held, setHeld] = useState(false)
     const [muted, setMuted] = useState(false)
 
@@ -277,63 +278,70 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         return !!(activeCallRef.current && sameCall(activeCallRef.current, call) && dialedNumberRef.current)
     }
 
-    // Telnyx WebRTC 2.27.x currently has an open bug where answer() can be
-    // silently ignored for a legitimate second inbound call (common in server-dialed
-    // transfer/consult flows). Telnyx's published workaround is to temporarily set
-    // call.options.attach=true while answer() is invoked. Keep the workaround scoped
-    // to the answer operation so normal call recovery semantics are unchanged.
-    const answerIncomingWithTransferWorkaround = async (call: any) => {
+    // Answer the freshest live Telnyx Call object.
+    //
+    // Telnyx fixed the "distinct second inbound call cannot be answered" bug in
+    // WebRTC 2.27.4+ (VSUP-122). We still keep the attach=true compatibility guard
+    // for an older locally-vendored bundle, but the pinned 2.27.10 bundle is loaded
+    // first below so normal calls do not depend on this internal workaround.
+    const answerIncomingCall = async (originalCall: any) => {
+        const client = clientRef.current
+        let call = originalCall
+
+        // React may hold a stale Call object after recovery/reconnect. Always prefer
+        // the current object from the SDK cache if one with the same ID exists.
+        if (client && typeof client.getActiveCalls === "function") {
+            try {
+                const liveCalls = client.getActiveCalls() || []
+                const fresh = liveCalls.find((candidate: any) => sameCall(candidate, originalCall))
+                if (fresh) call = fresh
+            } catch (e) {
+                console.warn("Could not refresh incoming Telnyx Call object before answer", e)
+            }
+        }
+
         if (!call || typeof call.answer !== "function") {
             throw new Error("Incoming Telnyx call cannot be answered")
         }
 
-        // Ask the SDK/browser for microphone permission while we are still inside
-        // the user's Answer click gesture. A denied mic can otherwise look like an
-        // answer that never connects.
-        const client = clientRef.current
-        if (client && typeof client.checkPermissions === "function") {
-            try {
-                const allowed = await client.checkPermissions(true, false)
-                if (allowed === false) {
-                    throw new Error("Microphone permission is required to answer calls")
-                }
-            } catch (permissionError: any) {
-                // If the SDK explicitly says permission is denied, surface it. Some
-                // SDK/browser combinations throw for unsupported permission probes;
-                // in that case answer() itself remains the source of truth.
-                const message = String(permissionError?.message || permissionError || "")
-                if (/permission|microphone|denied|notallowed/i.test(message)) {
-                    throw permissionError
-                }
-                console.warn("Telnyx microphone permission precheck skipped:", permissionError)
-            }
-        }
+        // Keep the actual object used for answering in React/ref state so subsequent
+        // callUpdate events and Answer/Decline actions refer to the same instance.
+        incomingCallRef.current = call
+        setIncomingCall(call)
 
-        const options = call.options || null
-        const hadAttach = !!(options && Object.prototype.hasOwnProperty.call(options, "attach"))
-        const previousAttach = options?.attach
+        const options = call.options || {}
+        if (!call.options) call.options = options
 
-        if (options) {
-            options.attach = true
-        }
+        const hadAttach = Object.prototype.hasOwnProperty.call(options, "attach")
+        const previousAttach = options.attach
+
+        // Session-level client.remoteElement is already "remoteAudio". Setting it on
+        // the call as well makes the destination explicit without delaying answer().
+        options.remoteElement = "remoteAudio"
+        options.attach = true
 
         try {
-            console.info("Answering incoming Telnyx call", {
+            console.info("[TELNYX] Answer button pressed", {
                 id: callId(call),
                 state: callState(call),
                 direction: callDirection(call),
-                transferCompatibilityWorkaround: !!options
+                hasPeer: !!call?.peer,
+                attachWorkaround: true
             })
 
-            await Promise.resolve(call.answer({ remoteElement: "remoteAudio" }))
+            // IMPORTANT: do not await an extra permissions probe before this call.
+            // answer() must run immediately from the user's click. The Telnyx SDK will
+            // request microphone access itself when needed.
+            const result = call.answer()
+            await Promise.resolve(result)
         } finally {
-            // The duplicate-answer guard runs during answer(). Restore the original
-            // value once the SDK has accepted the operation.
-            if (options) {
-                if (hadAttach) options.attach = previousAttach
-                else delete options.attach
-            }
+            // The old 2.27.0-2.27.3 workaround only needs attach=true while answer()
+            // performs its duplicate-answer guard. Restore the previous value after.
+            if (hadAttach) options.attach = previousAttach
+            else delete options.attach
         }
+
+        return call
     }
 
     const getAudioContext = (): AudioContext | null => {
@@ -574,6 +582,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // Active Call UI handling
     const showActive = (call: any, stateText: string) => {
+        setIsAnswering(false)
         if (answerWatchdogRef.current) {
             clearTimeout(answerWatchdogRef.current)
             answerWatchdogRef.current = null
@@ -608,6 +617,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // End call cleanup
     const endCall = useCallback((call?: any) => {
+        setIsAnswering(false)
         if (answerWatchdogRef.current) {
             clearTimeout(answerWatchdogRef.current)
             answerWatchdogRef.current = null
@@ -763,15 +773,16 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     // SDK script loader
     const loadSdk = () => {
         return new Promise<void>((resolve, reject) => {
-            if (
-                typeof window !== "undefined" &&
-                ((window as any).TelnyxRTC || (window as any).TelnyxWebRTC)
-            ) {
-                return resolve()
+            if (typeof window === "undefined") {
+                return reject(new Error("Telnyx SDK can only load in the browser"))
             }
+
+            // IMPORTANT: load a version that contains Telnyx VSUP-122 first.
+            // The previous code preferred /js/telnyx-webrtc.js. If that local file is
+            // 2.27.0-2.27.3, transferred calls ring but answer() is silently ignored.
             const scriptUrls = [
-                "/js/telnyx-webrtc.js",
-                "https://unpkg.com/@telnyx/webrtc@2.27.10/lib/bundle.js"
+                "https://unpkg.com/@telnyx/webrtc@2.27.10/lib/bundle.js",
+                "/js/telnyx-webrtc.js"
             ]
             let index = 0
 
@@ -918,6 +929,14 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     }
                 })
 
+                client.on("telnyx.warning", (warning: any) => {
+                    if (clientRef.current !== client) return
+                    console.warn("[TELNYX WARNING]", warning)
+                    if (warning?.code === 33007 || String(warning?.code) === "33007") {
+                        setStatusDetail("Telnyx blocked a duplicate inbound answer (33007)")
+                    }
+                })
+
                 client.on("telnyx.notification", onNotification)
                 clientRef.current = client
 
@@ -953,48 +972,62 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     // Button actions: Answer, Decline, Hangup, Hold, Mute
     const handleAnswer = async () => {
         const call = incomingCallRef.current || incomingCall
-        if (!call) return
+        if (!call || isAnswering) return
 
         const id = callId(call)
+        setIsAnswering(true)
         suppressRingForCallIdsRef.current.add(id)
         stopRinger(call)
+        setStatusDetail("Answering incoming call…")
 
         try {
-            await answerIncomingWithTransferWorkaround(call)
+            const answeredCall = await answerIncomingCall(call)
 
-            // Do not fake the Connected UI here. Wait for Telnyx to emit answering/
-            // active. The 2.27.x duplicate-answer bug returns from answer() without
-            // throwing, so detect that silent failure and restore the ringing UI.
+            // Do not fake Connected. Wait for Telnyx to emit answering/active. If a
+            // stale/old SDK silently ignores answer(), make that visible quickly.
             if (answerWatchdogRef.current) clearTimeout(answerWatchdogRef.current)
             answerWatchdogRef.current = setTimeout(() => {
                 answerWatchdogRef.current = null
 
-                const currentIncoming = incomingCallRef.current
-                if (!currentIncoming || !sameCall(currentIncoming, call)) return
+                let currentIncoming = incomingCallRef.current
+                const client = clientRef.current
+                if (client && typeof client.getActiveCalls === "function") {
+                    try {
+                        const liveCalls = client.getActiveCalls() || []
+                        const fresh = liveCalls.find((candidate: any) => sameCall(candidate, answeredCall))
+                        if (fresh) currentIncoming = fresh
+                    } catch { }
+                }
+
+                if (!currentIncoming || !sameCall(currentIncoming, answeredCall)) {
+                    setIsAnswering(false)
+                    return
+                }
 
                 const state = callState(currentIncoming)
                 if (state === "ringing" || state === "early" || !state) {
-                    console.error(
-                        "Telnyx answer() did not transition the call. " +
-                        "This is consistent with the 2.27.x duplicate inbound-answer transfer bug.",
-                        { id, state, call: currentIncoming }
-                    )
+                    console.error("[TELNYX] answer() returned but call is still ringing", {
+                        id, state, call: currentIncoming
+                    })
                     suppressRingForCallIdsRef.current.delete(id)
-                    setStatusDetail("Incoming call answer did not complete - retrying is safe")
+                    setStatusDetail("Answer was not accepted by Telnyx - check console warning/code")
+                    setIsAnswering(false)
                     startRinger(currentIncoming)
                 }
-            }, 7000)
+            }, 4000)
         } catch (e: any) {
             console.error("Could not answer incoming call", e)
             suppressRingForCallIdsRef.current.delete(id)
             setStatusDetail(e?.message || "Could not answer incoming call")
+            setIsAnswering(false)
             if (incomingCallRef.current && sameCall(incomingCallRef.current, call)) {
-                startRinger(call)
+                startRinger(incomingCallRef.current)
             }
         }
     }
 
     const handleDecline = async () => {
+        setIsAnswering(false)
         const call = incomingCallRef.current || incomingCall
         if (!call) return
 
@@ -1339,9 +1372,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                     id="btn-answer"
                                     className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 rounded-xl gap-2 shadow-sm"
                                     onClick={handleAnswer}
+                                    disabled={isAnswering}
                                 >
-                                    <PhoneIncoming className="w-4 h-4" />
-                                    Answer
+                                    {isAnswering ? <Loader2 className="w-4 h-4 animate-spin" /> : <PhoneIncoming className="w-4 h-4" />}
+                                    {isAnswering ? "Answering…" : "Answer"}
                                 </Button>
                                 <Button
                                     id="btn-decline"
