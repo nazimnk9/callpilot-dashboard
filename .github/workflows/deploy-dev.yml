@@ -1,9 +1,9 @@
 name: Deploy to dev server
 
-# Push to dev_test -> automatically deploys to the dev server.
+# Push to staging -> automatically deploys to the dev server.
 on:
   push:
-    branches: [dev_test]
+    branches: [staging]
   workflow_dispatch:
 
 concurrency:
