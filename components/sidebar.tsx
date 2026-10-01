@@ -132,7 +132,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-[90vh] md:h-screen w-full md:w-52 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-r border-b md:border-b-0 border-violet-100 dark:border-white/10 shadow-[4px_0_30px_-18px_rgba(91,73,232,0.35)] rounded-b-3xl md:rounded-none flex flex-col transition-transform duration-300 z-50 md:relative md:translate-x-0 md:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed left-0 top-0 h-[90vh] md:h-screen w-full md:w-52 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-r border-b md:border-b-0 border-violet-100 dark:border-white/10 shadow-[4px_0_30px_-18px_rgba(22,104,245,0.35)] rounded-b-3xl md:rounded-none flex flex-col transition-transform duration-300 z-50 md:relative md:translate-x-0 md:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
       >
         {/* Header - Logo area */}

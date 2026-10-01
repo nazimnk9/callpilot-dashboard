@@ -17,11 +17,19 @@ const config: Config = {
         // Remap the default blue scale to a vivid indigo-violet brand scale so every
         // existing blue-* utility picks up the new look.
         blue: {
-          50: '#f1f0ff', 100: '#e5e3ff', 200: '#cfcbff', 300: '#b0a8ff', 400: '#8f82fb',
-          500: '#7466f3', 600: '#5b49e8', 700: '#4c3bcc', 800: '#3f33a3', 900: '#362f82', 950: '#201b4d',
+          50: '#eff7ff', 100: '#dcedff', 200: '#bddcff', 300: '#8cc3ff', 400: '#52a1ff',
+          500: '#2b83ff', 600: '#1668f5', 700: '#0f52d6', 800: '#1243a8', 900: '#123a85', 950: '#0b2150',
+        },
+        violet: {
+          50: '#f7f0ff', 100: '#eddcff', 200: '#dcbfff', 300: '#c79cff', 400: '#b377fb',
+          500: '#9d5cf6', 600: '#8841e6', 700: '#7231c4', 800: '#5d2a9e', 900: '#4a2480', 950: '#2c1050',
+        },
+        indigo: {
+          50: '#f0f3ff', 100: '#e0e6ff', 200: '#c3ceff', 300: '#9aaaff', 400: '#7487ff',
+          500: '#4f6bff', 600: '#3b50ea', 700: '#2f40c3', 800: '#2a3799', 900: '#273178', 950: '#161c4a',
         },
         brand: {
-          cyan: '#22d3ee', pink: '#f472b6', violet: '#7c5cff', indigo: '#4f46e5',
+          cyan: '#22d3ee', pink: '#ff4fa3', violet: '#9d5cf6', indigo: '#1668f5',
         },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
