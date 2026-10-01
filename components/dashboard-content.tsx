@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone, Minus, CheckCircle2, Users, RotateCcw } from 'lucide-react';
+import { CreditCard, History, Settings, BarChart3, Info, ExternalLink, ChevronDown, ChevronUp, Loader2, Search, ChevronsUpDown, Check, Rocket, Zap, Building2, AlertCircle, Clock, Phone, Minus, CheckCircle2, Users, RotateCcw, ShieldAlert } from 'lucide-react';
 import { BASE_URL } from "@/lib/baseUrl";
 import { cookieUtils } from "@/services/auth-service";
 import { profileService } from "@/services/profile-service";
@@ -1318,6 +1318,32 @@ export function DashboardContent() {
         }
     };
 
+    if (orgData?.role === 'VOIP_USER') {
+        return (
+            <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8 flex items-center justify-center min-h-[calc(100vh-4rem)]">
+                <div className="max-w-md w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-sm text-center flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 mb-5">
+                        <ShieldAlert className="w-8 h-8" />
+                    </div>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 mb-3">
+                        Role: VOIP_USER
+                    </span>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                        Access Restricted
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
+                        You do not have authorization to access the AI Control Centre dashboard. Your account is configured for VoIP Business Line operations.
+                    </p>
+                    <Button
+                        onClick={() => router.push('/dashboard/phone-call-flows')}
+                        className="w-full bg-[#0f172a] dark:bg-gray-100 hover:bg-[#1e293b] dark:hover:bg-gray-200 text-white dark:text-gray-900 font-semibold h-11 rounded-lg text-sm transition-all shadow-sm"
+                    >
+                        Go to AI Call Builder
+                    </Button>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="flex-1 overflow-y-auto bg-transparent p-4 md:p-8 animate-fade-in">

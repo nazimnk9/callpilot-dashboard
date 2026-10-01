@@ -665,8 +665,8 @@ export function OrganizationUsersContent() {
             </div>
 
             {/* Invite User Modal */}
-            <Dialog 
-                open={isInviteModalOpen} 
+            <Dialog
+                open={isInviteModalOpen}
                 onOpenChange={(open) => {
                     setIsInviteModalOpen(open)
                     if (!open) {
@@ -768,6 +768,7 @@ export function OrganizationUsersContent() {
                                                 {/* <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem> */}
                                                 <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
                                                 <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
+                                                <SelectItem value="VOIP_USER" className="rounded-lg">VoIP User</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -861,7 +862,7 @@ export function OrganizationUsersContent() {
                                 />
                             </div> */}
 
-                             <div className="space-y-2">
+                            <div className="space-y-2">
                                 <Label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Assign Role <span className="text-red-500">*</span>
                                 </Label>
@@ -873,6 +874,7 @@ export function OrganizationUsersContent() {
                                         {/* <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem> */}
                                         <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
                                         <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
+                                        <SelectItem value="VOIP_USER" className="rounded-lg">VoIP User</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

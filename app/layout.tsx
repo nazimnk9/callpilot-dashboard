@@ -10,9 +10,15 @@ import './globals.css'
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta', display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'Chat Prompts - Dashboard',
-  description: 'Create and manage chat prompts with AI assistance',
-  icons: [],
+  title: {
+    default: "CallPilot",
+    template: "%s | CallPilot",
+  },
+  description: "CallPilot account dashboard.",
+  robots: {
+    index: false,
+    follow: false,
+  }, // whole panel is private by default
 }
 
 export default function RootLayout({
