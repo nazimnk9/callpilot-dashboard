@@ -30,7 +30,7 @@ jobs:
             echo "DEV_USER=$DEV_USER"
             echo "DEV_SSH_PASSWORD='$DEV_SSH_PASSWORD'"
             echo "REMOTE_DIR=/var/www/callpilot-dashboard"
-            echo "DEPLOY_MODE=screen"
+            echo "DEPLOY_MODE=docker"
             echo "SCREEN_NAME=callpilot"
             echo "API_BASE_URL=https://devapi.callpilot.pro/api/v1"
           } > .env.deploy

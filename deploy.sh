@@ -41,7 +41,7 @@ if [ "${DEPLOY_MODE:-screen}" = "screen" ]; then
   echo "    attach with: ssh $TARGET -t screen -r $SCREEN_NAME"
 else
   echo "==> Building and starting container"
-  $SSH "$TARGET" "cd $REMOTE_DIR && (command -v docker >/dev/null || curl -fsSL https://get.docker.com | sh) && docker compose up -d --build && docker image prune -f"
+  $SSH "$TARGET" "cd $REMOTE_DIR && (screen -S $SCREEN_NAME -X quit || true) && (command -v docker >/dev/null || curl -fsSL https://get.docker.com | sh) && $API_OVERRIDE docker compose up -d --build && docker image prune -f"
 fi
 
 echo "==> Done: http://$DEV_HOST:${HOST_PORT:-3000}"
