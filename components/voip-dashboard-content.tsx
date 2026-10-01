@@ -100,6 +100,8 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const [status, setStatus] = useState<"online" | "offline" | "connecting">("offline")
     const [statusDetail, setStatusDetail] = useState<string>("")
     const [soundBannerVisible, setSoundBannerVisible] = useState(false)
+    const [callError, setCallError] = useState<string | null>(null)
+    const [isDialing, setIsDialing] = useState(false)
     const [dialNumber, setDialNumber] = useState("")
     const [currentTab, setCurrentTab] = useState<"recent" | "missed" | "voicemail">("recent")
 
@@ -147,6 +149,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const isConnectingRef = useRef<boolean>(false)
     const clientReadyRef = useRef<boolean>(false)
     const dialedNumberRef = useRef<string>("")
+    const isDialingRef = useRef<boolean>(false)
     const baseTitleRef = useRef<string>(typeof document !== "undefined" ? document.title : "")
 
     // Keep refs synchronized
@@ -214,6 +217,133 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         const parts = value.split(`; ${name}=`)
         if (parts.length === 2) return parts.pop()?.split(";").shift() || ""
         return ""
+    }
+
+    const stopMediaStream = (stream?: MediaStream | null) => {
+        stream?.getTracks().forEach(track => {
+            try { track.stop() } catch { }
+        })
+    }
+
+    const friendlyMediaError = (error: any): string => {
+        const name = String(error?.name || "")
+        const message = String(error?.message || error || "")
+
+        if (message) {
+            const lower = message.toLowerCase()
+            if (
+                lower.includes("microphone access is blocked") ||
+                lower.includes("microphone permission") ||
+                lower.includes("secure context") ||
+                lower.includes("https")
+            ) {
+                return message
+            }
+        }
+
+        switch (name) {
+            case "NotAllowedError":
+            case "PermissionDeniedError":
+            case "SecurityError":
+                return "Microphone access is blocked. Allow microphone access in Chrome site settings and Windows privacy settings, then try again."
+            case "NotFoundError":
+            case "DevicesNotFoundError":
+                return "No microphone was found. Connect or enable a microphone, then try again."
+            case "NotReadableError":
+            case "TrackStartError":
+                return "Chrome could not start the microphone. Close other apps using it, check Windows microphone privacy settings, then try again."
+            case "OverconstrainedError":
+            case "ConstraintNotSatisfiedError":
+                return "The selected microphone could not be used. Choose the system default microphone in Chrome, then try again."
+            case "AbortError":
+                return "The microphone stopped while the call was starting. Try again after reconnecting the microphone."
+            case "TypeError":
+                return "This browser context cannot access the microphone. Use Chrome on HTTPS or localhost."
+            default:
+                return message || "Could not start the call. Check microphone permission and try again."
+        }
+    }
+
+    const telnyxErrorMessage = (error: any): string => {
+        const code = Number(error?.code)
+        switch (code) {
+            case 40001:
+                return "Chrome could not create the WebRTC offer. Refresh the page and try the call again."
+            case 40005:
+                return "Could not send the call request to Telnyx. Check the connection and try again."
+            case 42001:
+                return "Microphone access is blocked. Allow microphone access in Chrome site settings and Windows privacy settings, then try again."
+            case 42002:
+                return "No microphone was found. Connect or enable a microphone, then try again."
+            case 42003:
+                return "Chrome could not access the microphone. Close other apps using it, then try again."
+            case 44002:
+                return "The phone number is missing or invalid. Enter a valid destination number and try again."
+            case 45001:
+            case 45002:
+                return "The Telnyx signaling connection was interrupted. Check the network and try again."
+            case 46003:
+                return "The phone registration expired. Reconnecting now; try again when the badge is Online."
+            case 48001:
+                return "This device is offline. Reconnect to the internet and try again."
+            default:
+                return error?.message || "Call setup failed. Check the console for details and try again."
+        }
+    }
+
+    const ensureMicrophoneReady = async (): Promise<MediaStream> => {
+        if (typeof window === "undefined" || typeof navigator === "undefined") {
+            throw new Error("Calls can only start in a browser.")
+        }
+
+        if (!window.isSecureContext) {
+            throw new Error("Voice calling needs HTTPS or localhost so Chrome can use the microphone.")
+        }
+
+        if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+            throw new Error("This browser does not support microphone access required for calls.")
+        }
+
+        try {
+            const permission = await navigator.permissions?.query?.({ name: "microphone" as PermissionName })
+            if (permission?.state === "denied") {
+                throw new Error("Microphone access is blocked. Allow microphone access in Chrome site settings and Windows privacy settings, then try again.")
+            }
+        } catch (error: any) {
+            if (String(error?.message || "").toLowerCase().includes("microphone access is blocked")) {
+                throw error
+            }
+        }
+
+        let stream: MediaStream | null = null
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                },
+                video: false
+            })
+        } catch {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            } catch (secondError) {
+                throw secondError
+            }
+        }
+
+        if (!stream) {
+            throw new Error("Chrome could not open the microphone.")
+        }
+
+        const hasLiveAudio = stream.getAudioTracks().some(track => track.readyState === "live")
+        if (!hasLiveAudio) {
+            stopMediaStream(stream)
+            throw new Error("Chrome opened the microphone, but no live audio track was available.")
+        }
+
+        return stream
     }
 
     // API fetch wrapper matching portal.js
@@ -560,6 +690,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     // Incoming Call UI handling
     const showIncoming = (call: any) => {
         const id = callId(call)
+        setCallError(null)
 
         if (incomingCallRef.current && !sameCall(incomingCallRef.current, call)) {
             stopRinger(incomingCallRef.current)
@@ -582,6 +713,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
 
     // Active Call UI handling
     const showActive = (call: any, stateText: string) => {
+        setCallError(null)
         setIsAnswering(false)
         if (answerWatchdogRef.current) {
             clearTimeout(answerWatchdogRef.current)
@@ -905,11 +1037,39 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 client.on("telnyx.error", (e: any) => {
                     if (clientRef.current !== client) return
                     console.error("telnyx.error", e)
-                    const isFatal = e?.fatal === true || e?.code === 46001 || e?.code === 46002 || e?.code === 45003 || e?.code === 48001
+                    const telnyxError = e?.error || e
+                    const code = Number(telnyxError?.code || e?.code)
+                    const message = telnyxErrorMessage(telnyxError)
+                    const eventCallId = String(e?.callId || telnyxError?.callId || "")
+                    const currentActive = activeCallRef.current
+                    const currentIncoming = incomingCallRef.current
+                    const setupFailureCodes = [40001, 40005, 42001, 42002, 42003, 44002]
+
+                    if (
+                        eventCallId ||
+                        currentActive ||
+                        setupFailureCodes.includes(code)
+                    ) {
+                        setCallError(message)
+                        setStatusDetail(message)
+                    }
+
+                    const matchesActiveCall =
+                        currentActive &&
+                        (!eventCallId || callId(currentActive) === eventCallId || recoveredCallId(currentActive) === eventCallId)
+                    const matchesIncomingCall =
+                        currentIncoming &&
+                        (!eventCallId || callId(currentIncoming) === eventCallId || recoveredCallId(currentIncoming) === eventCallId)
+
+                    if ((matchesActiveCall || matchesIncomingCall) && setupFailureCodes.includes(code)) {
+                        endCall(matchesActiveCall ? currentActive : currentIncoming)
+                    }
+
+                    const isFatal = telnyxError?.fatal === true || e?.fatal === true || code === 46001 || code === 46002 || code === 45003 || code === 48001
                     if (isFatal && !activeCallRef.current && !incomingCallRef.current) {
                         clientReadyRef.current = false
                         setStatus("offline")
-                        setStatusDetail(e?.message || "Offline")
+                        setStatusDetail(message || "Offline")
                         scheduleReconnect()
                     }
                 })
@@ -1017,8 +1177,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
             }, 4000)
         } catch (e: any) {
             console.error("Could not answer incoming call", e)
+            const message = friendlyMediaError(e)
             suppressRingForCallIdsRef.current.delete(id)
-            setStatusDetail(e?.message || "Could not answer incoming call")
+            setCallError(message)
+            setStatusDetail(message || "Could not answer incoming call")
             setIsAnswering(false)
             if (incomingCallRef.current && sameCall(incomingCallRef.current, call)) {
                 startRinger(incomingCallRef.current)
@@ -1088,38 +1250,72 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     // Dial action matching portal.js
-    const dial = (number?: string) => {
+    const dial = async (number?: string) => {
         const rawTarget = (number || dialNumber || "").trim()
         if (!rawTarget) return
+        if (isDialingRef.current) return
+
         if (!clientRef.current || !clientReadyRef.current) {
-            alert("Phone is not ready yet. Wait for the Online badge.")
+            const message = "Phone is not ready yet. Wait for the Online badge, then try again."
+            setCallError(message)
+            setStatusDetail(message)
             return
         }
 
-        dialedNumberRef.current = rawTarget
-
-        if (clientRef.current && typeof clientRef.current.newCall === "function") {
-            try {
-                const call = clientRef.current.newCall({
-                    destinationNumber: rawTarget,
-                    remoteCallerName: rawTarget,
-                    callerNumber: cfgRef.current.callerId || undefined,
-                    remoteElement: "remoteAudio",
-                    customHeaders: [{ name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }]
-                })
-                if (call) {
-                    activeCallRef.current = call
-                    showActive(call, "Calling…")
-                }
-            } catch (err) {
-                console.warn("newCall error:", err)
-            }
-        } else {
-            // Simulated preview active call state
-            const simCall = { id: "call-" + Date.now(), direction: "outbound", number: rawTarget, destinationNumber: rawTarget, options: { destinationNumber: rawTarget, remoteCallerName: rawTarget } }
-            showActive(simCall, "Calling…")
+        if (activeCallRef.current || incomingCallRef.current) {
+            const message = "Finish the current call before starting another one."
+            setCallError(message)
+            setStatusDetail(message)
+            return
         }
-        setDialNumber("")
+
+        isDialingRef.current = true
+        setIsDialing(true)
+        setCallError(null)
+        setStatusDetail("Checking microphone...")
+
+        let localStream: MediaStream | null = null
+
+        try {
+            localStream = await ensureMicrophoneReady()
+            const client = clientRef.current
+            if (!client || !clientReadyRef.current || typeof client.newCall !== "function") {
+                throw new Error("Phone is not ready yet. Wait for the Online badge, then try again.")
+            }
+
+            dialedNumberRef.current = rawTarget
+            setStatusDetail("Starting call...")
+
+            const call = client.newCall({
+                destinationNumber: rawTarget,
+                remoteCallerName: rawTarget,
+                callerNumber: cfgRef.current.callerId || undefined,
+                remoteElement: "remoteAudio",
+                audio: true,
+                localStream,
+                customHeaders: [{ name: "X-Voice-Ext", value: cfgRef.current.extensionUid || extension || "" }]
+            })
+
+            if (!call) {
+                throw new Error("Telnyx did not create a call session.")
+            }
+
+            // The Telnyx Call now owns this stream and will stop it when the call is finalized.
+            localStream = null
+            activeCallRef.current = call
+            showActive(call, "Calling…")
+            setDialNumber("")
+        } catch (err: any) {
+            console.warn("newCall error:", err)
+            stopMediaStream(localStream)
+            dialedNumberRef.current = ""
+            const message = friendlyMediaError(err)
+            setCallError(message)
+            setStatusDetail(message)
+        } finally {
+            isDialingRef.current = false
+            setIsDialing(false)
+        }
     }
 
     // Transfer toggle & doTransfer matching portal.js
@@ -1357,6 +1553,13 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     </div>
                 )}
 
+                {callError && (
+                    <div className="p-3 text-xs rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 flex items-start gap-2 shadow-sm">
+                        <PhoneOff className="w-4 h-4 shrink-0 mt-0.5" />
+                        <span>{callError}</span>
+                    </div>
+                )}
+
                 {/* Section: Incoming Call */}
                 {incomingCall && (
                     <Card id="incoming" className="border-2 border-emerald-500 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-md animate-pulse">
@@ -1574,17 +1777,19 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                     value={dialNumber}
                                     onChange={e => setDialNumber(e.target.value)}
                                     onKeyDown={e => {
-                                        if (e.key === "Enter") dial(dialNumber)
+                                        if (e.key === "Enter") void dial(dialNumber)
                                     }}
+                                    disabled={isDialing}
                                 />
                             </div>
                             <Button
                                 id="btn-call"
                                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 px-6 rounded-xl gap-2 shadow-sm shrink-0"
-                                onClick={() => dial(dialNumber)}
+                                onClick={() => void dial(dialNumber)}
+                                disabled={isDialing || status !== "online" || !!activeCall || !!incomingCall}
                             >
-                                <Phone className="w-4 h-4" />
-                                CALL
+                                {isDialing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
+                                {isDialing ? "CALLING" : "CALL"}
                             </Button>
                         </div>
                     </CardContent>
@@ -1766,9 +1971,10 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => dial(c.number)}
+                                                onClick={() => void dial(c.number)}
                                                 className="h-8 px-2 text-xs text-muted-foreground hover:text-emerald-600 shrink-0"
                                                 title="Call this number"
+                                                disabled={isDialing || status !== "online" || !!activeCall || !!incomingCall}
                                             >
                                                 <Phone className="w-3.5 h-3.5" />
                                             </Button>
