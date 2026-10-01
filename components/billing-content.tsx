@@ -248,7 +248,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
     const [isCancellingPlan, setIsCancellingPlan] = useState(false);
     const [isUpdateSubscriptionModalOpen, setIsUpdateSubscriptionModalOpen] = useState(false);
     const [currentSubscription, setCurrentSubscription] = useState<any>(null);
-    const screeningRate = Number(currentSubscription?.topup_rate) || 3.45;
+    const screeningRate = Number(currentSubscription?.topup_rate) || 0;
     const [isFetchingSubscription, setIsFetchingSubscription] = useState(false);
     const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
     const [fetchedPlans, setFetchedPlans] = useState<any[]>([]);
@@ -571,6 +571,11 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
     const handleTopUp = async () => {
         if (!selectedPmForTopUp || !topUpAmount || !topUpMinutes || !topUpType) {
             toast.error("Please select a top-up type, quantity, and payment method");
+            return;
+        }
+
+        if (topUpType === "screening_credit" && !(screeningRate > 0)) {
+            toast.error("Top-up rate is not available for your current subscription.");
             return;
         }
 

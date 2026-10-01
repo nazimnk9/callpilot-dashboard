@@ -239,7 +239,7 @@ export function DashboardContent() {
     const [isCancellingPlan, setIsCancellingPlan] = useState(false);
     const [isUpdateSubscriptionModalOpen, setIsUpdateSubscriptionModalOpen] = useState(false);
     const [currentSubscription, setCurrentSubscription] = useState<any>(null);
-    const screeningRate = Number(currentSubscription?.topup_rate) || 3.45;
+    const screeningRate = Number(currentSubscription?.topup_rate) || 0;
     const [isFetchingSubscription, setIsFetchingSubscription] = useState(false);
     const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
     const [fetchedPlans, setFetchedPlans] = useState<any[]>([]);
@@ -625,6 +625,11 @@ export function DashboardContent() {
 
         if (topUpType === "ai_call_minutes" && !aiCallsActive) {
             toast.error("AI Call Minutes top-up is not allowed because AI Calls is not active on your account.");
+            return;
+        }
+
+        if (topUpType === "screening_credit" && !(screeningRate > 0)) {
+            toast.error("Top-up rate is not available for your current subscription.");
             return;
         }
 
@@ -1044,6 +1049,7 @@ export function DashboardContent() {
             const rawPrice = !isNaN(numPrice) ? numPrice : 0;
             const perRate = limit > 0 ? (rawPrice / limit).toFixed(2) : "1.99";
 
+            const apiTopUp = Number(plan.topup_rate ?? plan.top_up_rate)
             let topUpNote = "Top-up $4.45 per screening";
             let bestFor = "Getting started with AI screening.";
 
@@ -1054,6 +1060,8 @@ export function DashboardContent() {
                 topUpNote = "Top-up $2.95 per screening";
                 bestFor = "High-volume hiring — the lowest cost per screening.";
             }
+
+            if (apiTopUp > 0) topUpNote = `Top-up $${apiTopUp.toFixed(2)} per screening`;
 
             const screeningsNote = limit > 0 ? `${limit.toLocaleString()} screenings • $${perRate} each` : `${limit.toLocaleString()} screenings`;
             const formattedPrice = !isNaN(numPrice) ? `$${numPrice.toLocaleString()}` : (plan.price ? `$${plan.price}` : "$0");
