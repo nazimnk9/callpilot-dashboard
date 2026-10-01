@@ -450,11 +450,11 @@ export function OrganizationUsersContent() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div className="space-y-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Organization Users</h1>
+                            <h1 className="text-2xl font-bold tracking-tight gradient-text pb-1">Organization Users</h1>
                             <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Manage your team members and their roles.</p>
                         </div>
 
-                        {/* <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                        {/* <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-2xl w-fit">
                             <Button
                                 onClick={() => setActiveTab("users")}
                                 variant="ghost"
@@ -490,14 +490,14 @@ export function OrganizationUsersContent() {
                             setEmailExists(null)
                             setIsInviteModalOpen(true)
                         }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-11 px-6 rounded-xl shadow-lg shadow-blue-500/20 transition-all font-semibold"
+                        className="bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white gap-2 h-11 px-6 rounded-2xl shadow-lg shadow-blue-500/20 transition-all font-semibold"
                     >
                         <UserPlus className="h-5 w-5" />
                         Add User
                     </Button>
                 </div>
 
-                <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden rounded-xl">
+                <Card className="bg-white/80 backdrop-blur-xl dark:bg-white/5 border-gray-200 dark:border-gray-800 shadow-sm shadow-violet-500/10 overflow-hidden rounded-2xl">
                     <CardContent className="p-0">
                         <div className="overflow-x-auto">
                             <Table>
@@ -534,7 +534,7 @@ export function OrganizationUsersContent() {
                                                 <TableRow key={item.uid} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors border-b border-gray-50 dark:border-gray-800/50">
                                                     <TableCell className="py-4 px-6">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold border border-blue-200 dark:border-blue-800">
+                                                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-violet-500/40 shadow-lg flex items-center justify-center font-bold border dark: text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
                                                                 {item.user.first_name?.[0]}{item.user.last_name?.[0]}
                                                             </div>
                                                             <div>
@@ -586,7 +586,7 @@ export function OrganizationUsersContent() {
                                                                      onClick={() => handleOpenEditModal(item)}
                                                                      variant="ghost"
                                                                      size="icon"
-                                                                     className="h-9 w-9 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-all"
+                                                                     className="h-9 w-9 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-all"
                                                                  >
                                                                      <Edit2 className="h-4 w-4" />
                                                                  </Button>
@@ -596,7 +596,7 @@ export function OrganizationUsersContent() {
                                                                      onClick={() => handleOpenDeleteModal(item)}
                                                                      variant="ghost"
                                                                      size="icon"
-                                                                     className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all"
+                                                                     className="h-9 w-9 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all"
                                                                  >
                                                                      <Trash2 className="h-4 w-4" />
                                                                  </Button>
@@ -645,10 +645,10 @@ export function OrganizationUsersContent() {
                                                     </TableCell>
                                                     <TableCell className="py-4 px-6 text-right">
                                                         <div className="flex justify-end gap-2">
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 transition-all">
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-2xl hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 transition-all">
                                                                 <Send className="h-4 w-4" />
                                                             </Button>
-                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all">
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all">
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
                                                         </div>
@@ -678,7 +678,7 @@ export function OrganizationUsersContent() {
                     }
                 }}
             >
-                <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
+                <DialogContent className="sm:max-w-md bg-white/80 backdrop-blur-xl dark:bg-white/5 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
                     <DialogHeader className="p-6 pb-0">
                         <div className="flex items-center justify-between">
                             <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -705,7 +705,7 @@ export function OrganizationUsersContent() {
                                             value={inviteEmail}
                                             onChange={(e) => setInviteEmail(e.target.value)}
                                             required
-                                            className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                            className="h-11 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                                         />
                                     </div>
                                 </div>
@@ -715,14 +715,14 @@ export function OrganizationUsersContent() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setIsInviteModalOpen(false)}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
+                                    className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     onClick={handleNextStep}
                                     disabled={isCheckingEmail || !inviteEmail}
-                                    className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
+                                    className="h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
                                 >
                                     {isCheckingEmail ? (
                                         <>
@@ -751,7 +751,7 @@ export function OrganizationUsersContent() {
                                                 value={invitePassword}
                                                 onChange={(e) => setInvitePassword(e.target.value)}
                                                 required
-                                                className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                                className="h-11 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                                             />
                                         </div>
                                     )}
@@ -761,10 +761,10 @@ export function OrganizationUsersContent() {
                                             Assign Role <span className="text-red-500">*</span>
                                         </Label>
                                         <Select value={inviteRole} onValueChange={setInviteRole}>
-                                            <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                            <SelectTrigger className="h-11 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                                                 <SelectValue placeholder="Select a role" />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
+                                            <SelectContent className="rounded-2xl border-gray-200 dark:border-gray-800">
                                                 {/* <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem> */}
                                                 <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
                                                 <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
@@ -792,14 +792,14 @@ export function OrganizationUsersContent() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setIsInviteModalOpen(false)}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
+                                    className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     onClick={handleInviteUser}
                                     disabled={isInviting || !inviteEmail || !inviteRole || (emailExists === false && !invitePassword)}
-                                    className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
+                                    className="h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
                                 >
                                     {isInviting ? (
                                         <>
@@ -818,7 +818,7 @@ export function OrganizationUsersContent() {
 
             {/* Update User Modal */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
+                <DialogContent className="sm:max-w-md bg-white/80 backdrop-blur-xl dark:bg-white/5 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
                     <DialogHeader className="p-6 pb-0">
                         <div className="flex items-center justify-between">
                             <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -843,7 +843,7 @@ export function OrganizationUsersContent() {
                                     value={editEmail}
                                     onChange={(e) => setEditEmail(e.target.value)}
                                     required
-                                    className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                    className="h-11 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                                 />
                             </div> */}
 
@@ -857,7 +857,7 @@ export function OrganizationUsersContent() {
                                     placeholder="Enter new password"
                                     value={editPassword}
                                     onChange={(e) => setEditPassword(e.target.value)}
-                                    className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                                    className="h-11 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                                 />
                             </div> */}
 
@@ -866,10 +866,10 @@ export function OrganizationUsersContent() {
                                     Assign Role <span className="text-red-500">*</span>
                                 </Label>
                                 <Select value={editRole} onValueChange={setEditRole}>
-                                    <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                    <SelectTrigger className="h-11 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                                         <SelectValue placeholder="Select a role" />
                                     </SelectTrigger>
-                                    <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
+                                    <SelectContent className="rounded-2xl border-gray-200 dark:border-gray-800">
                                         {/* <SelectItem value="OWNER" className="rounded-lg">Owner</SelectItem> */}
                                         <SelectItem value="ADMINISTRATOR" className="rounded-lg">Administrator</SelectItem>
                                         <SelectItem value="STAFF" className="rounded-lg">Staff</SelectItem>
@@ -882,10 +882,10 @@ export function OrganizationUsersContent() {
                                     Status <span className="text-red-500">*</span>
                                 </Label>
                                 <Select value={editStatus} onValueChange={setEditStatus}>
-                                    <SelectTrigger className="h-11 rounded-xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                                    <SelectTrigger className="h-11 rounded-2xl bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                                         <SelectValue placeholder="Select status" />
                                     </SelectTrigger>
-                                    <SelectContent className="rounded-xl border-gray-200 dark:border-gray-800">
+                                    <SelectContent className="rounded-2xl border-gray-200 dark:border-gray-800">
                                         <SelectItem value="DRAFT" className="rounded-lg">DRAFT</SelectItem>
                                         <SelectItem value="PLACEHOLDER" className="rounded-lg">PLACEHOLDER</SelectItem>
                                         <SelectItem value="ACTIVE" className="rounded-lg">ACTIVE</SelectItem>
@@ -916,14 +916,14 @@ export function OrganizationUsersContent() {
                         <Button
                             variant="outline"
                             onClick={() => setIsEditModalOpen(false)}
-                            className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
+                            className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleUpdateUser}
                             disabled={isUpdating || !editEmail || !editRole || !editStatus}
-                            className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
+                            className="h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white shadow-lg shadow-blue-500/20 flex-1 gap-2"
                         >
                             {isUpdating ? (
                                 <>
@@ -940,7 +940,7 @@ export function OrganizationUsersContent() {
 
             {/* Delete Confirmation Modal */}
             <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-                <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
+                <DialogContent className="sm:max-w-md bg-white/80 backdrop-blur-xl dark:bg-white/5 border-gray-200 dark:border-gray-800 rounded-2xl p-0 overflow-hidden">
                     <DialogHeader className="p-6 pb-0">
                         <div className="flex items-center justify-between">
                             <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -962,7 +962,7 @@ export function OrganizationUsersContent() {
                             </span>{" "}
                             ({userToDelete?.user?.email}) from this organization?
                         </p>
-                        <p className="text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/30 p-3 rounded-xl border border-red-100 dark:border-red-900/30">
+                        <p className="text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/30 p-3 rounded-2xl border border-red-100 dark:border-red-900/30">
                             Warning: This action cannot be undone and they will immediately lose access to the organization's dashboard.
                         </p>
                     </div>
@@ -971,14 +971,14 @@ export function OrganizationUsersContent() {
                         <Button
                             variant="outline"
                             onClick={() => setIsDeleteModalOpen(false)}
-                            className="h-11 rounded-xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
+                            className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 flex-1"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleDeleteUser}
                             disabled={isDeleting}
-                            className="h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20 flex-1 gap-2"
+                            className="h-11 rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/20 flex-1 gap-2"
                         >
                             {isDeleting ? (
                                 <>

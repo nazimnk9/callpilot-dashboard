@@ -323,10 +323,10 @@ const StaticScreenshots = ({ images }: { images: string[] }) => {
       {images.map((src, idx) => (
         <div 
           key={idx} 
-          className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-md w-full"
+          className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white/80 backdrop-blur-xl dark:bg-white/5 shadow-md w-full"
         >
           {images.length > 1 && (
-            <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-black/70 text-white text-[10px] font-bold tracking-wider backdrop-blur-sm z-10">
+            <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5/70 text-white text-[10px] font-bold tracking-wider backdrop-blur-sm z-10">
               Screen {idx + 1}
             </div>
           )}
@@ -359,7 +359,7 @@ const HelpBlockComponent = ({ block, searchQuery }: { block: Block; searchQuery:
 
       {/* Pricing table block specifically rendered in Step 4 */}
       {block.title === "STEP 4 · Choose Plan Pricing Table" && (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800 my-4 bg-white dark:bg-gray-900 shadow-sm">
+        <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800 my-4 bg-white/80 backdrop-blur-xl dark:bg-white/5 shadow-sm shadow-violet-500/10">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800 text-[13px]">
             <thead className="bg-gray-50 dark:bg-gray-800/40">
               <tr>
@@ -443,7 +443,7 @@ const HelpBlockComponent = ({ block, searchQuery }: { block: Block; searchQuery:
             {block.actions.map((action, idx) => (
               <div
                 key={idx}
-                className="p-3 bg-gray-50/50 dark:bg-gray-800/10 rounded-xl border border-gray-100 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
+                className="p-3 bg-gray-50/50 dark:bg-gray-800/10 rounded-2xl border border-gray-100 dark:border-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800/20 transition-colors"
               >
                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800 dark:text-gray-200 mb-1">
                   <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
@@ -579,7 +579,7 @@ export function HelpsContent() {
         <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="max-w-[960px] mx-auto relative z-10">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 gradient-text pb-1">
             CallPilot Setup & Help Guide
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm leading-relaxed max-w-3xl">
@@ -597,7 +597,7 @@ export function HelpsContent() {
             placeholder="Search help topics..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10 py-5 w-full rounded-xl border border-gray-200 dark:border-gray-900 shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-transparent text-[13.5px]"
+            className="pl-10 pr-10 py-5 w-full rounded-2xl border border-gray-200 dark:border-gray-900 shadow-sm shadow-violet-500/10 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-transparent text-[13.5px]"
           />
           {searchQuery && (
             <button
@@ -616,7 +616,7 @@ export function HelpsContent() {
         
         {filteredSections.length === 0 ? (
           /* Empty State */
-          <Card className="p-12 text-center border-dashed border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-2xl shadow-sm">
+          <Card className="p-12 text-center border-dashed border-2 border-gray-200 dark:border-gray-800 bg-white/80 backdrop-blur-xl dark:bg-white/5 rounded-2xl shadow-sm shadow-violet-500/10">
             <HelpCircle size={40} className="mx-auto text-gray-300 dark:text-gray-700 mb-3 animate-pulse" />
             <h3 className="text-[16px] font-bold text-gray-950 dark:text-white mb-1">No results for &ldquo;{searchQuery}&rdquo;</h3>
             <p className="text-[13px] text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
@@ -653,7 +653,7 @@ export function HelpsContent() {
                       <div
                         key={section.id}
                         id={section.id}
-                        className="scroll-mt-28 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-white dark:bg-gray-900 shadow-sm transition-all duration-200"
+                        className="scroll-mt-28 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-white/80 backdrop-blur-xl dark:bg-white/5 shadow-sm shadow-violet-500/10 transition-all duration-200"
                       >
                         {/* Section Trigger (Min height 48px, whole row clickable) */}
                         <button
@@ -692,7 +692,7 @@ export function HelpsContent() {
                           <div className="p-6 space-y-8 bg-white dark:bg-gray-900">
                             {/* Warning notification for Step 1 pending review */}
                             {section.needsConfirmation && (
-                              <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 rounded-xl text-amber-800 dark:text-amber-300">
+                              <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 rounded-2xl text-amber-800 dark:text-amber-300">
                                 <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
                                 <div className="text-[12.5px] leading-relaxed">
                                   <strong className="font-bold">Pending Confirmation:</strong> Please confirm exactly what this screen shows and does before publishing.
@@ -733,7 +733,7 @@ export function HelpsContent() {
                       <div
                         key={section.id}
                         id={section.id}
-                        className="scroll-mt-28 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-white dark:bg-gray-900 shadow-sm transition-all duration-200"
+                        className="scroll-mt-28 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-white/80 backdrop-blur-xl dark:bg-white/5 shadow-sm shadow-violet-500/10 transition-all duration-200"
                       >
                         {/* Section Trigger */}
                         <button

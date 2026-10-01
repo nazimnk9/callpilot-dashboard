@@ -488,7 +488,7 @@ export function PhoneNumberBuyForm() {
                 {/* Header */}
                 <div className="space-y-4">
                     <div>
-                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Buy Phone Number</h1>
+                        <h1 className="text-lg font-bold tracking-tight gradient-text">Buy Phone Number</h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-2">Select country and payment method to purchase</p>
                     </div>
                 </div>
@@ -596,7 +596,7 @@ export function PhoneNumberBuyForm() {
                                     <Button
                                         type="submit"
                                         disabled={isLoading || !selectedPmForTopUp || !selectedCountry}
-                                        className="cursor-pointer bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
+                                        className="cursor-pointer bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 text-white dark: font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50"
                                     >
                                         {isLoading ? "Processing..." : "Buy AI Number"}
                                     </Button>
@@ -707,7 +707,7 @@ export function PhoneNumberBuyForm() {
                                 value={cardholderName}
                                 onChange={(e) => setCardholderName(e.target.value)}
                                 placeholder="e.g. John Doe"
-                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                         </div>
 
@@ -720,7 +720,7 @@ export function PhoneNumberBuyForm() {
                                 <div className="relative">
                                     <div
                                         onClick={() => setIsCountryOpen(!isCountryOpen)}
-                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                        className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
                                     >
                                         <span className={billingCountry ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}>
                                             {billingCountry ? (countriesData.find((c: any) => c.country_code === billingCountry)?.country || billingCountry) : "Country"} <span className="text-red-500">*</span>
@@ -739,7 +739,7 @@ export function PhoneNumberBuyForm() {
                                                         placeholder="Search country..."
                                                         value={modalCountrySearch}
                                                         onChange={(e) => setModalCountrySearch(e.target.value)}
-                                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow"
+                                                        className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-2.5 pl-10 pr-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow"
                                                     />
                                                 </div>
                                             </div>
@@ -772,14 +772,14 @@ export function PhoneNumberBuyForm() {
                                     value={addressLine1}
                                     onChange={(e) => setAddressLine1(e.target.value)}
                                     placeholder="Address line 1 *"
-                                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 />
                                 <input
                                     type="text"
                                     value={addressLine2}
                                     onChange={(e) => setAddressLine2(e.target.value)}
                                     placeholder="Address line 2"
-                                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 />
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <input
@@ -787,14 +787,14 @@ export function PhoneNumberBuyForm() {
                                         value={city}
                                         onChange={(e) => setCity(e.target.value)}
                                         placeholder="City"
-                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                        className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                     />
                                     <input
                                         type="text"
                                         value={postalCode}
                                         onChange={(e) => setPostalCode(e.target.value)}
                                         placeholder="Postal code"
-                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                        className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                     />
                                 </div>
                                 <input
@@ -802,7 +802,7 @@ export function PhoneNumberBuyForm() {
                                     value={stateRegion}
                                     onChange={(e) => setStateRegion(e.target.value)}
                                     placeholder="State, county, province, or region"
-                                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 />
                             </div>
                         </div>
@@ -827,7 +827,7 @@ export function PhoneNumberBuyForm() {
                     <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
                         <Button
                             onClick={() => setIsAddPaymentOpen(false)}
-                            className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
+                            className="w-full sm:w-auto bg-white/70 hover:bg-indigo-50 text-indigo-700 font-bold px-6 py-2.5 rounded-xl border border-indigo-100 shadow-none text-[15px] transition-colors dark:bg-white/5 dark:text-indigo-200 dark:border-white/10 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
                             disabled={isSubmitting}
                         >
                             Cancel
@@ -835,7 +835,7 @@ export function PhoneNumberBuyForm() {
                         <Button
                             onClick={handleAddPaymentMethod}
                             disabled={isSubmitting}
-                            className="w-full sm:w-auto bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                            className="w-full sm:w-auto gradient-bg text-white px-6 py-2.5 rounded-xl text-[15px] font-bold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
                         >
                             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                             Add payment method
@@ -862,7 +862,7 @@ export function PhoneNumberBuyForm() {
                     <AlertDialogFooter className="pt-4">
                         <AlertDialogAction
                             onClick={() => setErrorDetail(null)}
-                            className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
+                            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:shadow-lg hover:shadow-rose-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all h-auto border-none"
                         >
                             Continue
                         </AlertDialogAction>

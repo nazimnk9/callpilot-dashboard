@@ -66,7 +66,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
 
   return (
     <>
-      <header className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
+      <header className="bg-white/70 dark:bg-gray-950/70 backdrop-blur-xl border-b border-violet-100 dark:border-white/10 h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
         {/* Left section - Logo and project selector */}
         <div className="flex items-center gap-2 md:gap-6">
           {/* Project selector */}
@@ -120,7 +120,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
                                     ) : null}
                                   </div>
                                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold flex-shrink-0">
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                       {(orgName?.[0] || 'P').toUpperCase()}
                                     </div>
                                     <div className="flex flex-col min-w-0">
@@ -171,7 +171,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
                                     ) : null}
                                   </div>
                                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold flex-shrink-0">
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                       {(orgName?.[0] || 'P').toUpperCase()}
                                     </div>
                                     <div className="flex flex-col min-w-0">
@@ -206,7 +206,7 @@ export function Topbar({ onMenuClick, isSidebarOpen }: TopbarProps) {
                         ) : null}
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 flex items-center justify-center text-white text-xs font-bold">
                           {(organization?.business_name?.[0] || 'P').toUpperCase()}
                         </div>
                         <span className="text-xs font-medium text-gray-900 dark:text-gray-100">

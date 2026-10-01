@@ -135,7 +135,7 @@ export function PricingPlanPage({ featureUid }: PricingPlanPageProps) {
             <div className="min-h-screen bg-[#FFFFFF] p-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-12 text-center">
-                        <h1 className="text-4xl font-bold text-[#111827] mb-4">Pricing Plans</h1>
+                        <h1 className="text-4xl font-bold text-[#111827] mb-4 gradient-text pb-1">Pricing Plans</h1>
                         <p className="text-[#6B7280] text-lg">Select the plan that fits your needs.</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -162,7 +162,7 @@ export function PricingPlanPage({ featureUid }: PricingPlanPageProps) {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-16">
-                    <h1 className="text-4xl font-bold text-[#111827] mb-4 tracking-tight">Pricing Plans</h1>
+                    <h1 className="text-4xl font-bold text-[#111827] mb-4 tracking-tight gradient-text pb-1">Pricing Plans</h1>
                     <p className="text-lg text-[#6B7280]">Select the best plan for your recruitment needs.</p>
                 </div>
 

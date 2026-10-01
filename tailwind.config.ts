@@ -10,7 +10,19 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-jakarta)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
+        // Remap the default blue scale to a vivid indigo-violet brand scale so every
+        // existing blue-* utility picks up the new look.
+        blue: {
+          50: '#f1f0ff', 100: '#e5e3ff', 200: '#cfcbff', 300: '#b0a8ff', 400: '#8f82fb',
+          500: '#7466f3', 600: '#5b49e8', 700: '#4c3bcc', 800: '#3f33a3', 900: '#362f82', 950: '#201b4d',
+        },
+        brand: {
+          cyan: '#22d3ee', pink: '#f472b6', violet: '#7c5cff', indigo: '#4f46e5',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -68,6 +80,13 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
+        'fade-up': { from: { opacity: '0', transform: 'translateY(16px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'scale-in': { from: { opacity: '0', transform: 'scale(0.95)' }, to: { opacity: '1', transform: 'scale(1)' } },
+        'float': { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
+        'shimmer': { from: { backgroundPosition: '-200% 0' }, to: { backgroundPosition: '200% 0' } },
+        'gradient-shift': { '0%,100%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' } },
+        'pulse-ring': { '0%': { boxShadow: '0 0 0 0 rgba(124,92,255,0.45)' }, '70%': { boxShadow: '0 0 0 10px rgba(124,92,255,0)' }, '100%': { boxShadow: '0 0 0 0 rgba(124,92,255,0)' } },
         'accordion-down': {
           from: {
             height: '0',
@@ -86,6 +105,13 @@ const config: Config = {
         },
       },
       animation: {
+        'fade-up': 'fade-up 0.55s cubic-bezier(0.22,1,0.36,1) both',
+        'fade-in': 'fade-in 0.4s ease-out both',
+        'scale-in': 'scale-in 0.35s cubic-bezier(0.22,1,0.36,1) both',
+        'float': 'float 6s ease-in-out infinite',
+        'shimmer': 'shimmer 2.2s linear infinite',
+        'gradient': 'gradient-shift 8s ease infinite',
+        'pulse-ring': 'pulse-ring 2s cubic-bezier(0.4,0,0.6,1) infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },

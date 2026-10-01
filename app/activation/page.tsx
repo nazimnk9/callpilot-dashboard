@@ -1691,13 +1691,16 @@ export default function ActivationPage() {
     if (isAuthenticated === null) {
         return (
             <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white" />
+                <div className="animate-spin rounded-full h-12 w-12 border-2 border-violet-200 border-t-violet-600 dark:border-white/10 dark:border-t-violet-400" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col">
+        <div className="relative min-h-screen overflow-hidden bg-background flex flex-col">
+            <div className="pointer-events-none fixed -top-24 -left-24 h-96 w-96 rounded-full bg-brand-violet/25 blur-3xl animate-float" aria-hidden="true" />
+            <div className="pointer-events-none fixed top-1/3 -right-24 h-96 w-96 rounded-full bg-brand-cyan/20 blur-3xl animate-float" style={{ animationDelay: "1.5s" }} aria-hidden="true" />
+            <div className="pointer-events-none fixed -bottom-24 left-1/3 h-80 w-80 rounded-full bg-brand-pink/20 blur-3xl animate-float" style={{ animationDelay: "3s" }} aria-hidden="true" />
             <LoaderOverlay isLoading={isLoading || isSaving} />
 
             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
@@ -1821,7 +1824,7 @@ export default function ActivationPage() {
 
                     {/* Step 2: Platform Activation */}
                     <div className="flex flex-col items-center z-10 transform translate-x-[-1px]">
-                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white mb-2 ring-4 ring-blue-100 dark:ring-blue-900/30">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 flex items-center justify-center text-white mb-2 ring-4 ring-blue-100 dark:ring-blue-900/30">
                             <div className="w-4 h-4 rounded-full border-2 border-white" />
                         </div>
                         <span className="text-xs font-semibold text-blue-600 whitespace-nowrap">Upload Business Details</span>
@@ -1859,7 +1862,7 @@ export default function ActivationPage() {
                 </div>
 
                 {/* Form Section */}
-                <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm">
+                <div className="bg-white/80 backdrop-blur-xl dark:bg-white/5 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm shadow-violet-500/10">
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verify Business Details</h2>
                         <div className="flex items-center gap-2">
@@ -1954,7 +1957,7 @@ export default function ActivationPage() {
                                 </div>
                                 {["India", "Canada", "United States of America"].includes(org.country) && (
                                     <div className="space-y-4 mb-6">
-                                        <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                             <Checkbox
                                                 id="compliance"
                                                 checked={isComplianceAgreed}
@@ -1977,7 +1980,7 @@ export default function ActivationPage() {
                                             </label>
                                         </div>
 
-                                        <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                             <Checkbox
                                                 id="phone-billing"
                                                 checked={isPhoneBillingAgreed}
@@ -2145,7 +2148,7 @@ export default function ActivationPage() {
                                             </div>
                                         </div>
                                         <div className="space-y-4 mb-6">
-                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                                 <Checkbox
                                                     id="compliance"
                                                     checked={isComplianceAgreed}
@@ -2168,7 +2171,7 @@ export default function ActivationPage() {
                                                 </label>
                                             </div>
 
-                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                                 <Checkbox
                                                     id="phone-billing"
                                                     checked={isPhoneBillingAgreed}
@@ -2237,7 +2240,7 @@ export default function ActivationPage() {
                                         </div>
 
                                         <div className="space-y-4 mb-6">
-                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                                 <Checkbox
                                                     id="compliance"
                                                     checked={isComplianceAgreed}
@@ -2260,7 +2263,7 @@ export default function ActivationPage() {
                                                 </label>
                                             </div>
 
-                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                                 <Checkbox
                                                     id="phone-billing"
                                                     checked={isPhoneBillingAgreed}
@@ -2916,7 +2919,7 @@ export default function ActivationPage() {
                                         </div>
                                         {org.country !== "New Zealand" && (
                                             <div className="space-y-4 mb-6">
-                                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                                     <Checkbox
                                                         id="compliance"
                                                         checked={isComplianceAgreed}
@@ -2939,7 +2942,7 @@ export default function ActivationPage() {
                                                     </label>
                                                 </div>
 
-                                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                                     <Checkbox
                                                         id="phone-billing"
                                                         checked={isPhoneBillingAgreed}
@@ -2988,7 +2991,7 @@ export default function ActivationPage() {
                                         </div>
 
                                         {/* Preview Section for Step 1 & 2 */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
@@ -3231,7 +3234,7 @@ export default function ActivationPage() {
                                         </div>
 
                                         <div className="space-y-4 mb-6">
-                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                                 <Checkbox
                                                     id="compliance"
                                                     checked={isComplianceAgreed}
@@ -3254,7 +3257,7 @@ export default function ActivationPage() {
                                                 </label>
                                             </div>
 
-                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                            <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                                 <Checkbox
                                                     id="phone-billing"
                                                     checked={isPhoneBillingAgreed}
@@ -3303,7 +3306,7 @@ export default function ActivationPage() {
                                         </div>
 
                                         {/* Preview Section */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
@@ -3436,7 +3439,7 @@ export default function ActivationPage() {
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                             Business Information
                                         </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Registered Business Name</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.business_name || "N/A"}</p>
@@ -3462,7 +3465,7 @@ export default function ActivationPage() {
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                             Registered Business Address
                                         </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Street Address</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.street_address || "N/A"}</p>
@@ -3498,7 +3501,7 @@ export default function ActivationPage() {
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                             Authorize Representative Information
                                         </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Authorize Representative Name</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{org.authorize_representative_first_name} {org.authorize_representative_last_name}</p>
@@ -3520,7 +3523,7 @@ export default function ActivationPage() {
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                             Supporting Documents
                                         </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                             <div className="space-y-1">
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Business Registration Certificate</p>
                                                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -3562,7 +3565,7 @@ export default function ActivationPage() {
                                 </div>
 
                                 <div className="space-y-4 mb-6">
-                                    <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                    <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                         <Checkbox
                                             id="compliance"
                                             checked={isComplianceAgreed}
@@ -3585,7 +3588,7 @@ export default function ActivationPage() {
                                         </label>
                                     </div>
 
-                                    <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                                    <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800/30 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                                         <Checkbox
                                             id="phone-billing"
                                             checked={isPhoneBillingAgreed}

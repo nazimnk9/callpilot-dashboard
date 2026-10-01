@@ -43,6 +43,14 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+const ICON_GRADIENTS = [
+  'from-violet-500 to-indigo-600 shadow-violet-500/40',
+  'from-cyan-400 to-blue-500 shadow-cyan-500/40',
+  'from-pink-500 to-rose-500 shadow-pink-500/40',
+  'from-amber-400 to-orange-500 shadow-amber-500/40',
+  'from-emerald-400 to-teal-500 shadow-emerald-500/40',
+];
+
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -124,7 +132,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-[90vh] md:h-screen w-full md:w-52 bg-white dark:bg-gray-950 border-r border-b md:border-b-0 border-gray-200 dark:border-gray-800 rounded-b-3xl md:rounded-none flex flex-col transition-transform duration-300 z-50 md:relative md:translate-x-0 md:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed left-0 top-0 h-[90vh] md:h-screen w-full md:w-52 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-r border-b md:border-b-0 border-violet-100 dark:border-white/10 shadow-[4px_0_30px_-18px_rgba(91,73,232,0.35)] rounded-b-3xl md:rounded-none flex flex-col transition-transform duration-300 z-50 md:relative md:translate-x-0 md:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
       >
         {/* Header - Logo area */}
@@ -157,7 +165,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {currentMenuItems.map((item, index) => {
               if (item.isHeader) {
                 return (
-                  <div key={index} className="text-[13px] font-medium text-gray-400 dark:text-gray-500 mt-6 mb-2 px-3">
+                  <div key={index} className="text-[11px] font-bold uppercase tracking-widest text-blue-400 dark:text-blue-300/70 mt-6 mb-2 px-3">
                     {item.label}
                   </div>
                 );
@@ -167,17 +175,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   key={index}
                   href={item.href || '#'}
-                  className={`flex items-center gap-3 px-3 py-2 text-[15px] rounded-lg transition-colors group ${isActive
-                    ? 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+                  style={{ animationDelay: `${index * 25}ms` }}
+                  className={`relative flex items-center gap-3 px-3 py-2.5 text-[15px] rounded-xl transition-all duration-200 group animate-fade-up hover:translate-x-0.5 ${isActive
+                    ? 'bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-lg shadow-blue-600/30'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-white/5 hover:text-blue-700 dark:hover:text-white'
                     }`}
                 >
                   {item.icon && (
-                    <item.icon
-                      size={20}
-                      strokeWidth={isActive ? 3 : 2.5}
-                      className={`${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'}`}
-                    />
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-md transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6 ${isActive
+                        ? 'from-white/30 to-white/10 text-white ring-1 ring-white/40 shadow-white/20'
+                        : `${ICON_GRADIENTS[index % ICON_GRADIENTS.length]} text-white`
+                        }`}
+                    >
+                      <item.icon size={17} strokeWidth={2.4} />
+                    </span>
                   )}
                   <span className={isActive || item.isBold ? 'text-xs font-semibold' : 'text-xs font-medium'}>
                     {item.label}
@@ -189,7 +201,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Bottom section */}
-        <div className="border-t border-gray-100 dark:border-gray-800 px-7 py-6 bg-white dark:bg-gray-950 relative flex flex-col gap-4">
+        <div className="border-t border-gray-100 dark:border-gray-800 px-7 py-6 bg-transparent relative flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link

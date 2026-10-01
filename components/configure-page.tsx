@@ -1081,7 +1081,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             <button onClick={() => router.back()} className="h-8 w-8 -ml-1 sm:-ml-2 cursor-pointer rounded-full transition-all duration-300 hover:scale-125 text-gray-900 dark:text-gray-100">
                                 <ArrowLeft className="h-8 w-8" />
                             </button>
-                            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Configure – {featureName || "Loading..."}</h1>
+                            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight gradient-text pb-1">Configure – {featureName || "Loading..."}</h1>
                         </div>
                     </div>
 
@@ -1090,14 +1090,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             <>
                                 {/* Left Column */}
                                 <div className="space-y-6">
-                                    <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <Card className="p-4 sm:p-6 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
                                         <div className="space-y-4">
                                             <div className="space-y-2">
                                                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
                                                 <div id="phone_uid" className={fieldErrors.phone_uid ? "border-2 border-red-500 rounded-xl" : ""}>
                                                     <Select value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                                        <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                        <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100">
                                                             <SelectValue placeholder="Select phone number" />
                                                         </SelectTrigger>
                                                         <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1124,7 +1124,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         readOnly={true}
                                                         value={selectedVoiceData ? selectedVoiceData.name : voiceId}
                                                         placeholder="Enter Voice ID"
-                                                        className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 cursor-not-allowed"
+                                                        className="h-8 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 cursor-not-allowed"
                                                     />
                                                     <Button
                                                         type="button"
@@ -1132,7 +1132,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         size="icon"
                                                         disabled={!selectedVoiceData}
                                                         onClick={() => setIsVoicePreviewOpen(true)}
-                                                        className="h-8 w-8 rounded-xl border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all flex-shrink-0"
+                                                        className="h-8 w-8 rounded-2xl border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all flex-shrink-0"
                                                     >
                                                         <Volume2 className="h-4 w-4" />
                                                     </Button>
@@ -1149,7 +1149,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                                 {/* Right Column */}
                                 <div className="space-y-6">
-                                    <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <Card className="p-4 sm:p-6 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Assistant Settings</h2>
                                         <div className="space-y-4">
                                             <div className="space-y-2">
@@ -1184,7 +1184,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             <>
                                 {/* Left Column */}
                                 <div className="space-y-6 flex flex-col h-full">
-                                    <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
+                                    <Card className="p-4 sm:p-6 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
                                         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">General Settings</h2>
                                         <div className="space-y-6">
                                             <div className="space-y-2">
@@ -1195,7 +1195,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                             <Button
                                                                 type="button"
                                                                 disabled={isUpdateMode && !isEditing}
-                                                                className="w-full h-8 px-3 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl flex items-center justify-between text-left text-sm font-normal text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none transition-colors shadow-none"
+                                                                className="w-full h-8 px-3 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl flex items-center justify-between text-left text-sm font-normal text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none transition-colors shadow-none"
                                                             >
                                                                 <span className="truncate">
                                                                     {getPlatformDisplay()}
@@ -1203,7 +1203,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                                 <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0 ml-2" />
                                                             </Button>
                                                         </PopoverTrigger>
-                                                        <PopoverContent className="w-[300px] p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg" align="start">
+                                                        <PopoverContent className="w-[300px] p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-lg" align="start">
                                                             <div className="space-y-1.5 max-h-[200px] overflow-y-auto p-1">
                                                                 {platformOptions.map((p) => {
                                                                     const isChecked = platformUids.includes(p.uid);
@@ -1254,7 +1254,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Phone Number</Label>
                                                 <div id="phone_uid" className={fieldErrors.phone_uid ? "border-2 border-red-500 rounded-xl" : ""}>
                                                     <Select disabled={isUpdateMode && !isEditing} value={phoneNumberUid} onValueChange={handleSelectChange(setPhoneNumberUid)}>
-                                                        <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                        <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100">
                                                             <SelectValue placeholder="Select phone number" />
                                                         </SelectTrigger>
                                                         <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1280,7 +1280,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         readOnly={true}
                                                         value={selectedVoiceData ? selectedVoiceData.name : voiceId}
                                                         placeholder="Enter Voice ID"
-                                                        className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 cursor-not-allowed"
+                                                        className="h-8 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 cursor-not-allowed"
                                                     />
                                                     <Button
                                                         type="button"
@@ -1288,7 +1288,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         size="icon"
                                                         disabled={!selectedVoiceData}
                                                         onClick={() => setIsVoicePreviewOpen(true)}
-                                                        className="h-8 w-8 rounded-xl border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all flex-shrink-0"
+                                                        className="h-8 w-8 rounded-2xl border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all flex-shrink-0"
                                                     >
                                                         <Volume2 className="h-4 w-4" />
                                                     </Button>
@@ -1303,7 +1303,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">AI Call placed within</Label>
                                             <div id="calling_time_after_status_update" className={fieldErrors.calling_time_after_status_update ? "border-2 border-red-500 rounded-xl" : ""}>
                                                 <Select disabled={isUpdateMode && !isEditing} value={callingTimeAfterStatusUpdate} onValueChange={setCallingTimeAfterStatusUpdate}>
-                                                    <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100 text-sm">
+                                                    <SelectTrigger className="h-8 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100 text-sm">
                                                         <SelectValue placeholder="Select Time" />
                                                     </SelectTrigger>
                                                     <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1329,7 +1329,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
                                     </Card>
 
-                                    {/* <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    {/* <Card className="p-8 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Interview Questions</h2>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
                                         Add primary questions for the interview. Save each question before saving the full configuration.
@@ -1348,26 +1348,26 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                     />
                                                     <div className="flex gap-2 shrink-0">
                                                         {!q.isSaved ? (
-                                                            <Button size="sm" variant="outline" onClick={() => handleSaveQuestion(index)} className="h-10 px-5 border-2 rounded-xl font-bold cursor-pointer dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700" >Save</Button>
+                                                            <Button size="sm" variant="outline" onClick={() => handleSaveQuestion(index)} className="h-10 px-5 border-2 rounded-2xl font-bold cursor-pointer dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700" >Save</Button>
                                                         ) : (
                                                             <div className="h-10 w-12 flex items-center justify-center text-green-500 dark:text-green-400" title="Saved"><CheckCircle2 className="h-6 w-6" /></div>
                                                         )}
-                                                        <Button size="icon" variant="ghost" onClick={() => handleDeleteQuestion(index)} className="h-10 w-12 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl cursor-pointer"><Trash2 className="h-5 w-5" /></Button>
+                                                        <Button size="icon" variant="ghost" onClick={() => handleDeleteQuestion(index)} className="h-10 w-12 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-2xl cursor-pointer"><Trash2 className="h-5 w-5" /></Button>
                                                     </div>
                                                 </div>
                                                 {!q.value && !q.isSaved && suggestedQuestions.length > 0 && (
-                                                    <div className="border border-gray-100 dark:border-gray-700 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-900/30 space-y-3">
+                                                    <div className="border border-gray-100 dark:border-gray-700 rounded-2xl p-4 bg-gray-50/50 dark:bg-gray-900/30 space-y-3">
                                                         <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">Suggested Questions:</p>
                                                         <div className="flex flex-col gap-2">
                                                             {suggestedQuestions.map(s => (
-                                                                <div key={s.id} onClick={() => handleSuggestionClick(index, s.question)} className="text-sm p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg cursor-pointer transition-all shadow-sm dark:text-gray-100">{s.question}</div>
+                                                                <div key={s.id} onClick={() => handleSuggestionClick(index, s.question)} className="text-sm p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg cursor-pointer transition-all shadow-sm shadow-violet-500/10 dark:text-gray-100">{s.question}</div>
                                                             ))}
                                                         </div>
                                                     </div>
                                                 )}
                                             </div>
                                         ))}
-                                        <Button onClick={handleAddQuestion} variant="outline" className="h-10 px-6 border-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 transition-all">
+                                        <Button onClick={handleAddQuestion} variant="outline" className="h-10 px-6 border-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-bold rounded-2xl hover:bg-gray-900 dark:hover:bg-gray-100 hover:text-white dark:hover:text-gray-900 transition-all">
                                             <Plus className="h-4 w-4 mr-2" /> Add More Question
                                         </Button>
                                     </div>
@@ -1377,7 +1377,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                                 {/* Right Column */}
                                 <div className="space-y-6 flex flex-col h-full">
-                                    <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
+                                    <Card className="p-4 sm:p-6 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex-1">
                                         <div className="flex items-center justify-between gap-2 mb-6">
                                             <div className="flex items-center gap-2">
                                                 <Clock className="h-6 w-6 text-gray-900 dark:text-gray-100" />
@@ -1400,7 +1400,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             </div>
 
                                             {timeline.map((item, index) => (
-                                                <div key={item.day} className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center p-3 md:p-0 bg-gray-50/50 md:bg-transparent dark:bg-gray-900/30 md:dark:bg-transparent rounded-xl md:rounded-none border border-gray-100 md:border-none dark:border-gray-800 md:dark:border-none">
+                                                <div key={item.day} className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-2 items-start md:items-center p-3 md:p-0 bg-gray-50/50 md:bg-transparent dark:bg-gray-900/30 md:dark:bg-transparent rounded-2xl md:rounded-none border border-gray-100 md:border-none dark:border-gray-800 md:dark:border-none">
                                                     <div className="w-full md:col-span-3 flex justify-between items-center">
                                                         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                                             {item.day}
@@ -1473,13 +1473,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
                                     </Card>
 
-                                    {/* <Card className="p-8 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    {/* <Card className="p-8 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Automation Logic</h2>
                                     <div className="space-y-6">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Job Ad Status for Calling</Label>
                                             <Select value={jobAdStatus} onValueChange={handleSelectChange(setJobAdStatus)}>
-                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1493,7 +1493,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Application Status for Calling</Label>
                                             <Select value={applicationStatus} onValueChange={handleSelectChange(setApplicationStatus)}>
-                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1506,7 +1506,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Calling Time After Status Update</Label>
                                             <Select value={callingTime} onValueChange={handleSelectChange(setCallingTime)}>
-                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select time" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1519,7 +1519,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status When Call is Placed</Label>
                                             <Select value={placedStatus} onValueChange={handleSelectChange(setPlacedStatus)}>
-                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1532,7 +1532,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status for Successful Call</Label>
                                             <Select value={successfulStatus} onValueChange={handleSelectChange(setSuccessfulStatus)}>
-                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1545,7 +1545,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Status for Unsuccessful Call</Label>
                                             <Select value={unsuccessfulStatus} onValueChange={handleSelectChange(setUnsuccessfulStatus)}>
-                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-gray-100">
+                                                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-600 rounded-2xl dark:bg-gray-700 dark:text-gray-100">
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -1557,7 +1557,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                     </div>
                                 </Card> */}
                                 </div>
-                                <Card className="lg:col-span-2 p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                <Card className="lg:col-span-2 p-4 sm:p-6 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                     <div className="flex flex-col md:flex-col justify-between gap-6">
                                         <h2 className="text-xl font-semibold text-[#1e293b] dark:text-gray-100 whitespace-nowrap">AI Call Flow</h2>
                                         <div className="flex flex-wrap items-center gap-y-2 gap-x-2 text-[10px] sm:text-xs md:text-sm font-semibold text-[#334155] dark:text-gray-300">
@@ -1583,7 +1583,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 </Card>
 
                                 <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <Card className="p-4 sm:p-6 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                         <h2 className="text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 dark:border-gray-700">AI Call Additional Questions <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Optional)</span></h2>
                                         <div className="space-y-3">
                                             {/* Questions Loop */}
@@ -1592,7 +1592,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 "Are you available to work weekends?",
                                                 "Are you willing to travel if required?"
                                             ].map((defaultQuestion, idx) => (
-                                                <div key={idx} className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-3 sm:p-0 bg-gray-50 sm:bg-transparent dark:bg-gray-900/40 sm:dark:bg-transparent rounded-xl sm:rounded-none border border-gray-100 sm:border-none dark:border-gray-800 sm:dark:border-none">
+                                                <div key={idx} className="flex flex-col sm:flex-row gap-2 sm:gap-3 p-3 sm:p-0 bg-gray-50 sm:bg-transparent dark:bg-gray-900/40 sm:dark:bg-transparent rounded-2xl sm:rounded-none border border-gray-100 sm:border-none dark:border-gray-800 sm:dark:border-none">
                                                     <Input
                                                         disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx || addedQuestions.includes(idx)}
                                                         value={additionalQuestions[idx]}
@@ -1611,7 +1611,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                                 setShowDeleteConfirm(true)
                                                             }}
                                                             disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx}
-                                                            className="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed justify-center"
+                                                            className="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed justify-center"
                                                             title="Delete Question"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
@@ -1619,7 +1619,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                         <Button
                                                             onClick={() => handleAddAdditionalQuestion(additionalQuestions[idx], idx)}
                                                             disabled={(isUpdateMode && !isEditing) || addingQuestionIdx === idx || addedQuestions.includes(idx)}
-                                                            className="flex-[2] sm:flex-none h-9 sm:h-8 px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                                            className="flex-[2] sm:flex-none h-9 sm:h-8 px-4 sm:px-6 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white font-bold rounded-2xl whitespace-nowrap disabled:bg-gray-400 disabled:cursor-not-allowed"
                                                         >
                                                             {addingQuestionIdx === idx ? "Adding..." : addedQuestions.includes(idx) ? "Added" : "Add"}
                                                         </Button>
@@ -1629,7 +1629,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         </div>
                                     </Card>
 
-                                    <Card className="p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
+                                    <Card className="p-4 sm:p-6 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800">
                                         <h2 className="text-lg sm:text-xl font-semibold text-[#1e293b] dark:text-gray-100 mb-6 pb-4 border-b border-gray-50 dark:border-gray-700">Job Description Requirement</h2>
                                         <div className="space-y-4">
                                             <p className="text-[#475569] dark:text-gray-400 font-medium">The advert must include a section titled:</p>
@@ -1660,7 +1660,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
 
                                 <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
                                     {showWhatsappUploaderCard && (
-                                        <Card className="relative p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex flex-col items-center justify-center space-y-4 min-h-[200px]">
+                                        <Card className="relative p-4 sm:p-6 shadow-sm shadow-violet-500/10 border border-gray-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800 flex flex-col items-center justify-center space-y-4 min-h-[200px]">
                                             {whatsappTemplate ? (
                                                 <>
                                                     <button
@@ -1830,7 +1830,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 <p className="text-sm font-semibold text-[#1F2937] leading-relaxed">
                                                     Please create the following Job Application Statuses/Stages within your ATS/CRM under:
                                                 </p>
-                                                <p className="text-sm sm:text-base font-bold text-[#1F2937] bg-white p-3 rounded-[10px] border border-[#E5E7EB] shadow-sm">
+                                                <p className="text-sm sm:text-base font-bold text-[#1F2937] bg-white p-3 rounded-[10px] border border-[#E5E7EB] shadow-sm shadow-violet-500/10">
                                                     {selectedAts.toLowerCase().includes("recruit crm") || selectedAts.toLowerCase().includes("recruitcrm") ? (
                                                         <>Admin Settings &rarr; Hiring Pipeline &rarr; Create New Hiring Pipeline</>
                                                     ) : (
@@ -1843,7 +1843,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 <ul className="space-y-2.5 text-sm font-bold text-[#1F2937]">
                                                     {getStatusesForAts(selectedAts).map((status, index) => (
                                                         <li key={index} className="flex items-center gap-3">
-                                                            <span className="text-[#0252FF] font-semibold text-sm shrink-0 min-w-[16px]">{index + 1}.</span>
+                                                            <span className="text-blue-600 font-semibold text-sm shrink-0 min-w-[16px]">{index + 1}.</span>
                                                             <span>{status}</span>
                                                         </li>
                                                     ))}
@@ -1868,7 +1868,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 size="lg"
                                 onClick={handleSaveConfiguration}
                                 disabled={isSaving}
-                                className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                className="flex-1 h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white text-sm sm:text-lg font-semibold rounded-2xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
                             >
                                 {isSaving ? (isUpdateMode ? "Updating..." : "Saving...") : (isUpdateMode ? "Update Configure" : "Save Configure")}
                             </Button>
@@ -1876,7 +1876,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 <Button
                                     size="lg"
                                     onClick={() => setShowReleaseDialog(true)}
-                                    className="flex-1 h-12 sm:h-14 bg-black hover:bg-gray-900 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                    className="flex-1 h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white text-sm sm:text-lg font-semibold rounded-2xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                                 >
                                     Release Flow
                                 </Button>
@@ -1890,7 +1890,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         size="lg"
                                         onClick={handleSaveConfiguration}
                                         disabled={isSaving}
-                                        className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                        className="flex-1 h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white text-sm sm:text-lg font-semibold rounded-2xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                     >
                                         {isSaving ? "Activating..." : "Activate AI Call"}
                                     </Button>
@@ -1898,7 +1898,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                         <Button
                                             size="lg"
                                             onClick={() => setShowReleaseDialog(true)}
-                                            className="flex-1 h-12 sm:h-14 bg-black hover:bg-gray-900 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                            className="flex-1 h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white text-sm sm:text-lg font-semibold rounded-2xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                                         >
                                             Release Flow
                                         </Button>
@@ -1911,7 +1911,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             <Button
                                                 size="lg"
                                                 onClick={() => setIsEditing(true)}
-                                                className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                                className="flex-1 h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white text-sm sm:text-lg font-semibold rounded-2xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                             >
                                                 Edit AI Call
                                             </Button>
@@ -1920,7 +1920,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                                 size="lg"
                                                 onClick={handleSaveConfiguration}
                                                 disabled={isSaving}
-                                                className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                                className="flex-1 h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white text-sm sm:text-lg font-semibold rounded-2xl sm:rounded-2xl shadow-xl shadow-gray-600/60 transition-all hover:scale-[1.01] active:scale-[0.99]"
                                             >
                                                 {isSaving ? "Updating..." : "Update AI Call"}
                                             </Button>
@@ -1929,7 +1929,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                             <Button
                                                 size="lg"
                                                 onClick={() => setShowReleaseDialog(true)}
-                                                className="flex-1 h-12 sm:h-14 bg-black hover:bg-gray-900 text-white text-sm sm:text-lg font-semibold rounded-xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                                className="flex-1 h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white text-sm sm:text-lg font-semibold rounded-2xl sm:rounded-2xl border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                                             >
                                                 Release Flow
                                             </Button>
@@ -1953,7 +1953,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogAction onClick={handleDialogClose} className="h-12 bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 font-bold rounded-xl px-8 border-none">
+                        <AlertDialogAction onClick={handleDialogClose} className="h-12 bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 dark: text-white font-bold rounded-2xl px-8 border-none">
                             OK
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -1974,13 +1974,13 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                         <Button
                             variant="outline"
                             onClick={() => setShowReleaseDialog(false)}
-                            className="h-12 border-2 rounded-xl px-8 font-bold dark:border-gray-700 dark:text-gray-100"
+                            className="h-12 border-2 rounded-2xl px-8 font-bold dark:border-gray-700 dark:text-gray-100"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleReleaseFlow}
-                            className="h-12 bg-black hover:bg-gray-900 text-white font-bold rounded-xl px-8 border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
+                            className="h-12 bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white font-bold rounded-2xl px-8 border-none shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                         >
                             Release Flow
                         </Button>
@@ -2026,14 +2026,14 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                             variant="outline"
                             onClick={() => setShowWhatsappDeleteConfirm(false)}
                             disabled={isWhatsappDeleting}
-                            className="h-12 border-2 rounded-xl px-8 font-bold dark:border-gray-700 dark:text-gray-100"
+                            className="h-12 border-2 rounded-2xl px-8 font-bold dark:border-gray-700 dark:text-gray-100"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleDeleteWhatsappTemplate}
                             disabled={isWhatsappDeleting}
-                            className="h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl px-8 border-none flex items-center justify-center gap-2"
+                            className="h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl px-8 border-none flex items-center justify-center gap-2"
                         >
                             {isWhatsappDeleting ? (
                                 <>
@@ -2049,7 +2049,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
             </AlertDialog>
 
             <Dialog open={isVoicePreviewOpen} onOpenChange={setIsVoicePreviewOpen}>
-                <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-2xl">
+                <DialogContent className="sm:max-w-md bg-white/80 backdrop-blur-xl dark:bg-white/5 border-gray-200 dark:border-gray-800 rounded-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold flex items-center gap-2">
                             <Volume2 className="h-5 w-5 text-blue-500" />
@@ -2077,7 +2077,7 @@ export function ConfigurePage({ featureUid }: ConfigurePageProps) {
                                 <div className="flex justify-center">
                                     <Button
                                         onClick={() => setIsVoicePreviewOpen(false)}
-                                        className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-lg shadow-blue-500/20"
+                                        className="w-full h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 text-white font-semibold transition-all shadow-lg shadow-blue-500/20"
                                     >
                                         Close
                                     </Button>

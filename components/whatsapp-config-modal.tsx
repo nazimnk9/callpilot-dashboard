@@ -292,7 +292,7 @@ export function WhatsappConfigModal({ isOpen, onClose, onSuccess, configUid }: W
                             </div>
                             <Button
                                 onClick={onClose}
-                                className="w-full h-12 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-bold rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200"
+                                className="w-full h-12 bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 text-white font-bold rounded-xl dark:"
                             >
                                 Close
                             </Button>

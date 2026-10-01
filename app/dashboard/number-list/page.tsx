@@ -91,7 +91,7 @@ export default function MyNumbersListPage() {
                 {!isMotherStepCompleted ? (
                     <main className="flex-1 flex items-center justify-center p-4 bg-gray-50/50 dark:bg-gray-950">
                         <div className="max-w-md w-full text-center space-y-6 p-8 rounded-3xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-violet-500/40 shadow-lg mb-2 text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
                                 <Clock className="w-8 h-8 animate-pulse" />
                             </div>
                             <div className="space-y-2">

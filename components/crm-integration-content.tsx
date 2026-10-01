@@ -490,7 +490,7 @@ export function CRMIntegrationContent() {
                                 onChange={(e) => setRecruitCRMAccessToken(e.target.value)}
                                 disabled={isConnectingRecruitCRM}
                                 required
-                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                         </div>
                         <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -506,7 +506,7 @@ export function CRMIntegrationContent() {
                             <Button
                                 type="submit"
                                 disabled={isConnectingRecruitCRM || !recruitCRMAccessToken.trim()}
-                                className="w-full sm:w-auto bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold flex items-center justify-center gap-2"
+                                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 dark:bg-gray-100 text-white dark:text-gray-900 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 dark:hover:bg-gray-200 font-semibold flex items-center justify-center gap-2"
                             >
                                 {isConnectingRecruitCRM ? (
                                     <>
@@ -548,7 +548,7 @@ export function CRMIntegrationContent() {
                                 onChange={(e) => setAshbyApiKey(e.target.value)}
                                 disabled={isConnectingAshby}
                                 required
-                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-gray-700 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                         </div>
                         <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -564,7 +564,7 @@ export function CRMIntegrationContent() {
                             <Button
                                 type="submit"
                                 disabled={isConnectingAshby || !ashbyApiKey.trim()}
-                                className="w-full sm:w-auto bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold flex items-center justify-center gap-2"
+                                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-md shadow-violet-500/25 dark:bg-gray-100 text-white dark:text-gray-900 hover:from-blue-700 hover:to-violet-600 hover:-translate-y-0.5 dark:hover:bg-gray-200 font-semibold flex items-center justify-center gap-2"
                             >
                                 {isConnectingAshby ? (
                                     <>
@@ -587,17 +587,17 @@ export function CRMIntegrationContent() {
 
             <div className="max-w-4xl mx-auto space-y-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Available ATS to Connect</h1>
+                    <h1 className="text-2xl font-bold gradient-text pb-1">Available ATS to Connect</h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5 font-medium">Manage your ATS integrations and settings</p>
                 </div>
 
                 {isLoading ? (
-                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-white/80 backdrop-blur-xl dark:bg-white/5 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm shadow-violet-500/10">
                         <div className="divide-y divide-gray-100 dark:divide-gray-800">
                             {Array.from({ length: 6 }).map((_, index) => (
                                 <div key={index} className="flex items-center justify-between p-6">
                                     <div className="flex items-center gap-4">
-                                        <Skeleton className="w-14 h-14 rounded-xl dark:bg-gray-800" />
+                                        <Skeleton className="w-14 h-14 rounded-2xl dark:bg-gray-800" />
                                         <div className="space-y-2">
                                             <Skeleton className="h-5 w-32 dark:bg-gray-800" />
                                             {(index === 0 || index === 2) && (
@@ -605,13 +605,13 @@ export function CRMIntegrationContent() {
                                             )}
                                         </div>
                                     </div>
-                                    <Skeleton className="h-10 w-28 rounded-xl dark:bg-gray-800" />
+                                    <Skeleton className="h-10 w-28 rounded-2xl dark:bg-gray-800" />
                                 </div>
                             ))}
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="bg-white/80 backdrop-blur-xl dark:bg-white/5 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm shadow-violet-500/10">
                         <div className="divide-y divide-gray-100 dark:divide-gray-800">
                             {[...displayPlatforms]
                                 .sort((a, b) => {
@@ -630,27 +630,27 @@ export function CRMIntegrationContent() {
                                         <div className="flex items-center gap-4">
                                             {/* Logo */}
                                             {p.slug === "jobadder" && (
-                                                <div className="w-14 h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                                                <div className="w-14 h-14 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm shadow-violet-500/10">
                                                     <img src="/jobadder.jpeg" alt="JobAdder" className="w-full h-full object-cover" />
                                                 </div>
                                             )}
                                             {p.slug === "recruitcrm" && (
-                                                <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-200 bg-[#286cb3]">
+                                                <div className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm shadow-violet-500/10 border border-gray-200 bg-[#286cb3]">
                                                     <img src="/recruitcrm.png" alt="Recruit CRM" className="w-full h-full object-cover" />
                                                 </div>
                                             )}
                                             {p.slug === "greenhouse" && (
-                                                <div className="w-14 h-14 rounded-xl bg-[#008F52] flex items-center justify-center flex-shrink-0 p-3 shadow-sm">
+                                                <div className="w-14 h-14 rounded-2xl bg-[#008F52] flex items-center justify-center flex-shrink-0 p-3 shadow-sm shadow-violet-500/10">
                                                     <img src="/greenhouse.png" alt="Greenhouse" className="w-full h-full object-contain brightness-0 invert" />
                                                 </div>
                                             )}
                                             {p.slug === "ashby" && (
-                                                <div className="w-14 h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                                                <div className="w-14 h-14 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm shadow-violet-500/10">
                                                     <img src="/ashby-social-preview.png" alt="Ashby" className="w-full h-full object-cover" />
                                                 </div>
                                             )}
                                             {(p.slug === "icims" || p.slug === "sap-successfactors") && (
-                                                <div className="w-14 h-14 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                <div className="w-14 h-14 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex items-center justify-center flex-shrink-0 shadow-sm shadow-violet-500/10">
                                                     <Plug className="w-6 h-6 text-gray-400 rotate-45" />
                                                 </div>
                                             )}
@@ -683,7 +683,7 @@ export function CRMIntegrationContent() {
                                                 <Button
                                                     onClick={() => setDisconnectDialog({ show: true, platform: dynamicPlatform || null })}
                                                     disabled={isIntegrating || isConnectingRecruitCRM || isConnectingAshby}
-                                                    className="bg-[#EF4444] hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
+                                                    className="bg-[#EF4444] hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-2xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
                                                 >
                                                     Disconnect
                                                 </Button>
@@ -691,7 +691,7 @@ export function CRMIntegrationContent() {
                                                 <Button
                                                     onClick={() => dynamicPlatform && handleIntegrate(dynamicPlatform)}
                                                     disabled={isIntegrating || isConnectingRecruitCRM || isConnectingAshby || !dynamicPlatform}
-                                                    className="bg-[#0062FF] hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
+                                                    className="bg-[#0062FF] hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-2xl transition-all duration-200 text-sm h-10 border-none flex items-center justify-center"
                                                 >
                                                     Connect to ATS
                                                 </Button>

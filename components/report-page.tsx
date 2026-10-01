@@ -340,7 +340,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
 
             <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-foreground mb-2">
+                    <h1 className="text-3xl font-extrabold gradient-text mb-2">
                         {featureName}
                     </h1>
                     <p className="text-muted-foreground">
@@ -350,7 +350,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                 {/* {!isDiner && (
                     <Button
                         onClick={() => setIsRecallModalOpen(true)}
-                        className="bg-primary hover:bg-primary/90 cursor-pointer"
+                        className="gradient-bg text-white shadow-md shadow-indigo-500/30 hover:-translate-y-0.5 border-0 cursor-pointer"
                     >
                         Retry Call Interview
                     </Button>
@@ -361,29 +361,29 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                 <Table>
                     <TableHeader>
                         {isDiner ? (
-                            <TableRow className="bg-muted/50">
-                                <TableHead className="font-semibold text-foreground text-nowrap">ID</TableHead>
-                                <TableHead className="font-semibold text-foreground text-nowrap">Customer Name</TableHead>
-                                <TableHead className="font-semibold text-foreground text-nowrap">Party Size</TableHead>
-                                <TableHead className="font-semibold text-foreground text-nowrap">Reservation Date</TableHead>
-                                <TableHead className="font-semibold text-foreground text-nowrap">Reservation Time</TableHead>
-                                <TableHead className="font-semibold text-foreground text-nowrap">Status</TableHead>
-                                <TableHead className="font-semibold text-foreground text-nowrap">Actions</TableHead>
+                            <TableRow className="bg-indigo-50/80 dark:bg-white/5 hover:bg-indigo-50/80 sticky top-0">
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200 text-nowrap">ID</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200 text-nowrap">Customer Name</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200 text-nowrap">Party Size</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200 text-nowrap">Reservation Date</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200 text-nowrap">Reservation Time</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200 text-nowrap">Status</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200 text-nowrap">Actions</TableHead>
                             </TableRow>
                         ) : (
-                            <TableRow className="bg-muted/50">
-                                {/* <TableHead className="font-semibold text-foreground">Interview ID</TableHead> */}
-                                <TableHead className="font-semibold text-foreground">Candidate ID</TableHead>
-                                <TableHead className="font-semibold text-foreground">Candidate Name</TableHead>
-                                <TableHead className="font-semibold text-foreground">Candidate Email</TableHead>
-                                <TableHead className="font-semibold text-foreground">Candidate Mobile</TableHead>
-                                <TableHead className="font-semibold text-foreground">Recall</TableHead>
-                                {/* <TableHead className="font-semibold text-foreground">First Message Sent At</TableHead> */}
-                                {/* <TableHead className="font-semibold text-foreground">Status</TableHead> */}
-                                <TableHead className="font-semibold text-foreground">AI Decision</TableHead>
-                                <TableHead className="font-semibold text-foreground">Updated At</TableHead>
-                                <TableHead className="font-semibold text-foreground">Chat History</TableHead>
-                                {/* <TableHead className="font-semibold text-foreground">Retry call Interview</TableHead> */}
+                            <TableRow className="bg-indigo-50/80 dark:bg-white/5 hover:bg-indigo-50/80 sticky top-0">
+                                {/* <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Interview ID</TableHead> */}
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Candidate ID</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Candidate Name</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Candidate Email</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Candidate Mobile</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Recall</TableHead>
+                                {/* <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">First Message Sent At</TableHead> */}
+                                {/* <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Status</TableHead> */}
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">AI Decision</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Updated At</TableHead>
+                                <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Chat History</TableHead>
+                                {/* <TableHead className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">Retry call Interview</TableHead> */}
                             </TableRow>
                         )}
                     </TableHeader>
@@ -398,7 +398,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                             </TableRow>
                         ) : isDiner ? (
                             dinerReports.map((row) => (
-                                <TableRow key={row.id} className="hover:bg-muted/30">
+                                <TableRow key={row.id} className="hover:bg-indigo-50/60 dark:hover:bg-indigo-500/10 transition-colors animate-fade-up">
                                     <TableCell className="text-sm">{row.uid}</TableCell>
                                     <TableCell className="text-sm font-medium">{row.customer_name || "-"}</TableCell>
                                     <TableCell className="text-sm">{row.party_size}</TableCell>
@@ -430,7 +430,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                             ))
                         ) : (
                             reports.map((row) => (
-                                <TableRow key={row.id} className="hover:bg-muted/30">
+                                <TableRow key={row.id} className="hover:bg-indigo-50/60 dark:hover:bg-indigo-500/10 transition-colors animate-fade-up">
                                     {/* <TableCell className="text-sm">{row.uid}</TableCell> */}
                                     <TableCell className="text-sm">{row.candidate_id}</TableCell>
                                     <TableCell className="text-sm">{row.candidate_name}</TableCell>
@@ -486,20 +486,20 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 mb-8 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm animate-in fade-in duration-300">
                     <div className="text-sm font-medium text-muted-foreground">
                         Showing{" "}
-                        <span className="font-semibold text-foreground">
+                        <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">
                             {Math.min(totalCount, (currentPage - 1) * pageSize + 1)}
                         </span>{" "}
                         to{" "}
-                        <span className="font-semibold text-foreground">
+                        <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">
                             {Math.min(totalCount, currentPage * pageSize)}
                         </span>{" "}
-                        of <span className="font-semibold text-foreground">{totalCount}</span> entries
+                        of <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-200">{totalCount}</span> entries
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-9 px-3 rounded-xl font-semibold border-gray-200 dark:border-gray-700 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                            className="h-9 px-3 rounded-xl font-semibold border-indigo-100 dark:border-white/10 bg-white/70 dark:bg-white/5 hover:bg-indigo-50 transition-all duration-200 disabled:opacity-50 cursor-pointer"
                             disabled={currentPage === 1}
                             onClick={() => handlePageChange(currentPage - 1)}
                         >
@@ -511,7 +511,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-9 px-3 rounded-xl font-semibold border-gray-200 dark:border-gray-700 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                            className="h-9 px-3 rounded-xl font-semibold border-indigo-100 dark:border-white/10 bg-white/70 dark:bg-white/5 hover:bg-indigo-50 transition-all duration-200 disabled:opacity-50 cursor-pointer"
                             disabled={currentPage === totalPages}
                             onClick={() => handlePageChange(currentPage + 1)}
                         >
@@ -534,7 +534,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
             <Dialog open={isChatModalOpen} onOpenChange={setIsChatModalOpen}>
                 <DialogContent className="max-w-xl p-0 overflow-hidden">
                     <div className="flex items-center justify-between p-4 border-b">
-                        <h2 className="text-xl font-semibold text-foreground">Chat History</h2>
+                        <h2 className="text-xl font-bold gradient-text">Chat History</h2>
                     </div>
                     <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
                         {(isDiner ? selectedDinerReport?.conversation_json : selectedInterview?.conversation_json) && (isDiner ? (selectedDinerReport?.conversation_json?.length || 0) > 0 : (selectedInterview?.conversation_json?.length || 0) > 0) ? (
@@ -561,7 +561,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
             <Dialog open={isRecallModalOpen} onOpenChange={setIsRecallModalOpen}>
                 <DialogContent className="max-w-md">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-semibold text-foreground">Recall</h2>
+                        <h2 className="text-xl font-bold gradient-text">Recall</h2>
                         {/* <button
                             onClick={() => setIsRecallModalOpen(false)}
                             className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none cursor-pointer"
@@ -590,7 +590,7 @@ export default function ReportPage({ featureUid }: ReportPageProps) {
                             <Button
                                 onClick={handleRecall}
                                 disabled={isRecalling}
-                                className="bg-primary hover:bg-primary/90 cursor-pointer"
+                                className="gradient-bg text-white shadow-md shadow-indigo-500/30 hover:-translate-y-0.5 border-0 cursor-pointer"
                             >
                                 {isRecalling ? "Processing..." : "Recall"}
                             </Button>

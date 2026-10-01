@@ -167,7 +167,7 @@ export function AICallFlowOptionsContent() {
             <div className="max-w-[1200px] mx-auto space-y-6">
                 <div className="flex flex-row justify-between">
                     <div className="flex flex-col gap-1">
-                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">Callpillot Flow Store</h1>
+                        <h1 className="text-lg font-bold tracking-tight gradient-text">Callpillot Flow Store</h1>
                     </div>
                 </div>
 
@@ -203,10 +203,10 @@ export function AICallFlowOptionsContent() {
 
                     <div className="flex items-center gap-4 ml-auto">
                         <div className="flex items-center gap-2">
-                            <button className="text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 text-sm bg-gray-50 dark:bg-gray-900 px-3 py-1 rounded border border-gray-200 dark:border-gray-800">
+                            <button className="text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 text-sm bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-100 dark:border-white/10">
                                 Show Bookmarks
                             </button>
-                            <button className="text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 text-sm bg-gray-50 dark:bg-gray-900 px-3 py-1 rounded border border-gray-200 dark:border-gray-800">
+                            <button className="text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 text-sm bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-100 dark:border-white/10">
                                 Rating <ArrowUpWideNarrow className="w-4 h-4" /><ArrowDownWideNarrow className="w-4 h-4" />
                             </button>
                         </div>
@@ -215,7 +215,7 @@ export function AICallFlowOptionsContent() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-4">
                     {/* Sidebar Filters */}
-                    <aside className="space-y-6 border border-gray-200 dark:border-gray-800 rounded-xl p-6 bg-gray-50/30 dark:bg-gray-900/30 h-fit">
+                    <aside className="space-y-6 glass rounded-2xl p-6 animate-fade-up h-fit">
                         {/* Title Name Filter */}
                         <div className="space-y-3">
                             <div
@@ -279,7 +279,7 @@ export function AICallFlowOptionsContent() {
                     </aside>
 
                     {/* Main Results Container */}
-                    <div className="space-y-4 border border-gray-200 dark:border-gray-800 rounded-xl p-6 bg-gray-50/30 dark:bg-gray-900/30 min-h-[400px]">
+                    <div className="space-y-4 glass rounded-2xl p-6 animate-fade-up min-h-[400px]">
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center py-20 gap-4">
                                 <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
@@ -298,7 +298,7 @@ export function AICallFlowOptionsContent() {
                                         <div className="flex justify-between items-start">
                                             <div className="flex gap-4 items-start">
                                                 {/* Image on left side of title */}
-                                                <div className="w-20 h-28 border border-gray-200 dark:border-gray-600 rounded-md overflow-hidden bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+                                                <div className="w-20 h-28 border border-indigo-100 dark:border-white/10 rounded-xl shadow-md shadow-indigo-500/10 overflow-hidden bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                                                     <img src={flow.picture} alt={flow.name} className="w-full h-full object-fixed" />
                                                 </div>
 

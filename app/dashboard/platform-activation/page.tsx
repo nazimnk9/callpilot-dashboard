@@ -424,7 +424,7 @@ export default function PlatformActivationPage() {
                 {!isMotherStepCompleted ? (
                     <main className="flex-1 flex items-center justify-center p-4 bg-gray-50/50 dark:bg-gray-950">
                         <div className="max-w-md w-full text-center space-y-6 p-8 rounded-3xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-violet-500/40 shadow-lg mb-2 text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
                                 <Clock className="w-8 h-8 animate-pulse" />
                             </div>
                             <div className="space-y-2">
@@ -532,7 +532,7 @@ export default function PlatformActivationPage() {
                             <Button
                                 onClick={handleActivate}
                                 disabled={isLoading}
-                                className="w-full bg-black hover:bg-black/90 text-white rounded-xl py-6 text-lg font-semibold"
+                                className="w-full bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 text-white rounded-xl py-6 text-lg font-semibold"
                             >
                                 {isLoading && <Loader2 className="w-5 h-5 animate-spin mr-2" />}
                                 Activate AI Call
@@ -682,7 +682,7 @@ export default function PlatformActivationPage() {
 
                     <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6">
                         <Button onClick={() => setIsAddPaymentOpen(false)} variant="outline" className="rounded-xl h-auto py-3">Cancel</Button>
-                        <Button onClick={handleAddPaymentMethod} disabled={isSubmitting} className="rounded-xl h-auto py-3 bg-black text-white hover:bg-black/90">
+                        <Button onClick={handleAddPaymentMethod} disabled={isSubmitting} className="rounded-xl h-auto py-3 bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 text-white">
                             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                             Add payment method
                         </Button>

@@ -527,13 +527,13 @@ export function PhoneNumbersContent() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Name on card <span className="text-red-500">*</span></label>
-                            <input type="text" value={cardholderName} onChange={(e) => setCardholderName(e.target.value)} placeholder="e.g. John Doe" className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                            <input type="text" value={cardholderName} onChange={(e) => setCardholderName(e.target.value)} placeholder="e.g. John Doe" className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                         </div>
                         <div className="space-y-4">
                             <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Billing address</label>
                             <div className="space-y-3">
                                 <div className="relative">
-                                    <div onClick={() => setIsCountryOpen(!isCountryOpen)} className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+                                    <div onClick={() => setIsCountryOpen(!isCountryOpen)} className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
                                         <span className={billingCountry ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}>
                                             {billingCountry ? (countriesData.find((c: any) => c.country_code === billingCountry)?.country || billingCountry) : "Country"} <span className="text-red-500">*</span>
                                         </span>
@@ -544,7 +544,7 @@ export function PhoneNumbersContent() {
                                             <div className="p-3 border-b border-gray-100 dark:border-gray-800">
                                                 <div className="relative">
                                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                                                    <input autoFocus type="text" placeholder="Search country..." value={modalCountrySearch} onChange={(e) => setModalCountrySearch(e.target.value)} className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow" />
+                                                    <input autoFocus type="text" placeholder="Search country..." value={modalCountrySearch} onChange={(e) => setModalCountrySearch(e.target.value)} className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-2.5 pl-10 pr-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow" />
                                                 </div>
                                             </div>
                                             <div className="max-h-[280px] overflow-y-auto">
@@ -559,13 +559,13 @@ export function PhoneNumbersContent() {
                                         </div>
                                     )}
                                 </div>
-                                <input type="text" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} placeholder="Address line 1 *" className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
-                                <input type="text" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Address line 2" className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                                <input type="text" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} placeholder="Address line 1 *" className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                                <input type="text" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Address line 2" className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
-                                    <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Postal code" className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                                    <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                                    <input type="text" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="Postal code" className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                                 </div>
-                                <input type="text" value={stateRegion} onChange={(e) => setStateRegion(e.target.value)} placeholder="State, county, province, or region" className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                                <input type="text" value={stateRegion} onChange={(e) => setStateRegion(e.target.value)} placeholder="State, county, province, or region" className="w-full bg-white/70 dark:bg-white/5 backdrop-blur border border-indigo-100 dark:border-white/10 hover:border-indigo-300 rounded-xl transition-all py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                             </div>
                         </div>
                         <div className="flex items-center gap-3 pt-2">
@@ -576,8 +576,8 @@ export function PhoneNumbersContent() {
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
-                        <Button onClick={() => setIsAddPaymentOpen(false)} className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1" disabled={isSubmitting}>Cancel</Button>
-                        <Button onClick={handleAddPaymentMethod} disabled={isSubmitting} className="w-full sm:w-auto bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2 order-1 sm:order-2">
+                        <Button onClick={() => setIsAddPaymentOpen(false)} className="w-full sm:w-auto bg-white/70 hover:bg-indigo-50 text-indigo-700 font-bold px-6 py-2.5 rounded-xl border border-indigo-100 shadow-none text-[15px] transition-colors dark:bg-white/5 dark:text-indigo-200 dark:border-white/10 dark:hover:bg-gray-700 h-auto order-2 sm:order-1" disabled={isSubmitting}>Cancel</Button>
+                        <Button onClick={handleAddPaymentMethod} disabled={isSubmitting} className="w-full sm:w-auto gradient-bg text-white px-6 py-2.5 rounded-xl text-[15px] font-bold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:-translate-y-0.5 transition-all h-auto flex items-center justify-center gap-2 order-1 sm:order-2">
                             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />} Add payment method
                         </Button>
                     </div>
@@ -647,7 +647,7 @@ export function PhoneNumbersContent() {
                                         <Button type="button" variant="outline" className="cursor-pointer border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold px-6 py-2 rounded-xl flex items-center gap-2 transition-all duration-200" onClick={() => setIsBuyModalOpen(false)}>
                                             <ArrowLeft className="w-4 h-4 mr-2" /> Cancel
                                         </Button>
-                                        <Button type="submit" disabled={isLoading || !selectedPmForTopUp} className="cursor-pointer bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50">
+                                        <Button type="submit" disabled={isLoading || !selectedPmForTopUp} className="cursor-pointer bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 text-white dark: font-bold px-6 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50">
                                             {isLoading ? "Processing..." : "Buy AI Number"}
                                         </Button>
                                     </div>
@@ -677,7 +677,7 @@ export function PhoneNumbersContent() {
                         <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">{errorDetail}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="pt-4">
-                        <AlertDialogAction onClick={() => setErrorDetail(null)} className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none">Continue</AlertDialogAction>
+                        <AlertDialogAction onClick={() => setErrorDetail(null)} className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:shadow-lg hover:shadow-rose-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all h-auto border-none">Continue</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -697,7 +697,7 @@ export function PhoneNumbersContent() {
             <div className="p-4 md:p-8 space-y-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg font-semibold text-foreground tracking-tight">AI Voice Numbers</h1>
+                        <h1 className="text-lg font-bold tracking-tight gradient-text">AI Voice Numbers</h1>
                         <p className="text-muted-foreground mt-2">Manage your purchased AI automated phone numbers</p>
                     </div>
                 </div>
@@ -706,13 +706,13 @@ export function PhoneNumbersContent() {
                     <Button variant="outline" className="border-gray-200 dark:border-gray-700 font-semibold transition-all duration-200 gap-2 px-8" onClick={() => router.back()}>
                         <ArrowLeft size={18} /> Back
                     </Button>
-                    <Button variant="default" className="bg-black dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-900 dark:hover:bg-gray-200 font-semibold transition-all duration-200 gap-2 px-8" onClick={handleBuyNumber} disabled={isLoading}>
+                    <Button variant="default" className="bg-gradient-to-r from-blue-600 to-violet-500 shadow-md shadow-blue-600/30 hover:brightness-110 hover:-translate-y-0.5 text-white dark: font-semibold transition-all duration-200 gap-2 px-8" onClick={handleBuyNumber} disabled={isLoading}>
                         <Plus size={18} /> Buy AI Number
                     </Button>
                 </div>
 
                 {phoneNumbers.length === 0 && !isLoading ? (
-                    <Card className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 shadow-sm rounded-2xl overflow-hidden">
+                    <Card className="glass rounded-2xl overflow-hidden animate-scale-in">
                         <CardContent className="pt-12 pb-12 text-center">
                             <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-full w-fit mx-auto mb-4">
                                 <Phone className="w-8 h-8 text-muted-foreground opacity-50" />
@@ -753,7 +753,7 @@ export function PhoneNumbersContent() {
                                 <CardContent className="p-4 md:p-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                                         <div className="space-y-3 md:space-y-4">
-                                            <p className="text-[10px] md:text-[11px] font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Capabilities</p>
+                                            <p className="text-[10px] md:text-[11px] font-extrabold text-indigo-400 dark:text-indigo-300 uppercase tracking-[0.2em]">Capabilities</p>
                                             <div className="grid grid-cols-2 lg:grid-cols-4 md:grid-cols-2 gap-y-3 md:gap-y-4 gap-x-2">
                                                 {[
                                                     { label: "Voice", capable: number.voice_capable },
@@ -771,7 +771,7 @@ export function PhoneNumbersContent() {
                                             </div>
                                         </div>
                                         <div className="space-y-3 md:space-y-4">
-                                            <p className="text-[10px] md:text-[11px] font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Quick Details</p>
+                                            <p className="text-[10px] md:text-[11px] font-extrabold text-indigo-400 dark:text-indigo-300 uppercase tracking-[0.2em]">Quick Details</p>
                                             <div className="p-3 md:p-4">
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>

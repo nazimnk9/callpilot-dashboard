@@ -239,6 +239,7 @@ export function DashboardContent() {
     const [isCancellingPlan, setIsCancellingPlan] = useState(false);
     const [isUpdateSubscriptionModalOpen, setIsUpdateSubscriptionModalOpen] = useState(false);
     const [currentSubscription, setCurrentSubscription] = useState<any>(null);
+    const screeningRate = Number(currentSubscription?.topup_rate) || 3.45;
     const [isFetchingSubscription, setIsFetchingSubscription] = useState(false);
     const [isUpdateSubmitting, setIsUpdateSubmitting] = useState(false);
     const [fetchedPlans, setFetchedPlans] = useState<any[]>([]);
@@ -1311,7 +1312,7 @@ export function DashboardContent() {
 
 
     return (
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950 p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto bg-transparent p-4 md:p-8 animate-fade-in">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Complete Your Account Setup */}
                 {(() => {
@@ -1320,16 +1321,16 @@ export function DashboardContent() {
                             <div className="relative">
                                 <div
                                     onClick={() => setIsSetupDropdownOpen(!isSetupDropdownOpen)}
-                                    className="w-full flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 shadow-sm"
+                                    className="w-full flex items-center justify-between p-4 border border-blue-100 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-900 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 shadow-lg shadow-blue-500/10"
                                 >
-                                    <h1 className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                    <h1 className="text-[17px] font-semibold text-slate-900 dark:text-gray-100 flex items-center gap-2">
                                         Complete Your Account Setup ({completedCount}/{setupSteps.length})
                                     </h1>
-                                    <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isSetupDropdownOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${isSetupDropdownOpen ? 'rotate-180' : ''}`} />
                                 </div>
 
                                 {isSetupDropdownOpen && (
-                                    <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-900 border border-blue-100 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                         <div className="p-6 md:p-8 space-y-3">
                                             {setupSteps.map((option, idx) => {
                                                 const isCompleted = checkStepCompleted(option.key);
@@ -1352,13 +1353,13 @@ export function DashboardContent() {
                                                         }}
                                                     >
                                                         {isCompleted ? (
-                                                            <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                            <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/10">
                                                                 <Check className="h-4 w-4 text-white stroke-[3px]" />
                                                             </div>
                                                         ) : isDisabled ? (
-                                                            <div className="h-6 w-6 rounded-full border-[3px] border-gray-300 dark:border-gray-700 flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-sm transition-colors duration-200" />
+                                                            <div className="h-6 w-6 rounded-full border-[3px] border-gray-300 dark:border-gray-700 flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-lg shadow-blue-500/10 transition-colors duration-200" />
                                                         ) : (
-                                                            <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
+                                                            <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-lg shadow-blue-500/10 transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
                                                         )}
                                                         <span className={`text-[17px] font-medium transition-all duration-200 ${isCompleted ? 'text-gray-800 dark:text-gray-200' : (
                                                                 isDisabled ? 'text-black/50 dark:text-white/50' : 'text-gray-800 dark:text-gray-200 group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400'
@@ -1378,8 +1379,8 @@ export function DashboardContent() {
 
                     return (
                         <div>
-                            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Complete Your Account Setup</h1>
-                            <div className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8">
+                            <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up mb-6">Complete Your Account Setup</h1>
+                            <div className="group relative overflow-hidden rounded-2xl border border-blue-100/70 dark:border-gray-700/60 glass dark:bg-gray-900/60 shadow-lg shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8">
                                 {/* soft gradient glow */}
                                 <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
                                     <div className="h-full w-full bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-emerald-500/20" />
@@ -1412,13 +1413,13 @@ export function DashboardContent() {
                                                 }}
                                             >
                                                 {isCompleted ? (
-                                                    <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-sm">
+                                                    <div className="h-6 w-6 rounded-full bg-[#5EBB78] flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/10">
                                                         <Check className="h-4 w-4 text-white stroke-[3px]" />
                                                     </div>
                                                 ) : isDisabled ? (
-                                                    <div className="h-6 w-6 rounded-full border-[3px] border-gray-300 dark:border-gray-700 flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-sm transition-colors duration-200" />
+                                                    <div className="h-6 w-6 rounded-full border-[3px] border-gray-300 dark:border-gray-700 flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-800 shadow-lg shadow-blue-500/10 transition-colors duration-200" />
                                                 ) : (
-                                                    <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
+                                                    <div className="h-6 w-6 rounded-full border-[3px] border-blue-500 dark:border-blue-400 flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-900 shadow-lg shadow-blue-500/10 transition-colors duration-200 group-hover/item:border-blue-600 dark:group-hover/item:border-blue-300" />
                                                 )}
                                                 <span className={`text-[17px] font-medium transition-all duration-200 ${isCompleted ? 'text-gray-800 dark:text-gray-200' : (
                                                         isDisabled ? 'text-black/50 dark:text-white/50' : 'text-gray-800 dark:text-gray-200 group-hover/item:underline decoration-blue-500 underline-offset-4 group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400'
@@ -1436,15 +1437,15 @@ export function DashboardContent() {
                 })()}
 
                 <div>
-                    <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Account & Usage</h1>
-                    {/* <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
+                    <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up mb-6">Account & Usage</h1>
+                    {/* <p className="text-slate-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
                 </div>
 
                 {/* 3 cards in same row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {isLoading ? (
                         Array(3).fill(0).map((_, i) => (
-                            <div key={i} className="h-48 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
+                            <div key={i} className="h-48 rounded-2xl border border-blue-100/70 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                             </div>
                         ))
@@ -1452,7 +1453,7 @@ export function DashboardContent() {
                         cards.map((card, index) => (
                             <div
                                 key={index}
-                                className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8 flex flex-col items-center justify-between text-center min-h-[220px]"
+                                className="group relative overflow-hidden rounded-2xl border border-blue-100/70 dark:border-gray-700/60 glass dark:bg-gray-900/60 shadow-lg shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8 flex flex-col items-center justify-between text-center min-h-[220px]"
                             >
                                 {/* soft gradient glow */}
                                 <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
@@ -1468,7 +1469,7 @@ export function DashboardContent() {
                                     <div className="flex flex-col items-center">
                                         {/* icon container */}
                                         <div
-                                            className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10 mb-3`}
+                                            className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-lg shadow-blue-500/10 ring-1 ring-black/5 dark:ring-white/10 mb-3`}
                                         >
                                             <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
                                             <card.icon size={22} />
@@ -1479,7 +1480,7 @@ export function DashboardContent() {
                                             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                                 {card.title}
                                             </p>
-                                            <p className={`text-xl md:text-2xl font-bold tracking-tight ${card.value === 'Not Active' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                                            <p className={`text-xl md:text-2xl font-bold tracking-tight ${card.value === 'Not Active' ? 'text-gray-400 dark:text-gray-500' : 'text-slate-900 dark:text-white'}`}>
                                                 {card.value}
                                             </p>
                                         </div>
@@ -1491,7 +1492,7 @@ export function DashboardContent() {
                                             <button
                                                 disabled={isCheckingVerification}
                                                 onClick={handleUpgradePlanClick}
-                                                className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all duration-200 shadow-sm flex items-center justify-center cursor-pointer"
+                                                className="w-full py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-blue-500/10 flex items-center justify-center cursor-pointer"
                                             >
                                                 {isCheckingVerification ? (
                                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -1511,9 +1512,9 @@ export function DashboardContent() {
                                                     setTopUpAmount("");
                                                     setIsTopUpOpen(true);
                                                 }}
-                                                className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                                                className={`w-full py-2.5 px-4 rounded-2xl font-semibold text-sm transition-all duration-200 ${
                                                     aiApplicantCallsActive
-                                                        ? 'border border-gray-900 dark:border-gray-200 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 shadow-sm cursor-pointer'
+                                                        ? 'border border-gray-900 dark:border-gray-200 text-slate-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 shadow-lg shadow-blue-500/10 cursor-pointer'
                                                         : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border-none'
                                                 }`}
                                             >
@@ -1533,9 +1534,9 @@ export function DashboardContent() {
                                                         setIsTopUpOpen(true);
                                                     }
                                                 }}
-                                                className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                                                className={`w-full py-2.5 px-4 rounded-2xl font-semibold text-sm transition-all duration-200 ${
                                                     aiCallsActive
-                                                        ? 'border border-gray-900 dark:border-gray-200 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 shadow-sm cursor-pointer'
+                                                        ? 'border border-gray-900 dark:border-gray-200 text-slate-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 shadow-lg shadow-blue-500/10 cursor-pointer'
                                                         : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border-none'
                                                 }`}
                                             >
@@ -1561,9 +1562,9 @@ export function DashboardContent() {
                         }
                     }}
                 >
-                    <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-6">
+                    <DialogContent className="sm:max-w-[480px] p-6 sm:p-8 dark:bg-gray-950 border-blue-50 dark:border-gray-800 rounded-3xl gap-6">
                         <DialogHeader className="p-0">
-                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                            <DialogTitle className="text-[22px] font-bold text-slate-900 dark:text-gray-100">
                                 {topUpType === "screening_credit" ? "Add Screening Credits" : "Add Minutes"}
                             </DialogTitle>
                         </DialogHeader>
@@ -1572,7 +1573,7 @@ export function DashboardContent() {
                             {/* Choice Field Section only shown if both products are active */}
                             {aiCallsActive && aiApplicantCallsActive && (
                                 <div className="space-y-2">
-                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                    <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                         Top-up type
                                     </label>
                                     <Select
@@ -1589,7 +1590,7 @@ export function DashboardContent() {
                                                 return;
                                             }
                                             if (val === "screening_credit") {
-                                                setTopUpAmount((count * 3.45).toFixed(2));
+                                                setTopUpAmount((count * screeningRate).toFixed(2));
                                             } else if (val === "ai_call_minutes") {
                                                 if (orgData?.top_up_min_per_dol) {
                                                     const rate = parseFloat(orgData.top_up_min_per_dol);
@@ -1603,14 +1604,14 @@ export function DashboardContent() {
                                             }
                                         }}
                                     >
-                                        <SelectTrigger className="w-full py-6 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                                        <SelectTrigger className="w-full py-6 px-4 bg-blue-50/50 dark:bg-gray-900 border border-blue-50 dark:border-gray-800 rounded-2xl text-[15px] font-medium text-slate-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
                                             <SelectValue placeholder="Select top-up type" />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50">
-                                            <SelectItem value="screening_credit" className="text-[14px] font-medium cursor-pointer py-3 rounded-xl">
+                                        <SelectContent className="bg-white dark:bg-gray-950 border border-blue-50 dark:border-gray-800 rounded-2xl shadow-xl z-50">
+                                            <SelectItem value="screening_credit" className="text-[14px] font-medium cursor-pointer py-3 rounded-2xl">
                                                 Screening Credits
                                             </SelectItem>
-                                            <SelectItem value="ai_call_minutes" className="text-[14px] font-medium cursor-pointer py-3 rounded-xl">
+                                            <SelectItem value="ai_call_minutes" className="text-[14px] font-medium cursor-pointer py-3 rounded-2xl">
                                                 AI Call Minutes
                                             </SelectItem>
                                         </SelectContent>
@@ -1621,7 +1622,7 @@ export function DashboardContent() {
                             {/* Amount Section for ai_call_minutes */}
                             {topUpType === "ai_call_minutes" && (
                                 <div className="space-y-2">
-                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                    <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                         Minutes to add
                                     </label>
                                     <div className="relative">
@@ -1656,19 +1657,19 @@ export function DashboardContent() {
                                                 }
                                             }}
                                             placeholder="Enter minutes"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                                            className="w-full pl-12 pr-4 py-4 bg-blue-50/50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-slate-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                                         />
                                     </div>
                                     <div className="flex items-center justify-between px-1">
                                         <div className="flex items-center gap-2">
                                             <BarChart3 size={14} className="text-blue-500" />
-                                            <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
+                                            <p className="text-[13px] text-slate-900 dark:text-gray-100 font-bold">
                                                 Total Cost: ${topUpAmount || "0.00"}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Info size={14} className="text-gray-400" />
-                                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+                                            <p className="text-[13px] text-slate-500 dark:text-gray-400 font-medium">
                                                 Cost per minute: ${orgData?.top_up_min_per_dol && parseFloat(orgData.top_up_min_per_dol) > 0 ? (1 / parseFloat(orgData.top_up_min_per_dol)).toFixed(2) : "0.00"}
                                             </p>
                                         </div>
@@ -1679,7 +1680,7 @@ export function DashboardContent() {
                             {/* Amount Section for screening_credit */}
                             {topUpType === "screening_credit" && (
                                 <div className="space-y-2">
-                                    <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                    <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                         Screening calls to add
                                     </label>
                                     <div className="relative">
@@ -1702,24 +1703,24 @@ export function DashboardContent() {
                                                 if (isNaN(count)) return;
 
                                                 setTopUpMinutes(count.toString());
-                                                const total = (count * 3.45).toFixed(2);
+                                                const total = (count * screeningRate).toFixed(2);
                                                 setTopUpAmount(total);
                                             }}
                                             placeholder="Enter credits"
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                                            className="w-full pl-12 pr-4 py-4 bg-blue-50/50 dark:bg-gray-900 border-none rounded-2xl text-[16px] font-medium text-slate-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
                                         />
                                     </div>
                                     <div className="flex items-center justify-between px-1">
                                         <div className="flex items-center gap-2">
                                             <BarChart3 size={14} className="text-blue-500" />
-                                            <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold">
+                                            <p className="text-[13px] text-slate-900 dark:text-gray-100 font-bold">
                                                 Total Cost: ${topUpAmount || "0.00"}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Info size={14} className="text-gray-400" />
-                                            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
-                                                Cost per screening call: $3.45
+                                            <p className="text-[13px] text-slate-500 dark:text-gray-400 font-medium">
+                                                Cost per screening call: ${screeningRate.toFixed(2)}
                                             </p>
                                         </div>
                                     </div>
@@ -1728,13 +1729,13 @@ export function DashboardContent() {
 
                             {/* Payment Method Selector */}
                             <div className="space-y-2">
-                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                     Payment method
                                 </label>
                                 <div className="relative">
                                     <div
                                         onClick={() => setIsPmSelectorOpen(!isPmSelectorOpen)}
-                                        className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-gray-50 dark:bg-gray-900 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-850 transition-all duration-200"
+                                        className="flex items-center justify-between p-4 border border-blue-50 dark:border-gray-800 rounded-2xl bg-blue-50/50 dark:bg-gray-900 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-850 transition-all duration-200"
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
@@ -1742,12 +1743,12 @@ export function DashboardContent() {
                                                     <span className="text-white font-bold italic text-[8px]">VISA</span>
                                                 ) : (
                                                     <div className="flex -space-x-1.5">
-                                                        <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                        <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                        <div className="w-4 h-4 rounded-full bg-rose-500 opacity-80" />
+                                                        <div className="w-4 h-4 rounded-full bg-amber-400 opacity-80" />
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                            <span className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                                 {selectedPmForTopUp ? `•••• ${selectedPmForTopUp.card?.last4}` : 'Select card'}
                                             </span>
                                         </div>
@@ -1758,7 +1759,7 @@ export function DashboardContent() {
                                     </div>
 
                                     {isPmSelectorOpen && (
-                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-2xl z-[60] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-blue-50 dark:border-gray-800 rounded-3xl shadow-2xl z-[60] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                                             <div className="max-h-[240px] overflow-y-auto p-2">
                                                 {paymentMethods.map((pm) => (
                                                     <div
@@ -1775,15 +1776,15 @@ export function DashboardContent() {
                                                                     <span className="text-white font-bold italic text-[6px]">VISA</span>
                                                                 ) : (
                                                                     <div className="flex -space-x-1">
-                                                                        <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                        <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                        <div className="w-3 h-3 rounded-full bg-rose-500 opacity-80" />
+                                                                        <div className="w-3 h-3 rounded-full bg-amber-400 opacity-80" />
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <span className="text-[14px] font-bold text-gray-900 dark:text-gray-100">•••• {pm.card?.last4}</span>
+                                                            <span className="text-[14px] font-bold text-slate-900 dark:text-gray-100">•••• {pm.card?.last4}</span>
                                                         </div>
                                                         {selectedPmForTopUp?.id === pm.id && (
-                                                            <Check size={16} className="text-gray-900 dark:text-gray-100" />
+                                                            <Check size={16} className="text-slate-900 dark:text-gray-100" />
                                                         )}
                                                     </div>
                                                 ))}
@@ -1798,7 +1799,7 @@ export function DashboardContent() {
                                         setIsTopUpOpen(false)
                                         setIsAddPaymentOpen(true)
                                     }}
-                                    className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer"
+                                    className="text-[14px] font-bold text-slate-900 dark:text-gray-100 hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer"
                                 >
                                     <span className="text-lg">+</span> Add payment method
                                 </button>
@@ -1808,14 +1809,14 @@ export function DashboardContent() {
                         <div className="flex flex-col sm:flex-row gap-3 pt-4">
                             <Button
                                 onClick={() => setIsTopUpOpen(false)}
-                                className="w-full sm:flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold px-6 py-4 rounded-2xl border-none shadow-none text-[15px] transition-colors h-auto cursor-pointer"
+                                className="w-full sm:flex-1 bg-blue-50/50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-slate-900 dark:text-gray-100 font-bold px-6 py-4 rounded-2xl border-none shadow-none text-[15px] transition-colors h-auto cursor-pointer"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 onClick={handleTopUp}
                                 disabled={isTopUpSubmitting || !topUpType || !topUpMinutes || !topUpAmount || !selectedPmForTopUp}
-                                className="w-full sm:flex-1 bg-[#1a1c1e] hover:bg-black text-white px-6 py-4 rounded-2xl text-[15px] font-bold transition-all h-auto flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none cursor-pointer disabled:cursor-not-allowed"
+                                className="w-full sm:flex-1 bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white px-6 py-4 rounded-2xl text-[15px] font-bold transition-all h-auto flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 cursor-pointer disabled:cursor-not-allowed"
                             >
                                 {isTopUpSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                 Continue
@@ -1826,15 +1827,15 @@ export function DashboardContent() {
                 {isAllCompleted && (
                     <>
                         <div>
-                            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">System Health</h1>
-                            {/* <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
+                            <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up">System Health</h1>
+                            {/* <p className="text-slate-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
                         </div>
 
                         {/* 3 cards in same row */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {isLoading ? (
                                 Array(2).fill(0).map((_, i) => (
-                                    <div key={i} className="h-32 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
+                                    <div key={i} className="h-32 rounded-2xl border border-blue-100/70 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 animate-pulse flex items-center justify-center">
                                         <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
                                     </div>
                                 ))
@@ -1843,7 +1844,7 @@ export function DashboardContent() {
                                     <div
                                         key={index}
                                         // onClick={() => router.push('/dashboard/billing')}
-                                        className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                        className="group relative overflow-hidden rounded-2xl border border-blue-100/70 dark:border-gray-700/60 glass dark:bg-gray-900/60 shadow-lg shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                                     >
                                         {/* soft gradient glow */}
                                         <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
@@ -1860,7 +1861,7 @@ export function DashboardContent() {
                                                 <div className="flex items-center gap-4">
                                                     {/* icon container */}
                                                     <div
-                                                        className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
+                                                        className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-lg shadow-blue-500/10 ring-1 ring-black/5 dark:ring-white/10`}
                                                     >
                                                         <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
                                                         <card.icon size={22} />
@@ -1872,7 +1873,7 @@ export function DashboardContent() {
                                                                 <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                                                     {card.title}
                                                                 </p>
-                                                                <div className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
+                                                                <div className="text-xl font-medium tracking-tight text-slate-900 dark:text-white">
                                                                     {card.value}
                                                                 </div>
 
@@ -1884,7 +1885,7 @@ export function DashboardContent() {
                                                                 <button
                                                                     disabled={isCheckingVerification}
                                                                     onClick={handleUpgradePlanClick}
-                                                                    className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-gray-200 dark:shadow-none hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                                                                    className="w-[100px] md:w-[110px] sm:w-[15%] bg-secondary hover:bg-black hover:text-white text-black border border-black dark:border-secondary dark:bg-primary dark:hover:border-black dark:hover:text-black px-0 py-[3px] md:px-0 md:py-[3px] rounded-2xl text-[11px] font-bold transition-all duration-300 shadow-lg shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                                                                 >
                                                                     {isCheckingVerification ? (
                                                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1920,7 +1921,7 @@ export function DashboardContent() {
                             <div className="mt-8 space-y-6">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <div>
-                                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Applicant Screening Call - Report</h1>
+                                        <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up">AI Applicant Screening Call - Report</h1>
                                     </div>
 
                                     {/* Period Filter */}
@@ -1928,7 +1929,7 @@ export function DashboardContent() {
                                         {screeningPeriod === "custom" && (
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">From:</span>
+                                                    <span className="text-xs font-medium text-slate-500 dark:text-gray-400">From:</span>
                                                     <input
                                                         type="date"
                                                         value={screeningStartDate}
@@ -1937,11 +1938,11 @@ export function DashboardContent() {
                                                             setScreeningStartDate(val);
                                                             fetchScreeningAnalytics("custom", val, screeningEndDate);
                                                         }}
-                                                        className="h-9 px-2.5 py-1 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        className="h-9 px-2.5 py-1 text-xs rounded-2xl border border-blue-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">To:</span>
+                                                    <span className="text-xs font-medium text-slate-500 dark:text-gray-400">To:</span>
                                                     <input
                                                         type="date"
                                                         value={screeningEndDate}
@@ -1950,7 +1951,7 @@ export function DashboardContent() {
                                                             setScreeningEndDate(val);
                                                             fetchScreeningAnalytics("custom", screeningStartDate, val);
                                                         }}
-                                                        className="h-9 px-2.5 py-1 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        className="h-9 px-2.5 py-1 text-xs rounded-2xl border border-blue-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     />
                                                 </div>
                                             </div>
@@ -1968,10 +1969,10 @@ export function DashboardContent() {
                                                     }
                                                 }}
                                             >
-                                                <SelectTrigger className="h-9 rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-900 dark:text-gray-100">
+                                                <SelectTrigger className="h-9 rounded-2xl border-blue-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-slate-900 dark:text-gray-100">
                                                     <SelectValue placeholder="Select Period" />
                                                 </SelectTrigger>
-                                                <SelectContent className="rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                                                <SelectContent className="rounded-2xl border-blue-100 dark:border-gray-700 bg-white dark:bg-gray-800">
                                                     <SelectItem value="today" className="text-xs">Today</SelectItem>
                                                     <SelectItem value="daily" className="text-xs">Daily</SelectItem>
                                                     <SelectItem value="weekly" className="text-xs">Weekly</SelectItem>
@@ -1989,7 +1990,7 @@ export function DashboardContent() {
                                             variant="outline"
                                             size="sm"
                                             onClick={handleResetScreeningFilter}
-                                            className="h-9 px-3 rounded-xl border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1.5 shadow-none"
+                                            className="h-9 px-3 rounded-2xl border-blue-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1.5 shadow-none"
                                         >
                                             <RotateCcw className="h-3.5 w-3.5" />
                                             <span>Reset</span>
@@ -2000,7 +2001,7 @@ export function DashboardContent() {
                                 {isScreeningLoading ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                         {[1, 2, 3, 4].map((i) => (
-                                            <div key={i} className="h-28 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 animate-pulse" />
+                                            <div key={i} className="h-28 rounded-2xl border border-blue-100 dark:border-gray-800 bg-white dark:bg-gray-900 animate-pulse" />
                                         ))}
                                     </div>
                                 ) : (
@@ -2037,7 +2038,7 @@ export function DashboardContent() {
                                         ].map((card, index) => (
                                             <div
                                                 key={index}
-                                                className="group relative overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                                className="group relative overflow-hidden rounded-2xl border border-blue-100/70 dark:border-gray-700/60 glass dark:bg-gray-900/60 shadow-lg shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                                             >
                                                 {/* soft gradient glow */}
                                                 <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
@@ -2053,7 +2054,7 @@ export function DashboardContent() {
                                                     <div className="flex items-center gap-4">
                                                         {/* icon container */}
                                                         <div
-                                                            className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-sm ring-1 ring-black/5 dark:ring-white/10`}
+                                                            className={`relative grid h-12 w-12 place-items-center rounded-2xl ${card.bgColor} ${card.iconColor} shadow-lg shadow-blue-500/10 ring-1 ring-black/5 dark:ring-white/10`}
                                                         >
                                                             <div className="absolute inset-0 rounded-2xl opacity-40 blur-lg" />
                                                             <card.icon size={22} />
@@ -2063,7 +2064,7 @@ export function DashboardContent() {
                                                             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                                                 {card.title}
                                                             </p>
-                                                            <div className="text-xl font-medium tracking-tight text-gray-900 dark:text-white">
+                                                            <div className="text-xl font-medium tracking-tight text-slate-900 dark:text-white">
                                                                 {card.value}
                                                             </div>
                                                         </div>
@@ -2092,13 +2093,13 @@ export function DashboardContent() {
                     }
                 }}>
                     <DialogContent
-                        className="max-w-[calc(100vw-32px)] sm:max-w-[480px] p-5 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6 overflow-y-auto max-h-[90vh]"
+                        className="max-w-[calc(100vw-32px)] sm:max-w-[480px] p-5 sm:p-8 dark:bg-gray-950 border-blue-50 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6 overflow-y-auto max-h-[90vh]"
                     >
                         <DialogHeader className="p-0 space-y-2 text-left">
-                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                            <DialogTitle className="text-[22px] font-bold text-slate-900 dark:text-gray-100">
                                 Add payment method
                             </DialogTitle>
-                            <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                            <p className="text-[14px] text-slate-500 dark:text-gray-400 leading-relaxed font-medium">
                                 Add your credit card details below. This card will be saved to your account and can be removed at any time.
                             </p>
                         </DialogHeader>
@@ -2106,7 +2107,7 @@ export function DashboardContent() {
                         {addPaymentError && (
                             <div
                                 ref={addPaymentErrorRef}
-                                className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-200"
+                                className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-200"
                             >
                                 <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                                 <div className="flex-1 min-w-0">
@@ -2121,18 +2122,18 @@ export function DashboardContent() {
                         <div className="space-y-6">
                             {/* Card Information */}
                             <div className="space-y-2">
-                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                     Card information <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <div className="flex items-center flex-wrap sm:flex-nowrap border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 px-4 py-3 gap-3 focus-within:ring-1 focus-within:ring-gray-300 dark:focus-within:ring-gray-700 transition-shadow">
+                                    <div className="flex items-center flex-wrap sm:flex-nowrap border border-blue-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-gray-950 px-4 py-3 gap-3 focus-within:ring-1 focus-within:ring-gray-300 dark:focus-within:ring-gray-700 transition-shadow">
                                         <div className="flex-1 min-w-[180px] flex items-center gap-3">
                                             <div className="w-6 h-4 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center shrink-0">
                                                 <CreditCard size={14} className="text-gray-400" />
                                             </div>
                                             <div ref={cardNumberContainerRef} className="flex-1" />
                                         </div>
-                                        <div className="flex gap-3 text-[15px] font-medium text-gray-400 dark:text-gray-500 whitespace-nowrap w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100 dark:border-gray-800">
+                                        <div className="flex gap-3 text-[15px] font-medium text-gray-400 dark:text-gray-500 whitespace-nowrap w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-blue-50 dark:border-gray-800">
                                             <div ref={cardExpiryContainerRef} className="w-16" />
                                             <div ref={cardCvcContainerRef} className="w-12" />
                                         </div>
@@ -2142,7 +2143,7 @@ export function DashboardContent() {
 
                             {/* Name on Card */}
                             <div className="space-y-2">
-                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                     Name on card <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -2150,30 +2151,30 @@ export function DashboardContent() {
                                     value={cardholderName}
                                     onChange={(e) => setCardholderName(e.target.value)}
                                     placeholder="e.g. John Doe"
-                                    className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    className="w-full bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 />
                             </div>
 
                             {/* Billing Address */}
                             <div className="space-y-4">
-                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                     Billing address
                                 </label>
                                 <div className="space-y-3">
                                     <div className="relative" ref={dropdownRef}>
                                         <div
                                             onClick={() => setIsCountryOpen(!isCountryOpen)}
-                                            className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                            className="w-full bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-slate-900 dark:text-gray-100 flex items-center justify-between cursor-pointer hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
                                         >
-                                            <span className={selectedCountry ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}>
+                                            <span className={selectedCountry ? "text-slate-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}>
                                                 {selectedCountry ? selectedCountry.country : "Country"} <span className="text-red-500">*</span>
                                             </span>
                                             <ChevronsUpDown size={16} className="text-gray-400" />
                                         </div>
 
                                         {isCountryOpen && (
-                                            <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-[70] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-                                                <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                                            <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl shadow-xl z-[70] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="p-3 border-b border-blue-50 dark:border-gray-800">
                                                     <div className="relative">
                                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                                         <input
@@ -2182,7 +2183,7 @@ export function DashboardContent() {
                                                             placeholder=""
                                                             value={countrySearch}
                                                             onChange={(e) => setCountrySearch(e.target.value)}
-                                                            className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow"
+                                                            className="w-full bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl py-2.5 pl-10 pr-4 text-[15px] font-medium text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow"
                                                         />
                                                     </div>
                                                 </div>
@@ -2196,13 +2197,13 @@ export function DashboardContent() {
                                                                     setIsCountryOpen(false);
                                                                     setCountrySearch("");
                                                                 }}
-                                                                className="px-6 py-3 text-[15px] font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                                                                className="px-6 py-3 text-[15px] font-medium text-slate-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
                                                             >
                                                                 {c.country}
                                                             </div>
                                                         ))
                                                     ) : (
-                                                        <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400 text-sm italic">
+                                                        <div className="px-6 py-8 text-center text-slate-500 dark:text-gray-400 text-sm italic">
                                                             No countries found
                                                         </div>
                                                     )}
@@ -2215,14 +2216,14 @@ export function DashboardContent() {
                                         value={addressLine1}
                                         onChange={(e) => setAddressLine1(e.target.value)}
                                         placeholder="Address line 1 *"
-                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                        className="w-full bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                     />
                                     <input
                                         type="text"
                                         value={addressLine2}
                                         onChange={(e) => setAddressLine2(e.target.value)}
                                         placeholder="Address line 2"
-                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                        className="w-full bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                     />
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <input
@@ -2230,14 +2231,14 @@ export function DashboardContent() {
                                             value={city}
                                             onChange={(e) => setCity(e.target.value)}
                                             placeholder="City"
-                                            className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            className="w-full bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                         />
                                         <input
                                             type="text"
                                             value={postalCode}
                                             onChange={(e) => setPostalCode(e.target.value)}
                                             placeholder="Postal code"
-                                            className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            className="w-full bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                         />
                                     </div>
                                     <input
@@ -2245,7 +2246,7 @@ export function DashboardContent() {
                                         value={stateRegion}
                                         onChange={(e) => setStateRegion(e.target.value)}
                                         placeholder="State, county, province, or region"
-                                        className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 text-[15px] font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                        className="w-full bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl py-3 px-4 text-[15px] font-medium text-slate-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-700 transition-shadow placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                     />
                                 </div>
                             </div>
@@ -2260,7 +2261,7 @@ export function DashboardContent() {
                                 </div>
                                 <span
                                     onClick={() => setIsDefault(!isDefault)}
-                                    className="text-[15px] font-medium text-gray-900 dark:text-gray-100 cursor-pointer select-none"
+                                    className="text-[15px] font-medium text-slate-900 dark:text-gray-100 cursor-pointer select-none"
                                 >
                                     Set as default payment method
                                 </span>
@@ -2270,7 +2271,7 @@ export function DashboardContent() {
                         <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
                             <Button
                                 onClick={() => setIsAddPaymentOpen(false)}
-                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
+                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-slate-900 font-bold px-6 py-2.5 rounded-2xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
                                 disabled={isSubmitting}
                             >
                                 Cancel
@@ -2278,7 +2279,7 @@ export function DashboardContent() {
                             <Button
                                 onClick={handleAddPaymentMethod}
                                 disabled={isSubmitting}
-                                className="w-full sm:w-auto bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-2xl text-[15px] font-bold transition-colors h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
                             >
                                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                 Add payment method
@@ -2288,7 +2289,7 @@ export function DashboardContent() {
                 </Dialog>
 
                 <AlertDialog open={!!errorDetail} onOpenChange={() => setErrorDetail(null)}>
-                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-blue-50 dark:border-gray-800">
                         <AlertDialogHeader>
                             <div className="flex justify-center items-center gap-3 mb-2">
                                 <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
@@ -2298,7 +2299,7 @@ export function DashboardContent() {
                                     Error
                                 </AlertDialogTitle>
                             </div>
-                            <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">
+                            <AlertDialogDescription className="text-sm text-slate-500 dark:text-gray-400 font-medium pt-2 text-center">
                                 {errorDetail}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
@@ -2310,7 +2311,7 @@ export function DashboardContent() {
                                     }
                                     setErrorDetail(null);
                                 }}
-                                className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
+                                className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-2xl text-sm font-bold transition-colors h-auto border-none"
                             >
                                 Continue
                             </AlertDialogAction>
@@ -2319,7 +2320,7 @@ export function DashboardContent() {
                 </AlertDialog>
 
                 <AlertDialog open={!!successDetail} onOpenChange={() => setSuccessDetail(null)}>
-                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-blue-50 dark:border-gray-800">
                         <AlertDialogHeader>
                             <div className="flex justify-center items-center gap-3 mb-2">
                                 <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
@@ -2329,14 +2330,14 @@ export function DashboardContent() {
                                     Success
                                 </AlertDialogTitle>
                             </div>
-                            <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">
+                            <AlertDialogDescription className="text-sm text-slate-500 dark:text-gray-400 font-medium pt-2 text-center">
                                 {successDetail}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="pt-4">
                             <AlertDialogAction
                                 onClick={() => setSuccessDetail(null)}
-                                className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
+                                className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-2xl text-sm font-bold transition-colors h-auto border-none"
                             >
                                 Continue
                             </AlertDialogAction>
@@ -2345,12 +2346,12 @@ export function DashboardContent() {
                 </AlertDialog>
 
                 <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-                    <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
+                    <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-blue-50 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
                         <DialogHeader className="p-0 space-y-2 text-left">
-                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+                            <DialogTitle className="text-[22px] font-bold text-slate-900 dark:text-gray-100">
                                 Delete payment method?
                             </DialogTitle>
-                            <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
+                            <p className="text-[14px] text-slate-500 dark:text-gray-400 leading-relaxed font-medium">
                                 Are you sure you want to delete this payment method? This action cannot be undone.
                             </p>
                         </DialogHeader>
@@ -2358,7 +2359,7 @@ export function DashboardContent() {
                         <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
                             <Button
                                 onClick={() => setIsDeleteOpen(false)}
-                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
+                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-slate-900 font-bold px-6 py-2.5 rounded-2xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
                                 disabled={isDeleting}
                             >
                                 Cancel
@@ -2366,7 +2367,7 @@ export function DashboardContent() {
                             <Button
                                 onClick={handleDeletePaymentMethod}
                                 disabled={isDeleting}
-                                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-2xl text-[15px] font-bold transition-colors h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
                             >
                                 {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
                                 Continue
@@ -2376,39 +2377,39 @@ export function DashboardContent() {
                 </Dialog>
 
                 <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
-                    <DialogContent className="max-w-md w-full p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl">
+                    <DialogContent className="max-w-md w-full p-8 dark:bg-gray-950 border-blue-50 dark:border-gray-800 rounded-3xl">
                         {verificationBlockedStep === 'verification_pending' ? (
                             <div className="text-center space-y-6">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-violet-500/40 shadow-lg mb-2 text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
                                     <Clock className="w-8 h-8 animate-pulse" />
                                 </div>
                                 <div className="space-y-2">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verification Pending</h2>
-                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-gray-100">Verification Pending</h2>
+                                    <p className="text-[15px] font-medium text-slate-500 dark:text-gray-400 leading-relaxed">
                                         Your Business data is still waiting for verification. Please come back later.
                                     </p>
                                 </div>
                             </div>
                         ) : verificationBlockedStep === 'platform_activation_required' ? (
                             <div className="text-center space-y-6">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-violet-500/40 shadow-lg mb-2 text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
                                     <Clock className="w-8 h-8 animate-pulse" />
                                 </div>
                                 <div className="space-y-2">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Platform Activation Required</h2>
-                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-gray-100">Platform Activation Required</h2>
+                                    <p className="text-[15px] font-medium text-slate-500 dark:text-gray-400 leading-relaxed">
                                         To access AI Phone Numbers, please complete the Platform Activation setup fee payment first.
                                     </p>
                                 </div>
                             </div>
                         ) : verificationBlockedStep === 'phone_number_required' ? (
                             <div className="text-center space-y-6">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-2">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-violet-500/40 shadow-lg mb-2 text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
                                     <Phone className="w-8 h-8 animate-pulse" />
                                 </div>
                                 <div className="space-y-2">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Phone Number Required</h2>
-                                    <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-gray-100">Phone Number Required</h2>
+                                    <p className="text-[15px] font-medium text-slate-500 dark:text-gray-400 leading-relaxed">
                                         To configure billing, please purchase an Phone Number first.
                                     </p>
                                 </div>
@@ -2421,9 +2422,9 @@ export function DashboardContent() {
                     setIsSubscriptionModalOpen(open);
                     if (open) setModalPlanType("screening");
                 }}>
-                    <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
+                    <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-blue-50 dark:border-gray-800 rounded-3xl gap-8">
                         <DialogHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pr-8 text-left">
-                            <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-gray-100">
                                 Create Subscription Plan
                             </DialogTitle>
                             
@@ -2432,8 +2433,8 @@ export function DashboardContent() {
                                         type="button"
                                         onClick={() => setModalPlanType("screening")}
                                         className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "screening"
-                                                ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
-                                                : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                                ? "bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-lg shadow-blue-500/10"
+                                                : "text-slate-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
                                             }`}
                                     >
                                         Screening
@@ -2442,8 +2443,8 @@ export function DashboardContent() {
                                         type="button"
                                         onClick={() => setModalPlanType("calls")}
                                         className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "calls"
-                                                ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
-                                                : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                                ? "bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-lg shadow-blue-500/10"
+                                                : "text-slate-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
                                             }`}
                                     >
                                         Minutes
@@ -2455,23 +2456,23 @@ export function DashboardContent() {
                         <div className="space-y-8">
                             {modalPlanType === "screening" ? (
                                 <div className="flex flex-col items-center gap-2 text-center">
-                                    <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                                    <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-gray-100">
                                         AI Applicant Call Plans
                                     </h2>
                                     <div className="w-14 h-1 bg-gray-900 dark:bg-gray-100 rounded-full mx-auto my-1" />
                                     <p className="m-0 text-base sm:text-[17px] text-gray-600 dark:text-gray-400 font-medium max-w-xl">
                                         No Call. No Charge.
                                     </p>
-                                    <p className="m-0 text-[13px] sm:text-[14px] text-gray-500 dark:text-gray-400 font-normal">
+                                    <p className="m-0 text-[13px] sm:text-[14px] text-slate-500 dark:text-gray-400 font-normal">
                                         WhatsApp + SMS document requests &middot; Auto ATS sync &middot; Recruiter alerts
                                     </p>
-                                    <div className="inline-block bg-black text-white dark:bg-white dark:text-gray-900 text-[13px] font-semibold px-5 py-1.5 rounded-full mt-1">
+                                    <div className="inline-block bg-gradient-to-r from-blue-600 to-violet-500 text-white text-[13px] font-semibold px-5 py-1.5 rounded-full mt-1">
                                         New clients: your first 100 AI screening calls are free
                                     </div>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center gap-2 text-center">
-                                    <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                                    <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-gray-100">
                                         AI Call Plans
                                     </h2>
                                     <div className="w-14 h-1 bg-gray-900 dark:bg-gray-100 rounded-full mx-auto my-1" />
@@ -2485,7 +2486,7 @@ export function DashboardContent() {
                             {isFetchingPlans ? (
                                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                                     <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-                                    <p className="text-gray-500 font-medium">Fetching plans...</p>
+                                    <p className="text-slate-500 font-medium">Fetching plans...</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto">
@@ -2506,14 +2507,14 @@ export function DashboardContent() {
                                                 }}
                                                 className={[
                                                     "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
-                                                    isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
+                                                    isSelected ? "shadow-lg ring-2 ring-blue-500 border-blue-500" : "border-blue-100 dark:border-gray-800 shadow-lg shadow-blue-500/10",
                                                     !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
                                                 ].join(" ")}
 
                                             >
                                                 {tier.popular && !isSelected && (
                                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black text-white dark:bg-white dark:text-gray-900">
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-600 to-violet-500 text-white">
                                                             Most Popular
                                                         </span>
                                                     </div>
@@ -2526,15 +2527,15 @@ export function DashboardContent() {
                                                     ].join(" ")}>
                                                         <tier.icon className={[
                                                             "w-5 h-5 transition-colors",
-                                                            isSelected ? "text-black dark:text-white" : "text-gray-500",
+                                                            isSelected ? "text-black dark:text-white" : "text-slate-500",
                                                         ].join(" ")} />
                                                     </div>
-                                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
+                                                    <h3 className="text-xl font-semibold text-slate-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
                                                 </div>
 
                                                 <div className="mb-2">
-                                                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tier.price}</span>
-                                                    <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
+                                                    <span className="text-2xl font-bold text-slate-900 dark:text-gray-100">{tier.price}</span>
+                                                    <span className="text-slate-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
                                                 </div>
 
                                                 {modalPlanType === "screening" ? (
@@ -2542,10 +2543,10 @@ export function DashboardContent() {
                                                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                                                             {(tier as any).screeningsNote || (tier as any).minimumMinutes || (tier as any).minutes}
                                                         </p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                                        <p className="text-xs text-slate-500 dark:text-gray-400 mb-4">
                                                             {(tier as any).topUpNote}
                                                         </p>
-                                                        <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                                                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
                                                             BEST FOR
                                                         </p>
                                                         <p className="text-sm text-gray-700 dark:text-gray-300 mb-6 flex-grow leading-relaxed">
@@ -2554,10 +2555,10 @@ export function DashboardContent() {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                                                        <p className="text-sm font-semibold text-slate-500 dark:text-gray-400 mb-3">
                                                             {(tier as any).minimumMinutes || (tier as any).minutes}
                                                         </p>
-                                                        <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                                                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-2">
                                                             INCLUDES
                                                         </p>
                                                         <ul className="space-y-2.5 mb-4">
@@ -2568,7 +2569,7 @@ export function DashboardContent() {
                                                                 </li>
                                                             ))}
                                                         </ul>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 flex-grow leading-relaxed">
+                                                        <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 flex-grow leading-relaxed">
                                                             {(tier as any).audience || tier.description}
                                                         </p>
                                                     </>
@@ -2581,7 +2582,7 @@ export function DashboardContent() {
                                                             handleContactSales();
                                                         }}
                                                         disabled={isContactSalesSubmitting}
-                                                        className="w-full bg-[#1a1c1e] hover:bg-black text-white py-3 rounded-xl font-bold transition-all dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2"
+                                                        className="w-full bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white py-3 rounded-2xl font-bold transition-all h-auto flex items-center justify-center gap-2"
                                                     >
                                                         {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                                         {tier.cta}
@@ -2595,7 +2596,7 @@ export function DashboardContent() {
                             )}
 
                             {modalPlanType === "screening" ? (
-                                <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-normal flex-wrap text-center">
+                                <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-500 dark:text-gray-400 font-normal flex-wrap text-center">
                                     <span>1 credit covers a call of up to 2 minutes</span>
                                     <span>•</span>
                                     <span>Automatic top-ups and plan upgrades</span>
@@ -2603,7 +2604,7 @@ export function DashboardContent() {
                                     <span>AI number $10/month, or connect a compatible number</span>
                                 </p>
                             ) : (
-                                <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium flex-wrap text-center">
+                                <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-500 dark:text-gray-400 font-medium flex-wrap text-center">
                                     <span>Prices shown exclude VAT</span>
                                     <span>•</span>
                                     <span>$400 setup fee applies to Starter, Growth &amp; Pro — returned as free minutes after 12 months</span>
@@ -2614,14 +2615,14 @@ export function DashboardContent() {
 
                             {selectedPlan === 'Enterprise' ? (
                                 <div ref={enterpriseSectionRef} className="flex flex-col items-center justify-center space-y-4 pt-6">
-                                    <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm font-medium">
+                                    <p className="text-slate-500 dark:text-gray-400 text-center max-w-sm font-medium">
                                         For our custom Enterprise solutions, please contact our sales team to discuss your specific requirements.
                                     </p>
                                     <div className='flex flex-row gap-3'>
                                         <Button
                                             onClick={handleContactSales}
                                             disabled={isContactSalesSubmitting}
-                                            className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                            className="bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white px-8 py-2.5 rounded-2xl text-[15px] font-bold transition-colors h-auto flex items-center gap-2"
                                         >
                                             {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                             Contact Sales
@@ -2629,7 +2630,7 @@ export function DashboardContent() {
                                         <Button
                                             variant="ghost"
                                             onClick={() => setIsSubscriptionModalOpen(false)}
-                                            className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                            className="bg-gray-100 hover:bg-gray-200 text-slate-900 font-bold px-6 py-2.5 rounded-2xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
                                         >
                                             Cancel
                                         </Button>
@@ -2638,13 +2639,13 @@ export function DashboardContent() {
                             ) : (
                                 <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                        <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                             Payment method
                                         </label>
                                         <div className="relative">
                                             <div
                                                 onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
-                                                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                                className="flex items-center justify-between p-4 border border-blue-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
@@ -2652,12 +2653,12 @@ export function DashboardContent() {
                                                             <span className="text-white font-bold italic text-[8px]">VISA</span>
                                                         ) : (
                                                             <div className="flex -space-x-1.5">
-                                                                <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                                <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                                <div className="w-4 h-4 rounded-full bg-rose-500 opacity-80" />
+                                                                <div className="w-4 h-4 rounded-full bg-amber-400 opacity-80" />
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                    <span className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                                         {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
                                                     </span>
                                                 </div>
@@ -2668,7 +2669,7 @@ export function DashboardContent() {
                                             </div>
 
                                             {isPmSelectorForSubOpen && (
-                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                                                     <div className="max-h-[200px] overflow-y-auto">
                                                         {paymentMethods.map((pm) => (
                                                             <div
@@ -2685,15 +2686,15 @@ export function DashboardContent() {
                                                                             <span className="text-white font-bold italic text-[6px]">VISA</span>
                                                                         ) : (
                                                                             <div className="flex -space-x-1">
-                                                                                <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                                <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                                <div className="w-3 h-3 rounded-full bg-rose-500 opacity-80" />
+                                                                                <div className="w-3 h-3 rounded-full bg-amber-400 opacity-80" />
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                                    <span className="text-[14px] font-medium text-slate-900 dark:text-gray-100">•••• {pm.card.last4}</span>
                                                                 </div>
                                                                 {selectedPmForSubscription?.id === pm.id && (
-                                                                    <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                                    <Check size={14} className="text-slate-900 dark:text-gray-100" />
                                                                 )}
                                                             </div>
                                                         ))}
@@ -2707,7 +2708,7 @@ export function DashboardContent() {
                                                     setIsSubscriptionModalOpen(false)
                                                     setIsAddPaymentOpen(true)
                                                 }}
-                                                className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                                className="text-[14px] font-bold text-slate-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
                                             >
                                                 + Add payment method
                                             </button>
@@ -2717,14 +2718,14 @@ export function DashboardContent() {
                                     <div className="flex justify-end gap-3 pt-6">
                                         <Button
                                             onClick={() => setIsSubscriptionModalOpen(false)}
-                                            className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                            className="bg-gray-100 hover:bg-gray-200 text-slate-900 font-bold px-6 py-2.5 rounded-2xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
                                         >
                                             Cancel
                                         </Button>
                                         <Button
                                             onClick={handleCreateSubscription}
                                             disabled={isSubscriptionSubmitting || !selectedPlan || !selectedPmForSubscription}
-                                            className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                            className="bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white px-8 py-2.5 rounded-2xl text-[15px] font-bold transition-colors h-auto flex items-center gap-2"
                                         >
                                             {isSubscriptionSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                             Create Subscription Plan
@@ -2740,9 +2741,9 @@ export function DashboardContent() {
                     setIsUpdateSubscriptionModalOpen(open);
                     if (open) setModalPlanType("screening");
                 }}>
-                    <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-3xl gap-8">
+                    <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto p-8 dark:bg-gray-950 border-blue-50 dark:border-gray-800 rounded-3xl gap-8">
                         <DialogHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pr-8 text-left">
-                            <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-gray-100">
                                 Update Subscription Plan
                             </DialogTitle>
                             
@@ -2751,8 +2752,8 @@ export function DashboardContent() {
                                         type="button"
                                         onClick={() => setModalPlanType("screening")}
                                         className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "screening"
-                                                ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
-                                                : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                                ? "bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-lg shadow-blue-500/10"
+                                                : "text-slate-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
                                             }`}
                                     >
                                         Screening
@@ -2761,8 +2762,8 @@ export function DashboardContent() {
                                         type="button"
                                         onClick={() => setModalPlanType("calls")}
                                         className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all ${modalPlanType === "calls"
-                                                ? "bg-black text-white dark:bg-white dark:text-gray-950 shadow-sm"
-                                                : "text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
+                                                ? "bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-lg shadow-blue-500/10"
+                                                : "text-slate-900 dark:text-gray-100 hover:text-black dark:hover:text-white bg-transparent"
                                             }`}
                                     >
                                         Minutes
@@ -2775,29 +2776,29 @@ export function DashboardContent() {
                             {isFetchingSubscription || isFetchingPlans ? (
                                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                                     <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-                                    <p className="text-gray-500 font-medium">Fetching details...</p>
+                                    <p className="text-slate-500 font-medium">Fetching details...</p>
                                 </div>
                             ) : (
                                 <>
                                     {modalPlanType === "screening" ? (
                                         <div className="flex flex-col items-center gap-2 text-center">
-                                            <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                                            <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-gray-100">
                                                 AI Applicant Call Plans
                                             </h2>
                                             <div className="w-14 h-1 bg-gray-900 dark:bg-gray-100 rounded-full mx-auto my-1" />
                                             <p className="m-0 text-base sm:text-[17px] text-gray-600 dark:text-gray-400 font-medium max-w-xl">
                                                 No Call. No Charge.
                                             </p>
-                                            <p className="m-0 text-[13px] sm:text-[14px] text-gray-500 dark:text-gray-400 font-normal">
+                                            <p className="m-0 text-[13px] sm:text-[14px] text-slate-500 dark:text-gray-400 font-normal">
                                                 WhatsApp + SMS document requests &middot; Auto ATS sync &middot; Recruiter alerts
                                             </p>
-                                            <div className="inline-block bg-black text-white dark:bg-white dark:text-gray-900 text-[13px] font-semibold px-5 py-1.5 rounded-full mt-1">
+                                            <div className="inline-block bg-gradient-to-r from-blue-600 to-violet-500 text-white text-[13px] font-semibold px-5 py-1.5 rounded-full mt-1">
                                                 New clients: your first 100 AI screening calls are free
                                             </div>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 text-center">
-                                            <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+                                            <h2 className="m-0 text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-gray-100">
                                                 AI Call Plans
                                             </h2>
                                             <div className="w-14 h-1 bg-gray-900 dark:bg-gray-100 rounded-full mx-auto my-1" />
@@ -2825,13 +2826,13 @@ export function DashboardContent() {
                                                     }}
                                                     className={[
                                                         "relative bg-white dark:bg-gray-900 rounded-2xl p-6 lg:p-8 border flex flex-col transition-all duration-200 cursor-pointer",
-                                                        isSelected ? "shadow-lg ring-2 ring-black dark:ring-white border-black dark:border-white" : "border-gray-200 dark:border-gray-800 shadow-sm",
+                                                        isSelected ? "shadow-lg ring-2 ring-blue-500 border-blue-500" : "border-blue-100 dark:border-gray-800 shadow-lg shadow-blue-500/10",
                                                         !isSelected && isHighlighted && !tier.disabled ? "border-gray-400 dark:border-gray-600" : ""
                                                     ].join(" ")}
                                                 >
                                                     {tier.popular && !isSelected && (
                                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black text-white dark:bg-white dark:text-gray-900">
+                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-600 to-violet-500 text-white">
                                                                 Most Popular
                                                             </span>
                                                         </div>
@@ -2844,15 +2845,15 @@ export function DashboardContent() {
                                                         ].join(" ")}>
                                                             <tier.icon className={[
                                                                 "w-5 h-5 transition-colors",
-                                                                isSelected ? "text-black dark:text-white" : "text-gray-500",
+                                                                isSelected ? "text-black dark:text-white" : "text-slate-500",
                                                             ].join(" ")} />
                                                         </div>
-                                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
+                                                        <h3 className="text-xl font-semibold text-slate-900 dark:text-gray-100">{(tier as any).displayName || tier.name}</h3>
                                                     </div>
 
                                                     <div className="mb-2">
-                                                        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tier.price}</span>
-                                                        <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
+                                                        <span className="text-2xl font-bold text-slate-900 dark:text-gray-100">{tier.price}</span>
+                                                        <span className="text-slate-500 dark:text-gray-400 text-sm ml-1">{tier.unit}</span>
                                                     </div>
 
                                                     {modalPlanType === "screening" ? (
@@ -2860,10 +2861,10 @@ export function DashboardContent() {
                                                             <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                                                                 {(tier as any).screeningsNote || (tier as any).minimumMinutes || (tier as any).minutes}
                                                             </p>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                                            <p className="text-xs text-slate-500 dark:text-gray-400 mb-4">
                                                                 {(tier as any).topUpNote}
                                                             </p>
-                                                            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+                                                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
                                                                 BEST FOR
                                                             </p>
                                                             <p className="text-sm text-gray-700 dark:text-gray-300 mb-6 flex-grow leading-relaxed">
@@ -2872,10 +2873,10 @@ export function DashboardContent() {
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
+                                                            <p className="text-sm font-semibold text-slate-500 dark:text-gray-400 mb-3">
                                                                 {(tier as any).minimumMinutes || (tier as any).minutes}
                                                             </p>
-                                                            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                                                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-2">
                                                                 INCLUDES
                                                             </p>
                                                             <ul className="space-y-2.5 mb-4">
@@ -2886,7 +2887,7 @@ export function DashboardContent() {
                                                                     </li>
                                                                 ))}
                                                             </ul>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 flex-grow leading-relaxed">
+                                                            <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 flex-grow leading-relaxed">
                                                                 {(tier as any).audience || tier.description}
                                                             </p>
                                                         </>
@@ -2899,7 +2900,7 @@ export function DashboardContent() {
                                                                 handleContactSales();
                                                             }}
                                                             disabled={isContactSalesSubmitting}
-                                                            className="w-full bg-[#1a1c1e] hover:bg-black text-white py-3 rounded-xl font-bold transition-all dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2"
+                                                            className="w-full bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white py-3 rounded-2xl font-bold transition-all h-auto flex items-center justify-center gap-2"
                                                         >
                                                             {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                                             {tier.cta}
@@ -2911,7 +2912,7 @@ export function DashboardContent() {
                                     </div>
 
                                     {modalPlanType === "screening" ? (
-                                        <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-normal flex-wrap text-center">
+                                        <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-500 dark:text-gray-400 font-normal flex-wrap text-center">
                                             <span>1 credit covers a call of up to 2 minutes</span>
                                             <span>•</span>
                                             <span>Automatic top-ups and plan upgrades</span>
@@ -2919,7 +2920,7 @@ export function DashboardContent() {
                                             <span>AI number $10/month, or connect a compatible number</span>
                                         </p>
                                     ) : (
-                                        <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium flex-wrap text-center">
+                                        <p className="flex items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-500 dark:text-gray-400 font-medium flex-wrap text-center">
                                             <span>Prices shown exclude VAT</span>
                                             <span>•</span>
                                             <span>$400 setup fee applies to Starter, Growth &amp; Pro — returned as free minutes after 12 months</span>
@@ -2930,14 +2931,14 @@ export function DashboardContent() {
 
                                     {selectedPlan === 'Enterprise' ? (
                                         <div ref={enterpriseSectionUpdateRef} className="flex flex-col items-center justify-center space-y-4 pt-6">
-                                            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm font-medium">
+                                            <p className="text-slate-500 dark:text-gray-400 text-center max-w-sm font-medium">
                                                 For our custom Enterprise solutions, please contact our sales team to discuss your specific requirements.
                                             </p>
                                             <div className='flex flex-row gap-3'>
                                                 <Button
                                                     onClick={handleContactSales}
                                                     disabled={isContactSalesSubmitting}
-                                                    className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                                    className="bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white px-8 py-2.5 rounded-2xl text-[15px] font-bold transition-colors h-auto flex items-center gap-2"
                                                 >
                                                     {isContactSalesSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                                     Contact Sales
@@ -2945,7 +2946,7 @@ export function DashboardContent() {
                                                 <Button
                                                     variant="ghost"
                                                     onClick={() => setIsUpdateSubscriptionModalOpen(false)}
-                                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                                    className="bg-gray-100 hover:bg-gray-200 text-slate-900 font-bold px-6 py-2.5 rounded-2xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
                                                 >
                                                     Cancel
                                                 </Button>
@@ -2954,13 +2955,13 @@ export function DashboardContent() {
                                     ) : (
                                         <div ref={paymentSectionRef} className="max-w-md mx-auto w-full space-y-4">
                                             <div className="space-y-2">
-                                                <label className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                <label className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                                     Payment method
                                                 </label>
                                                 <div className="relative">
                                                     <div
                                                         onClick={() => setIsPmSelectorForSubOpen(!isPmSelectorForSubOpen)}
-                                                        className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+                                                        className="flex items-center justify-between p-4 border border-blue-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-gray-950 cursor-pointer group hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-10 h-6 bg-black dark:bg-gray-800 rounded flex items-center justify-center relative overflow-hidden">
@@ -2968,12 +2969,12 @@ export function DashboardContent() {
                                                                     <span className="text-white font-bold italic text-[8px]">VISA</span>
                                                                 ) : (
                                                                     <div className="flex -space-x-1.5">
-                                                                        <div className="w-4 h-4 rounded-full bg-red-600 opacity-80" />
-                                                                        <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80" />
+                                                                        <div className="w-4 h-4 rounded-full bg-rose-500 opacity-80" />
+                                                                        <div className="w-4 h-4 rounded-full bg-amber-400 opacity-80" />
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                                                            <span className="text-[15px] font-bold text-slate-900 dark:text-gray-100">
                                                                 {selectedPmForSubscription ? `•••• ${selectedPmForSubscription.card.last4}` : 'Select card'}
                                                             </span>
                                                         </div>
@@ -2984,7 +2985,7 @@ export function DashboardContent() {
                                                     </div>
 
                                                     {isPmSelectorForSubOpen && (
-                                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                                        <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white dark:bg-gray-950 border border-blue-100 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
                                                             <div className="max-h-[200px] overflow-y-auto">
                                                                 {paymentMethods.map((pm) => (
                                                                     <div
@@ -3001,15 +3002,15 @@ export function DashboardContent() {
                                                                                     <span className="text-white font-bold italic text-[6px]">VISA</span>
                                                                                 ) : (
                                                                                     <div className="flex -space-x-1">
-                                                                                        <div className="w-3 h-3 rounded-full bg-red-600 opacity-80" />
-                                                                                        <div className="w-3 h-3 rounded-full bg-yellow-500 opacity-80" />
+                                                                                        <div className="w-3 h-3 rounded-full bg-rose-500 opacity-80" />
+                                                                                        <div className="w-3 h-3 rounded-full bg-amber-400 opacity-80" />
                                                                                     </div>
                                                                                 )}
                                                                             </div>
-                                                                            <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">•••• {pm.card.last4}</span>
+                                                                            <span className="text-[14px] font-medium text-slate-900 dark:text-gray-100">•••• {pm.card.last4}</span>
                                                                         </div>
                                                                         {selectedPmForSubscription?.id === pm.id && (
-                                                                            <Check size={14} className="text-gray-900 dark:text-gray-100" />
+                                                                            <Check size={14} className="text-slate-900 dark:text-gray-100" />
                                                                         )}
                                                                     </div>
                                                                 ))}
@@ -3023,7 +3024,7 @@ export function DashboardContent() {
                                                             setIsUpdateSubscriptionModalOpen(false)
                                                             setIsAddPaymentOpen(true)
                                                         }}
-                                                        className="text-[14px] font-bold text-gray-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
+                                                        className="text-[14px] font-bold text-slate-900 dark:text-gray-100 hover:text-black dark:hover:text-white transition-colors"
                                                     >
                                                         + Add payment method
                                                     </button>
@@ -3033,14 +3034,14 @@ export function DashboardContent() {
                                             <div className="flex justify-end gap-3 pt-6">
                                                 <Button
                                                     onClick={() => setIsUpdateSubscriptionModalOpen(false)}
-                                                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
+                                                    className="bg-gray-100 hover:bg-gray-200 text-slate-900 font-bold px-6 py-2.5 rounded-2xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto"
                                                 >
                                                     Cancel
                                                 </Button>
                                                 <Button
                                                     onClick={handleUpdateSubscription}
                                                     disabled={isUpdateSubmitting || !selectedPlan || !selectedPmForSubscription}
-                                                    className="bg-[#1a1c1e] hover:bg-black text-white px-8 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center gap-2"
+                                                    className="bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white px-8 py-2.5 rounded-2xl text-[15px] font-bold transition-colors h-auto flex items-center gap-2"
                                                 >
                                                     {isUpdateSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                                                     Update Subscription Plan
@@ -3055,12 +3056,12 @@ export function DashboardContent() {
                 </Dialog>
 
                 <Dialog open={isCancelPlanModalOpen} onOpenChange={setIsCancelPlanModalOpen}>
-                    <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-gray-100 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
+                    <DialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 sm:p-8 dark:bg-gray-950 border-blue-50 dark:border-gray-800 rounded-2xl sm:rounded-3xl gap-6">
                         <DialogHeader className="p-0 space-y-2 text-left">
-                            <DialogTitle className="text-[22px] font-bold text-gray-900 dark:text-gray-100 text-center">
+                            <DialogTitle className="text-[22px] font-bold text-slate-900 dark:text-gray-100 text-center">
                                 Cancel plan confirmation
                             </DialogTitle>
-                            <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium text-center pt-2">
+                            <p className="text-[14px] text-slate-500 dark:text-gray-400 leading-relaxed font-medium text-center pt-2">
                                 Are you sure you want to cancel your current subscription plan?
                             </p>
                         </DialogHeader>
@@ -3068,7 +3069,7 @@ export function DashboardContent() {
                         <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
                             <Button
                                 onClick={() => setIsCancelPlanModalOpen(false)}
-                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold px-6 py-2.5 rounded-xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
+                                className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-slate-900 font-bold px-6 py-2.5 rounded-2xl border-none shadow-none text-[15px] transition-colors dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 h-auto order-2 sm:order-1"
                                 disabled={isCancellingPlan}
                             >
                                 Cancel
@@ -3076,7 +3077,7 @@ export function DashboardContent() {
                             <Button
                                 onClick={handleCancelPlan}
                                 disabled={isCancellingPlan}
-                                className="w-full sm:w-auto bg-[#1a1c1e] hover:bg-black text-white px-6 py-2.5 rounded-xl text-[15px] font-bold transition-colors dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
+                                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-violet-500 hover:from-blue-500 hover:to-violet-400 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-2xl text-[15px] font-bold transition-colors h-auto flex items-center justify-center gap-2 order-1 sm:order-2"
                             >
                                 {isCancellingPlan && <Loader2 className="w-4 h-4 animate-spin" />}
                                 Continue
@@ -3086,7 +3087,7 @@ export function DashboardContent() {
                 </Dialog>
 
                 <AlertDialog open={!!successDetail} onOpenChange={() => setSuccessDetail(null)}>
-                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-gray-100 dark:border-gray-800">
+                    <AlertDialogContent className="max-w-[calc(100vw-32px)] sm:max-w-[400px] p-6 rounded-2xl dark:bg-gray-950 border-blue-50 dark:border-gray-800">
                         <AlertDialogHeader>
                             <div className="flex justify-center items-center gap-3 mb-2">
                                 <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
@@ -3096,14 +3097,14 @@ export function DashboardContent() {
                                     Success
                                 </AlertDialogTitle>
                             </div>
-                            <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">
+                            <AlertDialogDescription className="text-sm text-slate-500 dark:text-gray-400 font-medium pt-2 text-center">
                                 {successDetail}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="pt-4">
                             <AlertDialogAction
                                 onClick={() => setSuccessDetail(null)}
-                                className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors h-auto border-none"
+                                className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-2xl text-sm font-bold transition-colors h-auto border-none"
                             >
                                 Continue
                             </AlertDialogAction>
@@ -3112,12 +3113,12 @@ export function DashboardContent() {
                 </AlertDialog>
 
                 {/* Placeholder for more content to make it look full */}
-                {/* <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-8 flex flex-col items-center justify-center min-h-[300px]">
-                    <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center mb-4">
+                {/* <div className="bg-white dark:bg-gray-800 rounded-2xl border border-blue-50 dark:border-gray-700 shadow-lg shadow-blue-500/10 p-8 flex flex-col items-center justify-center min-h-[300px]">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-violet-500/40 shadow-lg flex items-center justify-center mb-4 text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
                         <BarChart3 className="text-gray-400 dark:text-gray-500" size={32} />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Analysis coming soon</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mt-2">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">Analysis coming soon</h3>
+                    <p className="text-slate-500 dark:text-gray-400 text-center max-w-sm mt-2">
                         We're processing your data to provide deep insights into your call performance and user engagement.
                     </p>
                 </div> */}

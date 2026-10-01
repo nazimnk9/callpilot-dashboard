@@ -151,7 +151,7 @@ export function NumberListPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg font-semibold text-foreground tracking-tight">My Phone Numbers</h1>
+                        <h1 className="text-lg font-bold tracking-tight gradient-text">My Phone Numbers</h1>
                         <p className="text-muted-foreground mt-2">Manage your purchased phone numbers</p>
                     </div>
                     <Button
@@ -173,7 +173,7 @@ export function NumberListPage() {
 
                 {/* Phone Numbers List */}
                 {phoneNumbers.length === 0 && !isLoading ? (
-                    <Card className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 shadow-sm rounded-2xl overflow-hidden">
+                    <Card className="glass rounded-2xl overflow-hidden animate-scale-in">
                         <CardContent className="pt-12 pb-12 text-center">
                             <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-full w-fit mx-auto mb-4">
                                 <Phone className="w-8 h-8 text-muted-foreground opacity-50" />
@@ -187,12 +187,12 @@ export function NumberListPage() {
                         {phoneNumbers.map((number) => (
                             <Card
                                 key={number.id}
-                                className="bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 hover:shadow-xl hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 shadow-sm rounded-2xl overflow-hidden group"
+                                className="glass card-lift hover:border-indigo-300/60 rounded-2xl overflow-hidden group animate-fade-up"
                             >
-                                <CardHeader className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4 md:p-6 group-hover:bg-blue-50/30 dark:group-hover:bg-blue-900/10 transition-colors">
+                                <CardHeader className="bg-gradient-to-r from-indigo-50/70 via-transparent to-cyan-50/50 dark:from-indigo-500/10 dark:to-cyan-500/5 border-b border-indigo-100/70 dark:border-white/10 p-4 md:p-6 transition-colors">
                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3 md:gap-4 flex-1 w-full sm:w-auto">
-                                            <div className="p-2.5 md:p-3 bg-black dark:bg-gray-700 rounded-xl shrink-0">
+                                            <div className="p-2.5 md:p-3 gradient-bg rounded-xl shrink-0 shadow-lg shadow-indigo-500/30 group-hover:animate-float">
                                                 <Phone className="w-5 h-5 md:w-6 md:h-6 text-white dark:text-gray-100" />
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -231,7 +231,7 @@ export function NumberListPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                                         {/* Capabilities Section */}
                                         <div className="space-y-3 md:space-y-4">
-                                            <p className="text-[10px] md:text-[11px] font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
+                                            <p className="text-[10px] md:text-[11px] font-extrabold text-indigo-400 dark:text-indigo-300 uppercase tracking-[0.2em]">
                                                 Capabilities
                                             </p>
                                             <div className="grid grid-cols-2 lg:grid-cols-4 md:grid-cols-2 gap-y-3 md:gap-y-4 gap-x-2">
@@ -259,7 +259,7 @@ export function NumberListPage() {
 
                                         {/* Quick Info Section */}
                                         <div className="space-y-3 md:space-y-4">
-                                            <p className="text-[10px] md:text-[11px] font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
+                                            <p className="text-[10px] md:text-[11px] font-extrabold text-indigo-400 dark:text-indigo-300 uppercase tracking-[0.2em]">
                                                 Quick Details
                                             </p>
                                             <div className="p-3 md:p-4">

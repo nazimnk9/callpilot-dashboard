@@ -172,7 +172,7 @@ export function PhoneCallFlowsContent() {
             <div className="max-w-7xl mx-auto space-y-12">
                 <div className="flex flex-row justify-between">
                     <div className="flex flex-col gap-1">
-                        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 tracking-tight">AI Call Builder</h1>
+                        <h1 className="text-lg font-bold tracking-tight gradient-text">AI Call Builder</h1>
                         <p className="text-gray-500 dark:text-gray-400 font-medium">Enable and manage your AI-powered call flows.</p>
                     </div>
                     <div>
@@ -239,7 +239,7 @@ export function PhoneCallFlowsContent() {
                             <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
                                 <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
                                     {/* Image left from Name */}
-                                    <div className="w-24 h-32 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 dark:bg-gray-900">
+                                    <div className="w-24 h-32 border border-indigo-100 dark:border-white/10 rounded-xl shadow-md shadow-indigo-500/10 overflow-hidden flex-shrink-0 bg-gray-50 dark:bg-gray-900">
                                         <img src={selectedFlow.picture} alt={selectedFlow.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="space-y-2 flex-grow">
@@ -248,10 +248,10 @@ export function PhoneCallFlowsContent() {
                                         </DialogTitle>
                                         <div className="flex flex-row flex-wrap gap-2 justify-center sm:justify-start">
                                             <div className="flex items-center text-xs text-gray-500 font-medium capitalize">
-                                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.call_direction} Call</span>
+                                                <span className="bg-indigo-50 dark:bg-indigo-500/15 px-2 py-0.5 rounded-full text-indigo-700 dark:text-indigo-200 font-medium">{selectedFlow.call_direction} Call</span>
                                             </div>
                                             <div className="flex items-center text-xs text-gray-500 font-medium uppercase tracking-wider">
-                                                <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{selectedFlow.flow_category.replace(/_/g, ' ')}</span>
+                                                <span className="bg-indigo-50 dark:bg-indigo-500/15 px-2 py-0.5 rounded-full text-indigo-700 dark:text-indigo-200 font-medium">{selectedFlow.flow_category.replace(/_/g, ' ')}</span>
                                             </div>
                                         </div>
                                         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2">
@@ -297,7 +297,7 @@ export function PhoneCallFlowsContent() {
                                             {selectedFlow.required_resources.map((resource, index) => (
                                                 <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
                                                     <div className="mt-1 flex-shrink-0">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500/60 group-hover:bg-green-500 transition-colors" />
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500 group-hover:bg-green-500 transition-colors" />
                                                     </div>
                                                     <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal text-left">{resource}</span>
                                                 </li>
@@ -314,10 +314,10 @@ export function PhoneCallFlowsContent() {
                                 </div>
                                 <div className="flex justify-center sm:justify-start">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5 flex items-center justify-center bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="w-14 h-14 border border-indigo-100 dark:border-white/10 rounded-2xl p-2.5 flex items-center justify-center bg-white/80 dark:bg-white/5 shadow-md shadow-indigo-500/10 hover:shadow-lg hover:-translate-y-0.5 transition-all">
                                             <img src="/images/JobAdder.jpg" alt="JobAdder" className="w-full h-full object-contain" />
                                         </div>
-                                        <div className="w-14 h-14 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5 flex items-center justify-center bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="w-14 h-14 border border-indigo-100 dark:border-white/10 rounded-2xl p-2.5 flex items-center justify-center bg-white/80 dark:bg-white/5 shadow-md shadow-indigo-500/10 hover:shadow-lg hover:-translate-y-0.5 transition-all">
                                             <img src="/images/Bullhornconnector.jpg" alt="Bullhorn" className="w-full h-full object-contain" />
                                         </div>
                                     </div>

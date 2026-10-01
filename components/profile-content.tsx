@@ -296,7 +296,7 @@ export function ProfileContent() {
                                     type={showCurrentPassword ? "text" : "password"}
                                     value={passwords.currentPassword}
                                     onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
+                                    className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
                                     placeholder="••••••••"
                                 />
                                 <button
@@ -321,7 +321,7 @@ export function ProfileContent() {
                                     type={showNewPassword ? "text" : "password"}
                                     value={passwords.newPassword}
                                     onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
+                                    className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
                                     placeholder="••••••••"
                                 />
                                 <button
@@ -346,7 +346,7 @@ export function ProfileContent() {
                                     type={showConfirmPassword ? "text" : "password"}
                                     value={passwords.confirmPassword}
                                     onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
+                                    className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent pr-10"
                                     placeholder="••••••••"
                                 />
                                 <button
@@ -383,7 +383,7 @@ export function ProfileContent() {
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Page Title */}
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Profile</h1>
+                    <h1 className="text-2xl font-semibold gradient-text pb-1">Profile</h1>
                 </div>
 
                 {/* Tabs */}
@@ -424,7 +424,7 @@ export function ProfileContent() {
                                     id="first_name"
                                     value={profile.first_name}
                                     onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
+                                    className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
                                     placeholder="Enter your first name"
                                 />
                             </div>
@@ -439,7 +439,7 @@ export function ProfileContent() {
                                     id="last_name"
                                     value={profile.last_name}
                                     onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
+                                    className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent"
                                     placeholder="Enter your last name"
                                 />
                             </div>
@@ -455,7 +455,7 @@ export function ProfileContent() {
                                     type="email"
                                     value={profile.email}
                                     disabled
-                                    className="h-11 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent opacity-70"
+                                    className="h-11 rounded-2xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent opacity-70"
                                 /> */}
                                 <p className="text-[15px] font-medium text-gray-900 dark:text-gray-100 pt-2">
                                     {profile.email}
