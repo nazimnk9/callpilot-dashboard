@@ -210,6 +210,61 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    // ---- One-click diagnostics (mic, audio output, media-server reachability) ----
+    const [diagLines, setDiagLines] = useState<{ ok: boolean; text: string }[] | null>(null)
+    const [diagRunning, setDiagRunning] = useState(false)
+
+    const runDiagnostics = async () => {
+        setDiagRunning(true)
+        const out: { ok: boolean; text: string }[] = []
+        const push = (ok: boolean, text: string) => { out.push({ ok, text }); setDiagLines([...out]) }
+        setDiagLines([])
+        try {
+            const ua = typeof navigator !== "undefined" ? navigator.userAgent : ""
+            push(true, `Browser: ${ua.includes("Edg/") ? "Edge" : ua.includes("Firefox/") ? "Firefox" : ua.includes("Chrome/") ? "Chrome" : "Other"} on ${/Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "macOS" : /Linux/.test(ua) ? "Linux" : "unknown OS"}`)
+            push(typeof window !== "undefined" && window.isSecureContext, window.isSecureContext ? "Secure (https) page: OK" : "Page is not secure (https). Calls need https.")
+            push(!!(window as any).RTCPeerConnection, (window as any).RTCPeerConnection ? "WebRTC supported: OK" : "WebRTC is not available in this browser.")
+
+            const micOk = await ensureMic()
+            push(micOk, micOk ? "Microphone: OK" : "Microphone: FAILED - see the red message above")
+
+            try {
+                const devs = await navigator.mediaDevices.enumerateDevices()
+                const ins = devs.filter((d) => d.kind === "audioinput").length
+                const outs = devs.filter((d) => d.kind === "audiooutput").length
+                push(ins > 0, `Audio inputs found: ${ins}`)
+                push(outs > 0, `Audio outputs found: ${outs}${outs === 0 ? " (check speakers/headset in Windows Sound settings)" : ""}`)
+            } catch { push(false, "Could not list audio devices") }
+
+            // Media-server reachability: gather ICE candidates from Telnyx STUN/TURN.
+            await new Promise<void>((resolve) => {
+                let srflx = false, relay = false, done = false
+                const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.telnyx.com:3478" }, { urls: "turn:turn.telnyx.com:3478?transport=tcp", username: "testuser000", credential: "test0000" }] })
+                const finish = () => {
+                    if (done) return
+                    done = true
+                    try { pc.close() } catch { /* ignore */ }
+                    push(srflx, srflx ? "Reach Telnyx media servers (UDP/STUN): OK" : "Telnyx media servers (UDP/STUN) NOT reachable - a firewall, VPN or antivirus is probably blocking WebRTC. Try another network or disable the VPN.")
+                    if (!srflx) push(relay, relay ? "TURN relay (TCP) reachable - calls may still work" : "TURN relay NOT reachable either")
+                    resolve()
+                }
+                pc.createDataChannel("diag")
+                pc.onicecandidate = (e) => {
+                    const c = e.candidate?.candidate || ""
+                    if (c.includes(" typ srflx")) srflx = true
+                    if (c.includes(" typ relay")) relay = true
+                    if (!e.candidate) finish()
+                }
+                pc.createOffer().then((o) => pc.setLocalDescription(o)).catch(() => finish())
+                setTimeout(finish, 6000)
+            })
+
+            push(status === "online", status === "online" ? "Phone registered with Telnyx: Online" : `Phone registration: ${status}${statusDetail ? " - " + statusDetail : ""}`)
+        } finally {
+            setDiagRunning(false)
+        }
+    }
+
     // Keep refs synchronized
     useEffect(() => {
         activeCallRef.current = activeCall
@@ -1409,6 +1464,21 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                             <span>{micIssue}</span>
                             <button type="button" onClick={() => void ensureMic()} className="shrink-0 font-semibold underline underline-offset-2">Test microphone</button>
                         </div>
+                    )}
+
+                    <div className="flex items-center gap-3 text-xs">
+                        <button type="button" onClick={() => void runDiagnostics()} disabled={diagRunning} className="font-semibold text-blue-600 dark:text-blue-400 underline underline-offset-2 disabled:opacity-60">
+                            {diagRunning ? "Running diagnostics…" : "Run call diagnostics"}
+                        </button>
+                    </div>
+                    {diagLines && diagLines.length > 0 && (
+                        <ul id="voip-diagnostics" className="rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-xs space-y-1">
+                            {diagLines.map((l, i) => (
+                                <li key={i} className={l.ok ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-300"}>
+                                    {l.ok ? "✓" : "✗"} {l.text}
+                                </li>
+                            ))}
+                        </ul>
                     )}
 
                     <p className="text-xs text-muted-foreground leading-relaxed">
