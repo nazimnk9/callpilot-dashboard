@@ -149,6 +149,67 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     const dialedNumberRef = useRef<string>("")
     const baseTitleRef = useRef<string>(typeof document !== "undefined" ? document.title : "")
 
+    // ---- Microphone preflight (Windows PCs often have no/blocked/busy mic) ----
+    const [micIssue, setMicIssue] = useState<string | null>(null)
+
+    const micErrorMessage = (err: any): string => {
+        const name = err?.name || ""
+        if (name === "NotFoundError" || name === "DevicesNotFoundError")
+            return "No microphone found. Plug in a headset/microphone and make sure Windows Settings > Sound > Input shows one."
+        if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError")
+            return "Microphone is blocked. Click the lock icon in the address bar, allow Microphone, and also check Windows Settings > Privacy > Microphone."
+        if (name === "NotReadableError" || name === "TrackStartError" || name === "AbortError")
+            return "Microphone is busy or unavailable. Close other apps using it (Teams, Zoom, Skype) and check the default input device in Windows Sound settings."
+        if (name === "OverconstrainedError")
+            return "The selected microphone is not usable. Choose a different default input device."
+        return err?.message ? `Microphone error: ${err.message}` : "Could not access the microphone."
+    }
+
+    // Opens the mic once to trigger the browser permission prompt and verify it works.
+    const ensureMic = async (): Promise<boolean> => {
+        if (typeof navigator === "undefined") return true
+        if (!navigator.mediaDevices?.getUserMedia) {
+            setMicIssue("Calls need a secure (https) page and a browser with microphone support.")
+            return false
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            stream.getTracks().forEach((t) => t.stop())
+            setMicIssue(null)
+            return true
+        } catch (err: any) {
+            console.error("[VOIP] microphone check failed", err)
+            setMicIssue(micErrorMessage(err))
+            return false
+        }
+    }
+
+    useEffect(() => {
+        if (typeof navigator === "undefined" || !navigator.mediaDevices) return
+        const passiveCheck = async () => {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices()
+                if (!devices.some((d) => d.kind === "audioinput")) {
+                    setMicIssue("No microphone found. Plug in a headset/microphone and make sure Windows Settings > Sound > Input shows one.")
+                    return
+                }
+                const perm = await (navigator as any).permissions?.query?.({ name: "microphone" }).catch(() => null)
+                if (perm?.state === "denied") setMicIssue(micErrorMessage({ name: "NotAllowedError" }))
+                else setMicIssue((prev) => (prev && prev.startsWith("No microphone") ? null : prev))
+            } catch { /* ignore */ }
+        }
+        passiveCheck()
+        navigator.mediaDevices.addEventListener?.("devicechange", passiveCheck)
+        // Ask for mic permission on the first click so it is already granted before a call comes in.
+        const warm = () => { void ensureMic() }
+        window.addEventListener("pointerdown", warm, { once: true })
+        return () => {
+            navigator.mediaDevices.removeEventListener?.("devicechange", passiveCheck)
+            window.removeEventListener("pointerdown", warm)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
     // Keep refs synchronized
     useEffect(() => {
         activeCallRef.current = activeCall
@@ -906,6 +967,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     if (clientRef.current !== client) return
                     console.error("telnyx.error", e)
                     const isFatal = e?.fatal === true || e?.code === 46001 || e?.code === 46002 || e?.code === 45003 || e?.code === 48001
+                    if (!isFatal && e?.message) setStatusDetail(String(e.message))
                     if (isFatal && !activeCallRef.current && !incomingCallRef.current) {
                         clientReadyRef.current = false
                         setStatus("offline")
@@ -1088,11 +1150,15 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
     }
 
     // Dial action matching portal.js
-    const dial = (number?: string) => {
+    const dial = async (number?: string) => {
         const rawTarget = (number || dialNumber || "").trim()
         if (!rawTarget) return
         if (!clientRef.current || !clientReadyRef.current) {
             alert("Phone is not ready yet. Wait for the Online badge.")
+            return
+        }
+        if (!(await ensureMic())) {
+            alert(micIssue || "Microphone is not available. Please check your microphone and try again.")
             return
         }
 
@@ -1111,8 +1177,9 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                     activeCallRef.current = call
                     showActive(call, "Calling…")
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.warn("newCall error:", err)
+                alert(`Could not start the call: ${err?.message || err}`)
             }
         } else {
             // Simulated preview active call state
@@ -1336,6 +1403,13 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                             {status === "online" ? "Online" : status === "connecting" ? "Connecting…" : "Offline"}
                         </Badge>
                     </div>
+
+                    {micIssue && (
+                        <div role="alert" className="flex items-start justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
+                            <span>{micIssue}</span>
+                            <button type="button" onClick={() => void ensureMic()} className="shrink-0 font-semibold underline underline-offset-2">Test microphone</button>
+                        </div>
+                    )}
 
                     <p className="text-xs text-muted-foreground leading-relaxed">
                         Logged in: <strong className="text-foreground">{userName}</strong> (ext {extension})<br />
@@ -1786,7 +1860,7 @@ export function VoipDashboardContent({ flowUid }: VoipDashboardContentProps) {
                 </p>
             </div>
 
-            <audio id="remoteAudio" autoPlay playsInline className="fixed -top-full -left-full opacity-0 pointer-events-none w-0 h-0" />
+            <audio id="remoteAudio" autoPlay playsInline className="sr-only" />
         </div>
     )
 }
