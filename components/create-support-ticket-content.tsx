@@ -400,7 +400,7 @@ export function CreateSupportTicketContent() {
                 <AlertDialogContent className="bg-white/80 backdrop-blur-xl dark:bg-white/5 border-gray-100 dark:border-gray-800 rounded-2xl max-w-[450px]">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 shadow-rose-500/40 shadow-lg flex items-center justify-center text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 to-rose-600 shadow-rose-500/40 shadow-lg flex items-center justify-center text-white transition-transform duration-300 hover:scale-110 hover:-rotate-6">
                                 <X size={18} />
                             </div>
                             {errorAlert.title}

@@ -43,13 +43,6 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const ICON_GRADIENTS = [
-  'from-violet-500 to-indigo-600 shadow-violet-500/40',
-  'from-cyan-400 to-blue-500 shadow-cyan-500/40',
-  'from-pink-500 to-rose-500 shadow-pink-500/40',
-  'from-amber-400 to-orange-500 shadow-amber-500/40',
-  'from-emerald-400 to-teal-500 shadow-emerald-500/40',
-];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
@@ -132,7 +125,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Mobile overlay - only on mobile, not tablets */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
           onClick={onClose}
         />
       )}
@@ -172,7 +165,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {currentMenuItems.map((item, index) => {
               if (item.isHeader) {
                 return (
-                  <div key={index} className="text-[11px] font-bold uppercase tracking-widest text-blue-400 dark:text-blue-300/70 mt-6 mb-2 px-3">
+                  <div key={index} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80 mt-6 mb-2 px-3">
                     {item.label}
                   </div>
                 );
@@ -182,23 +175,26 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   key={index}
                   href={item.href || '#'}
-                  style={{ animationDelay: `${index * 25}ms` }}
-                  className={`relative flex items-center gap-3 px-3 py-2.5 text-[15px] rounded-xl transition-all duration-200 group animate-fade-up hover:translate-x-0.5 ${isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-violet-500 text-white shadow-lg shadow-blue-600/30'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-white/5 hover:text-blue-700 dark:hover:text-white'
+                  style={{ animationDelay: `${index * 20}ms` }}
+                  className={`relative flex items-center gap-3 px-3 py-2.5 text-[15px] rounded-xl transition-all duration-200 group animate-fade-up ${isActive
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                 >
+                  {isActive && (
+                    <span aria-hidden className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary animate-scale-in" />
+                  )}
                   {item.icon && (
                     <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-md transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6 ${isActive
-                        ? 'from-white/30 to-white/10 text-white ring-1 ring-white/40 shadow-white/20'
-                        : `${ICON_GRADIENTS[index % ICON_GRADIENTS.length]} text-white`
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 ${isActive
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-muted text-muted-foreground group-hover:bg-accent group-hover:text-primary'
                         }`}
                     >
-                      <item.icon size={17} strokeWidth={2.4} />
+                      <item.icon size={18} strokeWidth={2} />
                     </span>
                   )}
-                  <span className={isActive || item.isBold ? 'text-xs font-semibold' : 'text-xs font-medium'}>
+                  <span className={isActive || item.isBold ? 'text-[13px] font-semibold' : 'text-[13px] font-medium'}>
                     {item.label}
                   </span>
                 </Link>

@@ -164,7 +164,7 @@ export function FinalSubmissionModal({ open, onOpenChange, onBack, onSuccess }: 
                         {/* Bundle Info */}
                         <div>
                             <h3 className="font-bold text-lg gradient-text mb-3">Bundle Information</h3>
-                            <div className="p-5 rounded-2xl glass bg-gradient-to-br from-indigo-50/70 to-cyan-50/50 dark:from-indigo-500/10 dark:to-cyan-500/5 space-y-2 card-lift">
+                            <div className="p-5 rounded-2xl glass bg-gradient-to-br from-indigo-50/70 to-blue-50/50 dark:from-indigo-500/10 dark:to-blue-500/5 space-y-2 card-lift">
                                 <p>
                                     <span className="font-medium">Name:</span> {bundle.friendly_name}
                                 </p>
@@ -183,7 +183,7 @@ export function FinalSubmissionModal({ open, onOpenChange, onBack, onSuccess }: 
                         {/* End User Info */}
                         <div>
                             <h3 className="font-bold text-lg gradient-text mb-3">End User Information</h3>
-                            <div className="p-5 rounded-2xl glass bg-gradient-to-br from-indigo-50/70 to-cyan-50/50 dark:from-indigo-500/10 dark:to-cyan-500/5 space-y-2 card-lift">
+                            <div className="p-5 rounded-2xl glass bg-gradient-to-br from-indigo-50/70 to-blue-50/50 dark:from-indigo-500/10 dark:to-blue-500/5 space-y-2 card-lift">
                                 <p>
                                     <span className="font-medium">Friendly Name:</span> {endUser.friendly_name}
                                 </p>
@@ -205,7 +205,7 @@ export function FinalSubmissionModal({ open, onOpenChange, onBack, onSuccess }: 
                         {/* Address Info */}
                         <div>
                             <h3 className="font-bold text-lg gradient-text mb-3">Address Information</h3>
-                            <div className="p-5 rounded-2xl glass bg-gradient-to-br from-indigo-50/70 to-cyan-50/50 dark:from-indigo-500/10 dark:to-cyan-500/5 space-y-2 card-lift">
+                            <div className="p-5 rounded-2xl glass bg-gradient-to-br from-indigo-50/70 to-blue-50/50 dark:from-indigo-500/10 dark:to-blue-500/5 space-y-2 card-lift">
                                 <p>
                                     <span className="font-medium">Customer:</span> {address.customer_name}
                                 </p>

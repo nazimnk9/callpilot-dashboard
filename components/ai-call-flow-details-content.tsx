@@ -147,7 +147,7 @@ export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps
                                 {flow.required_resources.map((resource, index) => (
                                     <li key={index} className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 group">
                                         <div className="mt-1 flex-shrink-0">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500 group-hover:bg-green-500 transition-colors" />
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 group-hover:bg-green-500 transition-colors" />
                                         </div>
                                         <span className="group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors leading-normal">{resource}</span>
                                     </li>
@@ -216,7 +216,7 @@ export function AICallFlowDetailsContent({ flow }: AICallFlowDetailsContentProps
                     <AlertDialogFooter className="pt-4">
                         <AlertDialogAction
                             onClick={() => _setErrorDetail(null)}
-                            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:shadow-lg hover:shadow-rose-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all h-auto border-none"
+                            className="w-full bg-gradient-to-r from-rose-500 to-rose-600 hover:shadow-lg hover:shadow-rose-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all h-auto border-none"
                         >
                             Continue
                         </AlertDialogAction>

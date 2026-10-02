@@ -5,7 +5,7 @@ import { Plus, ArrowUp } from 'lucide-react';
 export function HomeContent() {
   return (
     <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
-      <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-72 w-72 rounded-full bg-gradient-to-br from-blue-500/30 via-violet-500/20 to-cyan-400/30 blur-3xl animate-float" />
+      <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-72 w-72 rounded-full bg-gradient-to-br from-blue-500/30 to-blue-400/30 blur-3xl animate-float" />
       <div className="w-full max-w-2xl space-y-8 relative">
         {/* Header */}
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight gradient-text animate-fade-up">

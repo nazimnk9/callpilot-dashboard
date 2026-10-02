@@ -1,5 +1,6 @@
 "use client"
 
+import { EmptyState, ListSkeleton } from '@/components/ui/empty-state'
 import { useState, useEffect } from "react"
 import {
     Table,
@@ -326,9 +327,7 @@ export function CallLogsContent() {
                                 <TableBody>
                                     {filteredCallLogs.length === 0 && !isLoading ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                                No call logs found.
-                                            </TableCell>
+                                            <TableCell colSpan={7} className="p-0"><EmptyState bare title="No call activity yet" description="Calls handled by your AI flows will appear here." /></TableCell>
                                         </TableRow>
                                     ) : (
                                         filteredCallLogs.map((log) => (
@@ -336,7 +335,7 @@ export function CallLogsContent() {
                                                 <TableCell className="font-medium">
                                                     <div className="flex items-center gap-2">
                                                         {log.state === "INCOMING" ? (
-                                                            <PhoneIncoming className="w-4 h-4 text-cyan-500" />
+                                                            <PhoneIncoming className="w-4 h-4 text-blue-500" />
                                                         ) : (
                                                             <PhoneOutgoing className="w-4 h-4 text-green-500" />
                                                         )}

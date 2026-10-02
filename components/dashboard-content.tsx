@@ -1413,7 +1413,7 @@ export function DashboardContent() {
 
                     return (
                         <div>
-                            <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up mb-6">Complete Your Account Setup</h1>
+                            <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300  dark:to-blue-300 animate-fade-up mb-6">Complete Your Account Setup</h1>
                             <div className="group relative overflow-hidden rounded-2xl border border-blue-100/70 dark:border-gray-700/60 glass dark:bg-gray-900/60 shadow-lg shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6 md:p-8">
                                 {/* soft gradient glow */}
                                 <div className="pointer-events-none absolute -inset-24 opacity-0 blur-3xl transition-opacity duration-300 group-hover:opacity-100">
@@ -1471,7 +1471,7 @@ export function DashboardContent() {
                 })()}
 
                 <div>
-                    <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up mb-6">Account & Usage</h1>
+                    <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300  dark:to-blue-300 animate-fade-up mb-6">Account & Usage</h1>
                     {/* <p className="text-slate-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
                 </div>
 
@@ -1861,7 +1861,7 @@ export function DashboardContent() {
                 {isAllCompleted && (
                     <>
                         <div>
-                            <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up">System Health</h1>
+                            <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300  dark:to-blue-300 animate-fade-up">System Health</h1>
                             {/* <p className="text-slate-500 dark:text-gray-400 mt-1">Welcome back! Here's what's happening today.</p> */}
                         </div>
 
@@ -1955,7 +1955,7 @@ export function DashboardContent() {
                             <div className="mt-8 space-y-6">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <div>
-                                        <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up">AI Applicant Screening Call - Report</h1>
+                                        <h1 className="text-xl font-bold tracking-tight gradient-text dark:from-indigo-300  dark:to-blue-300 animate-fade-up">AI Applicant Screening Call - Report</h1>
                                     </div>
 
                                     {/* Period Filter */}

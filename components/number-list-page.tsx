@@ -1,5 +1,6 @@
 "use client"
 
+import { EmptyState, ListSkeleton } from '@/components/ui/empty-state'
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -173,15 +174,7 @@ export function NumberListPage() {
 
                 {/* Phone Numbers List */}
                 {phoneNumbers.length === 0 && !isLoading ? (
-                    <Card className="glass rounded-2xl overflow-hidden animate-scale-in">
-                        <CardContent className="pt-12 pb-12 text-center">
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-full w-fit mx-auto mb-4">
-                                <Phone className="w-8 h-8 text-muted-foreground opacity-50" />
-                            </div>
-                            <p className="text-gray-900 dark:text-gray-100 font-bold text-lg">No phone numbers found</p>
-                            <p className="text-sm text-muted-foreground mt-1">Purchase your first phone number to get started</p>
-                        </CardContent>
-                    </Card>
+                    <EmptyState icon={Phone} title="No phone numbers yet" description="Purchase your first phone number to get started." />
                 ) : (
                     <div className="grid grid-cols-1 gap-6">
                         {phoneNumbers.map((number) => (
@@ -189,7 +182,7 @@ export function NumberListPage() {
                                 key={number.id}
                                 className="glass card-lift hover:border-indigo-300/60 rounded-2xl overflow-hidden group animate-fade-up"
                             >
-                                <CardHeader className="bg-gradient-to-r from-indigo-50/70 via-transparent to-cyan-50/50 dark:from-indigo-500/10 dark:to-cyan-500/5 border-b border-indigo-100/70 dark:border-white/10 p-4 md:p-6 transition-colors">
+                                <CardHeader className="bg-gradient-to-r from-indigo-50/70 via-transparent to-blue-50/50 dark:from-indigo-500/10 dark:to-blue-500/5 border-b border-indigo-100/70 dark:border-white/10 p-4 md:p-6 transition-colors">
                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3 md:gap-4 flex-1 w-full sm:w-auto">
                                             <div className="p-2.5 md:p-3 gradient-bg rounded-xl shrink-0 shadow-lg shadow-indigo-500/30 group-hover:animate-float">

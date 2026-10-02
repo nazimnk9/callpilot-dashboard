@@ -1,5 +1,6 @@
 "use client"
 
+import { EmptyState, ListSkeleton } from '@/components/ui/empty-state'
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -677,7 +678,7 @@ export function PhoneNumbersContent() {
                         <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400 font-medium pt-2 text-center">{errorDetail}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="pt-4">
-                        <AlertDialogAction onClick={() => setErrorDetail(null)} className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:shadow-lg hover:shadow-rose-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all h-auto border-none">Continue</AlertDialogAction>
+                        <AlertDialogAction onClick={() => setErrorDetail(null)} className="w-full bg-gradient-to-r from-rose-500 to-rose-600 hover:shadow-lg hover:shadow-rose-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all h-auto border-none">Continue</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -712,15 +713,7 @@ export function PhoneNumbersContent() {
                 </div>
 
                 {phoneNumbers.length === 0 && !isLoading ? (
-                    <Card className="glass rounded-2xl overflow-hidden animate-scale-in">
-                        <CardContent className="pt-12 pb-12 text-center">
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-full w-fit mx-auto mb-4">
-                                <Phone className="w-8 h-8 text-muted-foreground opacity-50" />
-                            </div>
-                            <p className="text-gray-900 dark:text-gray-100 font-bold text-lg">No phone numbers found</p>
-                            <p className="text-sm text-muted-foreground mt-1">Purchase your first phone number to get started</p>
-                        </CardContent>
-                    </Card>
+                    <EmptyState icon={Phone} title="No phone numbers yet" description="Purchase your first phone number to get started." />
                 ) : (
                     <div className="grid grid-cols-1 gap-6">
                         {phoneNumbers.map((number) => (

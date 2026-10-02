@@ -1086,7 +1086,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
         <main className="flex-1 overflow-y-auto bg-transparent p-4 md:p-8 font-sans animate-fade-in">
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Page Title */}
-                <h1 className="text-3xl font-extrabold tracking-tight gradient-text dark:from-indigo-300 dark:via-violet-300 dark:to-cyan-300 animate-fade-up">Billing</h1>
+                <h1 className="text-3xl font-extrabold tracking-tight gradient-text dark:from-indigo-300  dark:to-blue-300 animate-fade-up">Billing</h1>
 
                 {/* Tabs */}
                 <div className="flex items-center gap-6 border-b border-blue-100 dark:border-gray-800 overflow-x-auto whitespace-nowrap scrollbar-hide">
@@ -1101,7 +1101,7 @@ export function BillingContent({ blockedStep = null }: BillingContentProps) {
                         >
                             {tab}
                             {activeTab === tab && (
-                                <div className="absolute bottom-0 left-0 w-full h-0.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 animate-scale-in" />
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 animate-scale-in" />
                             )}
                         </button>
                     ))}

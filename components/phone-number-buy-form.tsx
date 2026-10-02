@@ -862,7 +862,7 @@ export function PhoneNumberBuyForm() {
                     <AlertDialogFooter className="pt-4">
                         <AlertDialogAction
                             onClick={() => setErrorDetail(null)}
-                            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:shadow-lg hover:shadow-rose-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all h-auto border-none"
+                            className="w-full bg-gradient-to-r from-rose-500 to-rose-600 hover:shadow-lg hover:shadow-rose-500/30 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all h-auto border-none"
                         >
                             Continue
                         </AlertDialogAction>

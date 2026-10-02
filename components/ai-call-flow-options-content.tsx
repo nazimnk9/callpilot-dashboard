@@ -1,5 +1,6 @@
 "use client"
 
+import { EmptyState, ListSkeleton } from '@/components/ui/empty-state'
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -281,15 +282,9 @@ export function AICallFlowOptionsContent() {
                     {/* Main Results Container */}
                     <div className="space-y-4 glass rounded-2xl p-6 animate-fade-up min-h-[400px]">
                         {isLoading ? (
-                            <div className="flex flex-col items-center justify-center py-20 gap-4">
-                                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-                                <p className="text-gray-500 font-medium">Fetching available flows...</p>
-                            </div>
+                            <ListSkeleton rows={4} />
                         ) : availableResults.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 gap-2 text-gray-500">
-                                <p className="font-medium">No flows found.</p>
-                                <p className="text-sm text-gray-400">Try adjusting your filters.</p>
-                            </div>
+                            <EmptyState title="No flows found" description="Try adjusting your filters." />
                         ) : (
                             availableResults.map(flow => (
                                 <div key={flow.id} className="group relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden flex shadow-sm hover:shadow-md transition-shadow">

@@ -14,22 +14,22 @@ const config: Config = {
         sans: ['var(--font-jakarta)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Remap the default blue scale to a vivid indigo-violet brand scale so every
-        // existing blue-* utility picks up the new look.
+        // Brand green ramp (#469077). The default blue/violet/indigo scales are remapped
+        // onto it so every existing utility picks up the brand colour.
         blue: {
-          50: '#eff7ff', 100: '#dcedff', 200: '#bddcff', 300: '#8cc3ff', 400: '#52a1ff',
-          500: '#2b83ff', 600: '#1668f5', 700: '#0f52d6', 800: '#1243a8', 900: '#123a85', 950: '#0b2150',
+          50: '#E8F3EF', 100: '#D3E8E0', 200: '#AFD3C6', 300: '#8CBFAD', 400: '#6FAF99',
+          500: '#469077', 600: '#3B7F69', 700: '#34745F', 800: '#2A5D4D', 900: '#214A3E', 950: '#122A23',
         },
         violet: {
-          50: '#f7f0ff', 100: '#eddcff', 200: '#dcbfff', 300: '#c79cff', 400: '#b377fb',
-          500: '#9d5cf6', 600: '#8841e6', 700: '#7231c4', 800: '#5d2a9e', 900: '#4a2480', 950: '#2c1050',
+          50: '#E8F3EF', 100: '#D3E8E0', 200: '#AFD3C6', 300: '#8CBFAD', 400: '#6FAF99',
+          500: '#469077', 600: '#3B7F69', 700: '#34745F', 800: '#2A5D4D', 900: '#214A3E', 950: '#122A23',
         },
         indigo: {
-          50: '#f0f3ff', 100: '#e0e6ff', 200: '#c3ceff', 300: '#9aaaff', 400: '#7487ff',
-          500: '#4f6bff', 600: '#3b50ea', 700: '#2f40c3', 800: '#2a3799', 900: '#273178', 950: '#161c4a',
+          50: '#E8F3EF', 100: '#D3E8E0', 200: '#AFD3C6', 300: '#8CBFAD', 400: '#6FAF99',
+          500: '#469077', 600: '#3B7F69', 700: '#34745F', 800: '#2A5D4D', 900: '#214A3E', 950: '#122A23',
         },
         brand: {
-          cyan: '#22d3ee', pink: '#ff4fa3', violet: '#9d5cf6', indigo: '#1668f5',
+          cyan: '#6FAF99', pink: '#6FAF99', violet: '#469077', indigo: '#34745F',
         },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
@@ -88,13 +88,13 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
-        'fade-up': { from: { opacity: '0', transform: 'translateY(16px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        'fade-up': { from: { opacity: '0', transform: 'translateY(12px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
         'scale-in': { from: { opacity: '0', transform: 'scale(0.95)' }, to: { opacity: '1', transform: 'scale(1)' } },
         'float': { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
         'shimmer': { from: { backgroundPosition: '-200% 0' }, to: { backgroundPosition: '200% 0' } },
         'gradient-shift': { '0%,100%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' } },
-        'pulse-ring': { '0%': { boxShadow: '0 0 0 0 rgba(124,92,255,0.45)' }, '70%': { boxShadow: '0 0 0 10px rgba(124,92,255,0)' }, '100%': { boxShadow: '0 0 0 0 rgba(124,92,255,0)' } },
+        'pulse-ring': { '0%': { boxShadow: '0 0 0 0 rgba(70,144,119,0.4)' }, '70%': { boxShadow: '0 0 0 10px rgba(70,144,119,0)' }, '100%': { boxShadow: '0 0 0 0 rgba(70,144,119,0)' } },
         'accordion-down': {
           from: {
             height: '0',
@@ -113,7 +113,7 @@ const config: Config = {
         },
       },
       animation: {
-        'fade-up': 'fade-up 0.55s cubic-bezier(0.22,1,0.36,1) both',
+        'fade-up': 'fade-up 0.3s cubic-bezier(0.22,1,0.36,1) both',
         'fade-in': 'fade-in 0.4s ease-out both',
         'scale-in': 'scale-in 0.35s cubic-bezier(0.22,1,0.36,1) both',
         'float': 'float 6s ease-in-out infinite',
